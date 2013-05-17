@@ -24,6 +24,9 @@ module tsdimport {
 		reposName:string = '';
 		reposUrl:string = '';
 
+		getDefUrl():string {
+			return this.reposUrl + this.name.toLowerCase() + '/' + this.name.toLowerCase() + '.d.ts';
+		}
 		isValid():bool {
 			if (this.errors.length > 0) {
 				return false;

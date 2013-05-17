@@ -17,14 +17,24 @@ module tsdimport {
 	var projects = ['underscore', 'easeljs'];
 
 	var importer = new DefinitionImporter(repos);
-	importer.parseDefinitions(projects, (err?, data?) => {
+	var exporter = new DefinitionExporter(repos);
+
+	importer.parseDefinitions(projects, (err?, map?:HeaderData[]) => {
 		console.log('parseDefinitions complete');
-		if(err) {
+		if (err) {
 			console.log(err);
 			return;
 		}
-		console.log(util.inspect(data, false, 10));
-		
+		console.log(util.inspect(map, false, 10));
+
+		exporter.exportDefinitions(map, (err?) => {
+			console.log('exportDefinitions complete');
+			if (err) {
+				console.log(err);
+				return;
+			}
+
+		});
 	});
 }
 

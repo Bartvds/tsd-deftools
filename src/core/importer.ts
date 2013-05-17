@@ -18,6 +18,7 @@ module tsdimport {
 		constructor(public repos:Repos) {
 
 		}
+
 		loadDef(name:string, map:any, callback:(err, data?) => void) {
 			var src = path.resolve(this.repos.local + '/' + name + '/' + name + '.d.ts');
 			var self:DefinitionImporter = this;
@@ -64,9 +65,9 @@ module tsdimport {
 		parseDefinitions(projects:string[], finish:(err?, map?) => void) {
 			var self:DefinitionImporter = this;
 			var map = {};
-			var res = {};
+			var res:HeaderData[] = [];
 
-			async.map(projects, (name, callback:(err?, data?) => void) => {
+			async.forEach(projects, (name, callback:(err?, data?) => void) => {
 
 				self.loadDef(name, map, (err?:any, data?:HeaderData) => {
 					console.log('LOADED ' +  name);
@@ -80,13 +81,14 @@ module tsdimport {
 						console.log('no data');
 						return callback('null data');
 					}
-					res[data.name] = data;
+					res.push(data);
 
 					if (data.references.length > 0) {
 
 						console.log('references: ' + data.references);
 
 						async.forEach(data.references, (ref, callback:(err?, data?) => void) => {
+
 							var match = ref.match(dependency);
 							if (match && match.length >= 3) {
 								if (match[1] && match[2]) {
@@ -108,6 +110,7 @@ module tsdimport {
 								}
 							}
 							return callback(['bad reference', ref]);
+
 						}, (err) => {
 							console.log('looped references');
 							callback(err);
@@ -118,24 +121,9 @@ module tsdimport {
 				});
 			}, (err) => {
 				if (err) {
-					console.log(['err!']);
-					console.log(err);
 					return finish(err);
 				}
-				console.log(['done!']);
 				finish(null, res);
-				/*async.map(result, (data:HeaderData, callback:(err?, data?) => void) => {
-					if(data){
-						if(data.references.length > 0){
-
-							callback();
-						}
-					}
-				}, (err, result) => {
-
-					console.log('finished!');
-					finish(err);
-				});*/
 			});
 		}
 

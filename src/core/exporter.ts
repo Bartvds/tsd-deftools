@@ -4,12 +4,46 @@
 module tsdimport {
 
 
+	var fs = require('fs');
+	var path = require('path');
+	var util = require('util');
+	var async:Async = require('async');
+	var _:UnderscoreStatic = require('underscore');
+	var agent:SuperAgent = require('superagent');
+
+	var dependency = /^\.\.\/([\w _-]+)\/([\w _-]+)\.d\.ts$/
+
+	export class DefinitionExporter {
+
+		constructor(public repos:Repos) {
+
+		}
+
+		getEncoder():DataEncoder {
+			return new Encode_V2(this.repos);
+		}
+
+		exportDefinitions(list:HeaderData[], finish:(err?, map?) => void) {
+			console.log('exportDefinitions');
+			var encoder = this.getEncoder();
+			async.forEach(list, (data:HeaderData, callback:(err?, data?) => void) => {
+				console.log(data.name);
+				console.log(util.inspect(encoder.encode(data), false, 10));
+
+				callback();
+
+			}, (err) => {
+				finish(err);
+			});
+		}
+	}
+
 	export interface DataEncoder {
 		encode(str:HeaderData):any;
 	}
 
 	export class Encode_V2 implements DataEncoder {
-		constructor() {
+		constructor(public repos:Repos) {
 
 		}
 
@@ -27,7 +61,7 @@ module tsdimport {
 								"version": data.version
 							}
 						}),
-						"url": header.reposUrl + header.name.toLowerCase() + '/' + header.name.toLowerCase() + '.d.ts',
+						"url": header.getDefUrl(),
 						"author": header.authorName,
 						"author_url": header.authorUrl
 					}
@@ -45,11 +79,11 @@ module tsdimport {
 		};
 
 		return (
-			S4() + S4() + "-" +
-			S4() + "-" +
-			S4() + "-" +
-			S4() + "-" +
-			S4() + S4() + S4()
+		S4() + S4() + "-" +
+		S4() + "-" +
+		S4() + "-" +
+		S4() + "-" +
+		S4() + S4() + S4()
 		);
 	}
 }
