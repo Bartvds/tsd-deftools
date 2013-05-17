@@ -2,18 +2,29 @@
 
 module tsdimport {
 
+	var trailSlash = /(\w)(\/?)$/;
+
+	var path = require('path');
+	var fs = require('fs');
+
 	export class Repos {
-		constructor(public url:string = '', public local:string = '') {
-			//kill trailing  slash
-			this.url = this.url.replace(/\/$/, '');
-			this.local = this.local.replace(/\/$/, '');
+		constructor(public url:string = '', public local:string = '', public out:string = '') {
+			//add trailing  slash
+			this.url = this.url.replace(trailSlash, '$1/');
+
+			this.local = path.resolve(this.local).replace(trailSlash, '$1/');
+			this.out = path.resolve(this.out).replace(trailSlash, '$1/');
+
+			if (!fs.existsSync(this.local) || !fs.statSync(this.local).isDirectory()) {
+				throw new Error('path not exist or not directoy: ' + this.local);
+			}
+			if (!fs.existsSync(this.out) || !fs.statSync(this.out).isDirectory()) {
+				throw new Error('path not exist or not directoy: ' + this.out);
+			}
 		}
 	}
 
 	export class HeaderData {
-		errors:any[] = [];
-		references:any[] = [];
-		dependencies:any[] = [];
 		name:string = '';
 		version:string = '*';
 		description:string = '';
@@ -24,9 +35,14 @@ module tsdimport {
 		reposName:string = '';
 		reposUrl:string = '';
 
+		errors:any[] = [];
+		references:any[] = [];
+		dependencies:any[] = [];
+
 		getDefUrl():string {
 			return this.reposUrl + this.name.toLowerCase() + '/' + this.name.toLowerCase() + '.d.ts';
 		}
+
 		isValid():bool {
 			if (this.errors.length > 0) {
 				return false;
@@ -103,7 +119,7 @@ module tsdimport {
 			}
 			else {
 				data.authorName = match[1];
-				data.authorUrl= match[2];
+				data.authorUrl = match[2];
 				this.labelUrl.lastIndex = match.index + match[0].length;
 			}
 
@@ -113,11 +129,11 @@ module tsdimport {
 			}
 			else {
 				data.reposName = match[1];
-				data.reposUrl= match[2].replace(this.endSlash, '/');
+				data.reposUrl = match[2].replace(this.endSlash, '/');
 			}
 
 			this.referencePath.lastIndex = 0;
-			while (match = this.referencePath.exec(str)){
+			while (match = this.referencePath.exec(str)) {
 				if (match.length > 1) {
 					data.references.push(match[1]);
 				}

@@ -12,7 +12,7 @@ module tsdimport {
 	var _:UnderscoreStatic = require('underscore');
 	var agent:SuperAgent = require('superagent');
 
-	var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', '../../DefinitelyTyped/fork');
+	var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', '../../DefinitelyTyped/fork', 'out');
 	//var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', './typings/DefinitelyTyped');
 	var projects = ['underscore', 'easeljs'];
 

@@ -23,14 +23,33 @@ module tsdimport {
 			return new Encode_V2(this.repos);
 		}
 
+		writeDef(data:HeaderData, encoder:DataEncoder, finish:(err?) => void) {
+			console.log(util.inspect(encoder.encode(data), false, 10));
+
+			var dest = this.repos.out + data.name + '.json';
+			console.log(dest);
+
+			fs.exists(dest, (exists:bool) => {
+				if (exists){
+					return finish('file exists: ' + dest);
+				}
+				var obj = encoder.encode(data);
+				console.log(util.inspect(obj, true, 8));
+
+				fs.writeFile(dest, JSON.stringify(obj, null, 4), (err) => {
+					finish(err);
+				});
+			});
+		};
+
 		exportDefinitions(list:HeaderData[], finish:(err?, map?) => void) {
 			console.log('exportDefinitions');
+			var self:DefinitionExporter = this;
 			var encoder = this.getEncoder();
 			async.forEach(list, (data:HeaderData, callback:(err?, data?) => void) => {
-				console.log(data.name);
-				console.log(util.inspect(encoder.encode(data), false, 10));
 
-				callback();
+				console.log(data.name);
+				self.writeDef(data, encoder, callback);
 
 			}, (err) => {
 				finish(err);

@@ -16,7 +16,8 @@ module.exports = function (grunt) {
 		pkg: grunt.file.readJSON('package.json'),
 		clean: {
 			build : ['tmp', 'build'],
-			test : ['test/_tmp.*']
+			test : ['test/_tmp.*'],
+			out : ['out/*.*']
 		},
 		execute: {
 			importer: {

@@ -20,7 +20,7 @@ module tsdimport {
 		}
 
 		loadDef(name:string, map:any, callback:(err, data?) => void) {
-			var src = path.resolve(this.repos.local + '/' + name + '/' + name + '.d.ts');
+			var src = path.resolve(this.repos.local + name + '/' + name + '.d.ts');
 			var self:DefinitionImporter = this;
 			console.log('name: ' + name);
 			console.log('src: ' + src);
