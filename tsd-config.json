@@ -1,0 +1,47 @@
+{
+    "localPath": "typings",
+    "libPath": "lib",
+    "repo": {
+        "uriList": [
+            {
+                "sourceType": 1,
+                "source": "http://www.tsdpm.com/repository_v2.json"
+            }
+        ]
+    },
+    "dependencies": {
+        "node@0.10": {
+            "repo": {
+                "sourceType": 1,
+                "source": "http://www.tsdpm.com/repository_v2.json"
+            },
+            "key": "5372ddd2-2876-41fe-9243-9b61e0ac05a8",
+            "uri": {
+                "source": "https://github.com/borisyankov/DefinitelyTyped/raw/master/node/node.d.ts",
+                "sourceType": 1
+            }
+        },
+        "async@0.1": {
+            "repo": {
+                "sourceType": 1,
+                "source": "http://www.tsdpm.com/repository_v2.json"
+            },
+            "key": "C9E5903D-85FB-4127-A487-0F8479942F42",
+            "uri": {
+                "source": "https://github.com/borisyankov/DefinitelyTyped/raw/master/async/async.d.ts",
+                "sourceType": 1
+            }
+        },
+        "underscore@1.4": {
+            "repo": {
+                "sourceType": 1,
+                "source": "http://www.tsdpm.com/repository_v2.json"
+            },
+            "key": "84ec0626-dd47-48ba-abd2-ec3a39356972",
+            "uri": {
+                "source": "https://github.com/borisyankov/DefinitelyTyped/raw/master/underscore/underscore.d.ts",
+                "sourceType": 1
+            }
+        }
+    }
+}

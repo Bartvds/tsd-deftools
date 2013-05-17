@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "superagent": "~0.14.2",
+    "underscore": "~1.4.4",
+    "async": "~0.2.8"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-typescript": "~0.1.5",
+    "grunt-contrib-clean": "~0.4.1",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-execute": "~0.1.2"
+  }
+}
