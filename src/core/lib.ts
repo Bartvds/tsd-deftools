@@ -8,15 +8,26 @@ module tsdimport {
 	var fs = require('fs');
 
 	export class Repos {
-		constructor(public url:string = '', public local:string = '', public out:string = '') {
-			//add trailing  slash
-			this.url = this.url.replace(trailSlash, '$1/');
+		constructor(public local:string, public tsd:string, public out:string) {
 
+			if (!this.local) {
+				throw('missing local')
+			}
+			if (!this.tsd) {
+				throw('missing tsd')
+			}
+			if (!this.out) {
+				throw('missing out')
+			}
 			this.local = path.resolve(this.local).replace(trailSlash, '$1/');
+			this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
 			this.out = path.resolve(this.out).replace(trailSlash, '$1/');
 
 			if (!fs.existsSync(this.local) || !fs.statSync(this.local).isDirectory()) {
 				throw new Error('path not exist or not directoy: ' + this.local);
+			}
+			if (!fs.existsSync(this.tsd) || !fs.statSync(this.tsd).isDirectory()) {
+				throw new Error('path not exist or not directoy: ' + this.tsd);
 			}
 			if (!fs.existsSync(this.out) || !fs.statSync(this.out).isDirectory()) {
 				throw new Error('path not exist or not directoy: ' + this.out);

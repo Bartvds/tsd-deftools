@@ -12,8 +12,19 @@ module tsdimport {
 	var _:UnderscoreStatic = require('underscore');
 	var agent:SuperAgent = require('superagent');
 
-	var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', '../../DefinitelyTyped/fork', 'out');
-	//var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', './typings/DefinitelyTyped');
+	var conf;
+	var tmp = path.resolve('./tsd-deftools.json');
+	try {
+		conf = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
+	}
+	catch (e) {
+		console.log(e);
+		throw(e);
+		throw('cannot load conf: '+ tmp);
+	}
+
+	console.log(conf);
+	var repos = new Repos(conf.path.DefinitlyTyped, conf.path.tsd, conf.path.out);
 	var projects = ['underscore', 'easeljs'];
 
 	var importer = new DefinitionImporter(repos);
