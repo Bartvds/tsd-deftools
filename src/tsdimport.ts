@@ -13,32 +13,52 @@ module tsdimport {
 
 	var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', '../../DefinitelyTyped/fork');
 
-	var parser = new HeaderParser();
-
-	var projects = ['mocha'];
+	var projects = ['mocha', 'easeljs'];
 
 	async.forEachLimit(projects, 3, (name, callback:(err?) => void) => {
 
 		var path = repos.local + '/' + name + '/' + name + '.d.ts';
 
-		async.waterfall([(callback:(err?) => void) => {
+		async.waterfall([(callback) => {
 			console.log('name: ' + name);
 			console.log('path: ' + path);
-			fs.readFile(path, 'utf8', callback)
-		}, (data, callback:(err?) => void) => {
+			fs.readFile(path, 'utf-8', callback)
+		}, (source, callback) => {
 
-			console.log(data+'');
-			callback();
+			var parser = new HeaderParser();
+			var data = parser.parse(source)
 
-		},(callback:(err?) => void) => {
-			callback();
+			console.log(util.inspect(data, false, 6));
+
+			if (!data) {
+				return callback('bad data ' + name);
+			}
+			if (data.errors.length > 0) {
+				return callback(data.errors);
+			}
+			if (!data.isValid()) {
+				return callback('invalid data');
+			}
+
+			var encoder = new Encode_V2();
+			var v2 = encoder.encode(data);
+
+			console.log(util.inspect(v2, false, 6));
+
+			callback(null, data);
+
 		}],
 		(err) => {
-			callback(err);
-			console.log('completed' + name);
+			if (err) {
+				return callback(err);
+			}
+			console.log('completed ' + name);
 		});
 	}, (err) => {
-		if (err) throw err;
+		if (err) {
+			console.log(err);
+			//throw err;
+		}
 		console.log('all done!');
 	});
 }
