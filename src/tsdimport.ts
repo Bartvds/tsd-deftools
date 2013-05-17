@@ -1,6 +1,7 @@
 ///<reference path="_ref.ts" />
 ///<reference path="core/lib.ts" />
-
+///<reference path="core/exporter.ts" />
+///<reference path="core/importer.ts" />
 
 module tsdimport {
 
@@ -12,53 +13,19 @@ module tsdimport {
 	var agent:SuperAgent = require('superagent');
 
 	var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', '../../DefinitelyTyped/fork');
+	//var repos = new Repos('https://github.com/borisyankov/DefinitelyTyped', './typings/DefinitelyTyped');
+	var projects = ['underscore', 'easeljs'];
 
-	var projects = ['mocha', 'easeljs'];
-
-	async.forEachLimit(projects, 3, (name, callback:(err?) => void) => {
-
-		var path = repos.local + '/' + name + '/' + name + '.d.ts';
-
-		async.waterfall([(callback) => {
-			console.log('name: ' + name);
-			console.log('path: ' + path);
-			fs.readFile(path, 'utf-8', callback)
-		}, (source, callback) => {
-
-			var parser = new HeaderParser();
-			var data = parser.parse(source)
-
-			console.log(util.inspect(data, false, 6));
-
-			if (!data) {
-				return callback('bad data ' + name);
-			}
-			if (data.errors.length > 0) {
-				return callback(data.errors);
-			}
-			if (!data.isValid()) {
-				return callback('invalid data');
-			}
-
-			var encoder = new Encode_V2();
-			var v2 = encoder.encode(data);
-
-			console.log(util.inspect(v2, false, 6));
-
-			callback(null, data);
-
-		}],
-		(err) => {
-			if (err) {
-				return callback(err);
-			}
-			console.log('completed ' + name);
-		});
-	}, (err) => {
-		if (err) {
+	var importer = new DefinitionImporter(repos);
+	importer.parseDefinitions(projects, (err?, data?) => {
+		console.log('parseDefinitions complete');
+		if(err) {
 			console.log(err);
-			//throw err;
+			return;
 		}
-		console.log('all done!');
+		console.log(util.inspect(data, false, 10));
+		
 	});
 }
+
+exports = (module).exports = tsdimport;

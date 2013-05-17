@@ -26,6 +26,7 @@ interface Async {
     forEachLimit(arr: any[], limit: number, iterator: AsyncIterator, callback: AsyncCallback): void;
     map(arr: any[], iterator: AsyncIterator, callback: AsyncCallback);
     mapSeries(arr: any[], iterator: AsyncIterator, callback: AsyncCallback);
+	mapLimit(arr: any[], limit:number, iterator: AsyncIterator, callback: AsyncCallback);
     filter(arr: any[], iterator: AsyncIterator, callback: AsyncCallback);
     select(arr: any[], iterator: AsyncIterator, callback: AsyncCallback);
     filterSeries(arr: any[], iterator: AsyncIterator, callback: AsyncCallback);

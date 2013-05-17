@@ -46,7 +46,7 @@ module tsdimport {
 	export class HeaderParser {
 		//[<\[\{\(]? [\)\}\]>]?
 
-		nameVersion = /^[ \t]*\/\/[ \t]*Type definitions[\w ]+:?[ \t]+([\w\._\-]+)[ \t]+(\d+\.\d+\.?\d*)[ \t]*$/gm;
+		nameVersion = /^[ \t]*\/\/[ \t]*Type definitions[\w ]+:?[ \t]+([\w\._\-]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*$/gm;
 		labelUrl = /^[ \t]*\/\/[ \t]*([\w _-]+):?[ \t]+[<\[\{\(]?(http[\S]*)[ \t]*$/gm;
 		authorNameUrl = /^[ \t]*\/\/[ \t]*Definitions[ \t\w]+:[ \t]+([\w \t]+[\w]+)[ \t]*[<\[\{\(]?(http[\w:\/\\\._-]+)[\)\}\]>]?[ \t]*$/gm;
 		referencePath = /^[ \t]*\/\/\/[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
@@ -116,62 +116,11 @@ module tsdimport {
 			this.referencePath.lastIndex = 0;
 			while (match = this.referencePath.exec(str)){
 				if (match.length > 1) {
-					console.log(match[1]);
 					data.references.push(match[1]);
 				}
 			}
 
 			return data;
 		}
-	}
-
-	export interface DataEncoder {
-		encode(str:HeaderData):any;
-	}
-
-	export class Encode_V2 implements DataEncoder {
-
-		constructor() {
-
-		}
-
-		encode(header:HeaderData):any {
-			var ret = {
-				"name": header.name,
-				"description": header.description,
-				"versions": [
-					{
-						"version": header.version,
-						"key": getGUID(),
-						"dependencies": [
-							/*{
-								"name": "LIB_NAME",
-								"version": "VERSION"
-							}*/
-						],
-						"url": header.reposUrl + header.name.toLowerCase() + '/' + header.name.toLowerCase() + '.d.ts',
-						"author": header.authorName,
-						"author_url": header.authorUrl
-					}
-				]
-			};
-			return ret;
-		}
-	}
-
-	export function getGUID():string {
-		var S4 = function () {
-			return Math.floor(
-			Math.random() * 0x10000 /* 65536 */
-			).toString(16);
-		};
-
-		return (
-		S4() + S4() + "-" +
-		S4() + "-" +
-		S4() + "-" +
-		S4() + "-" +
-		S4() + S4() + S4()
-		);
 	}
 }
