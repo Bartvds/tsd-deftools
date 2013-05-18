@@ -26,12 +26,17 @@ module tsdimport {
 				return value.dependencies.length > 0;
 			})
 		}
-		/*isDependency():HeaderData[] {
-			var deps:HeaderData[] = [];
-			return _(this.parsed).each((value:HeaderData) => {
-				return value.dependencies.length > 0;
-			})
-		}*/
+		isDependency():HeaderData[] {
+			var ret:HeaderData[] = [];
+			return _(this.parsed).reduce((ret:HeaderData[], value:HeaderData) => {
+				_(value.dependencies).forEach((dep:HeaderData) => {
+					if (ret.indexOf(dep) < 0) {
+						ret.push(dep);
+					}
+				});
+				return ret;
+			}, ret);
+		}
 	}
 
 	export class DefinitionImporter {

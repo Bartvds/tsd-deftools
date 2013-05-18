@@ -577,6 +577,17 @@ var tsdimport;
                 return value.dependencies.length > 0;
             });
         };
+        ImportResult.prototype.isDependency = function () {
+            var ret = [];
+            return _(this.parsed).reduce(function (ret, value) {
+                _(value.dependencies).forEach(function (dep) {
+                    if(ret.indexOf(dep) < 0) {
+                        ret.push(dep);
+                    }
+                });
+                return ret;
+            }, ret);
+        };
         return ImportResult;
     })();
     tsdimport.ImportResult = ImportResult;    
@@ -849,9 +860,11 @@ var tsdimport;
             console.log('parsed(): ' + util.inspect(res.parsed, false, 8));
             console.log('error(): ' + util.inspect(res.error, false, 8));
             console.log('hasDependency(): ' + util.inspect(res.hasDependency(), false, 8));
+            console.log('isDependency(): ' + util.inspect(res.isDependency(), false, 8));
             console.log('parsed: ' + res.parsed.length);
             console.log('error: ' + res.error.length);
             console.log('hasDependency(): ' + res.hasDependency().length);
+            console.log('isDependency(): ' + res.isDependency().length);
         });
     });
     expose.add('createUnlisted', function () {

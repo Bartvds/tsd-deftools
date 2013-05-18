@@ -39,9 +39,11 @@ module tsdimport {
 			console.log('parsed(): ' + util.inspect(res.parsed, false, 8));
 			console.log('error(): ' + util.inspect(res.error, false, 8));
 			console.log('hasDependency(): ' + util.inspect(res.hasDependency(), false, 8));
+			console.log('isDependency(): ' + util.inspect(res.isDependency(), false, 8));
 			console.log('parsed: ' + res.parsed.length);
 			console.log('error: ' + res.error.length);
 			console.log('hasDependency(): ' + res.hasDependency().length);
+			console.log('isDependency(): ' + res.isDependency().length);
 		});
 	});
 
