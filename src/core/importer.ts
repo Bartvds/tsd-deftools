@@ -11,6 +11,7 @@ module tsdimport {
 	var agent:SuperAgent = require('superagent');
 
 	var dependency = /^\.\.\/([\w _-]+)\/([\w _-]+)\.d\.ts$/
+	var definition = /^([\w _-]+)\.d\.ts$/
 
 	export class ImportResult {
 		error:any[] = [];
@@ -28,13 +29,15 @@ module tsdimport {
 
 		}
 
-		loadDef(name:string, res:ImportResult, callback:(err, data?) => void) {
-			var src = path.resolve(this.repos.defs + name + '/' + name + '.d.ts');
+		loadDef(def:Def, res:ImportResult, callback:(err, data?) => void) {
+			var src = path.resolve(this.repos.defs + def.project + '/' + def.name + '.d.ts');
 			var self:DefinitionImporter = this;
 
-			if (res.map.hasOwnProperty(name)) {
-				console.log('from cache: ' + name);
-				return callback(null, res.map[name]);
+			var key = def.combi();
+
+			if (res.map.hasOwnProperty(key)) {
+				console.log('from cache: ' + key);
+				return callback(null, res.map[key]);
 			}
 
 			fs.readFile(src, 'utf-8', (err, source) => {
@@ -43,19 +46,19 @@ module tsdimport {
 				}
 
 				var parser = new HeaderParser();
-				var data = parser.parse(source)
+				var data = parser.parse(def, source)
 
 				if (!data) {
-					return callback([<any>name, 'bad data']);
+					return callback([<any>key, 'bad data']);
 				}
 				if (data.errors.length > 0) {
-					return callback([<any>name, src, data.errors]);
+					return callback([<any>def, src, data.errors]);
 				}
 				if (!data.isValid()) {
-					return callback([<any>name, 'invalid data']);
+					return callback([<any>def, 'invalid data']);
 				}
 				if (data) {
-					res.map[data.name] = data;
+					res.map[key] = data;
 				}
 				//console.log(util.inspect(data, false, 6));
 
@@ -63,14 +66,14 @@ module tsdimport {
 			});
 		}
 
-		parseDefinitions(projects:string[], finish:(err?, res?:ImportResult) => void) {
+		parseDefinitions(projects:Def[], finish:(err?, res?:ImportResult) => void) {
 			var self:DefinitionImporter = this;
 
 			var res = new ImportResult();
 
-			async.forEach(projects, (name, callback:(err?, data?) => void) => {
+			async.forEach(projects, (def:Def, callback:(err?, data?) => void) => {
 
-				self.loadDef(name, res, (err?:any, data?:HeaderData) => {
+				self.loadDef(def, res, (err?:any, data?:HeaderData) => {
 					if (err) {
 						//console.log([<any>'err', err]);
 						res.error.push(err);
@@ -90,29 +93,38 @@ module tsdimport {
 
 						async.forEach(data.references, (ref, callback:(err?, data?) => void) => {
 
-							var match = ref.match(dependency);
+							var match, dep;
+							match= ref.match(dependency);
 							if (match && match.length >= 3) {
-								if (match[1] && match[2]) {
-									//console.log('depencency: ' + match[1]);
-
-									self.loadDef(match[1], res, (err?:any, sub?:HeaderData) => {
-										if (err) {
-											res.error.push(err);
-											return callback(null);
-										}
-										if (!sub) {
-											res.error.push(['cannot load dependency', ref]);
-											return callback(null);
-										}
-										//console.log('save dependency: ' + match[1]);
-										//console.log('save in: ' + data.name);
-										data.dependencies.push(sub);
-										return callback(null, data);
-									});
-									return;
+								dep = new Def(match[1], match[2]);
+							}
+							else {
+								match= ref.match(definition);
+								if (match && match.length >= 2) {
+									dep = new Def(def.project, match[1]);
 								}
 							}
-							return callback(['bad reference', ref]);
+
+							if (dep) {
+								//console.log('depencency: ' + match[1]);
+								self.loadDef(dep, res, (err?:any, sub?:HeaderData) => {
+									if (err) {
+										res.error.push(err);
+										return callback(null);
+									}
+									if (!sub) {
+										res.error.push(['cannot load dependency', ref]);
+										return callback(null);
+									}
+									//console.log('save dependency: ' + match[1]);
+									//console.log('save in: ' + data.name);
+									data.dependencies.push(sub);
+									return callback(null, data);
+								});
+								return;
+
+							}
+							return callback(['bad reference', def.project, def.name, ref]);
 
 						}, (err) => {
 							//console.log('looped references');

@@ -15,11 +15,20 @@ module tsdimport {
 	var isJson = /\.json$/;
 	var isDef = /\.d\.ts$/;
 
+	export class Def {
+		constructor(public project:string, public name:string){
+
+		}
+		combi():string {
+			return this.project + '/' + this.name;
+		}
+	}
 	export class CompareResult {
-		unlisted:string[] = [];
+		unlisted:Def[] = [];
+		defs:Def[] = [];
+
 		notDefs:string[] = [];
 		tsd:string[] = [];
-		defs:string[] = [];
 	}
 	export class DefinitionComparer {
 
@@ -66,7 +75,7 @@ module tsdimport {
 												return callback(false);
 											}
 											//console.log('-> ' + sub);
-											ret.push(name);
+											ret.push(new Def(file, name.replace(isDef, '')));
 											callback(null);
 										});
 									}, (err) =>{
@@ -94,14 +103,17 @@ module tsdimport {
 			},
 			(err, results) => {
 				var res = new CompareResult();
-				res.unlisted = _(results.defs).filter((value) => {
-					return results.tsd.indexOf(value) < 0;
+				res.unlisted = _(results.defs).filter((value:Def) => {
+					return _(results.tsd).some((t) => {
+						return value.name === t;
+					})
 				});
-				res.notDefs = _(results.tsd).filter((value) => {
-					return results.defs.indexOf(value) < 0;
-				});
-				res.tsd = _(results.tsd).toArray();
 				res.defs = _(results.defs).toArray();
+
+				res.notDefs = _(results.tsd).filter((value:Def) => {
+					return results.defs.indexOf(value.name) < 0;
+				});
+				res.tsd = results.tsd;
 
 				console.log('tsd %d', res.tsd.length);
 				console.log('defs %d', res.defs.length);

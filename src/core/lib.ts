@@ -10,6 +10,7 @@ module tsdimport {
 	export class Repos {
 		constructor(public defs:string, public tsd:string, public out:string) {
 
+			//let's check these pedantically
 			if (!this.defs) {
 				throw('missing local')
 			}
@@ -19,6 +20,7 @@ module tsdimport {
 			if (!this.out) {
 				throw('missing out')
 			}
+
 			this.defs = path.resolve(this.defs).replace(trailSlash, '$1/');
 			this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
 			this.out = path.resolve(this.out).replace(trailSlash, '$1/');
@@ -38,6 +40,7 @@ module tsdimport {
 	export class HeaderData {
 		name:string = '';
 		version:string = '*';
+		submodule:string = '';
 		description:string = '';
 		projectUrl:string = '';
 
@@ -49,9 +52,13 @@ module tsdimport {
 		errors:any[] = [];
 		references:any[] = [];
 		dependencies:any[] = [];
+		constructor(public def:Def){
+
+		}
 
 		getDefUrl():string {
-			return this.reposUrl + this.name.toLowerCase() + '/' + this.name.toLowerCase() + '.d.ts';
+			if (!this.def) return '';
+			return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
 		}
 
 		isValid():bool {
@@ -75,17 +82,17 @@ module tsdimport {
 	export class HeaderParser {
 		//[<\[\{\(]? [\)\}\]>]?
 
-		nameVersion = /^[ \t]*\/\/[ \t]*Type definitions[\w ]+:?[ \t]+([\w\._\-]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*$/gm;
-		labelUrl = /^[ \t]*\/\/[ \t]*([\w _-]+):?[ \t]+[<\[\{\(]?(http[\S]*)[ \t]*$/gm;
-		authorNameUrl = /^[ \t]*\/\/[ \t]*Definitions[ \t\w]+:[ \t]+([\w \t]+[\w]+)[ \t]*[<\[\{\(]?(http[\w:\/\\\._-]+)[\)\}\]>]?[ \t]*$/gm;
-		referencePath = /^[ \t]*\/\/\/[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
+		nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
+		labelUrl = /^[ \t]*\/\/\/?[ \t]*([\w _-]+):?[ \t]+[<\[\{\(]?(http[\S]*)[ \t]*$/gm;
+		authorNameUrl = /^[ \t]*\/\/\/?[ \t]*Definitions[ \t\w]+:[ \t]+([\w \t]+[\w]+)[ \t]*[<\[\{\(]?(http[\w:\/\\\._-]+)[\)\}\]>]?[ \t]*$/gm;
+		referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
 		endSlash = /\/?$/;
 
 		constructor() {
 
 		}
 
-		parse(str:string):HeaderData {
+		parse(def:Def, str:string):HeaderData {
 			if (typeof str !== 'string') {
 				str = '' + str;
 			}
@@ -95,7 +102,7 @@ module tsdimport {
 			if (i < 0) {
 				return null;
 			}
-			var data = new HeaderData();
+			var data = new HeaderData(def);
 
 			this.nameVersion.lastIndex = i;
 			this.labelUrl.lastIndex = i;
@@ -111,6 +118,7 @@ module tsdimport {
 			else {
 				data.name = match[1];
 				data.version = match[2];
+				data.submodule =  match.length >= 3 ? match[3] : '';
 				this.labelUrl.lastIndex = match.index + match[0].length;
 			}
 

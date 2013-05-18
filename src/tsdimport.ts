@@ -38,17 +38,17 @@ module tsdimport {
 
 	}, (res:CompareResult, callback:(err?, list?:HeaderData[]) => void) => {
 		console.log('parseDefinitions');
-		console.log(res.defs);
-		//importer.parseDefinitions(res.unlisted, callback);
+		//console.log(res.defs);
+		importer.parseDefinitions(res.defs, callback);
 
 	}, (res:ImportResult, callback:(err?) => void) => {
-		console.log(res.parsed);
-		console.log(res.error);
+		//console.log(res.parsed);
+		//console.log(res.error);
 
-		console.log('parsed: ' + res.parsed.length);
 		console.log('error: ' + res.error.length);
+		console.log('parsed: ' + res.parsed.length);
 		console.log('exportDefinitions');
-		//exporter.exportDefinitions(list, callback);
+		exporter.exportDefinitions(res.parsed, callback);
 		callback();
 	}], (err, data) => {
 		console.log('complete');
