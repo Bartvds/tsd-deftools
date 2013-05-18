@@ -3,7 +3,7 @@
 module tsdimport {
 
 	export class ParseError {
-		constructor(public message:string, public test?:string) {
+		constructor(public message:string = '', public text?:string = '') {
 
 		}
 	}
@@ -18,28 +18,47 @@ module tsdimport {
 		referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
 		endSlash = /\/?$/;
 
+		cursor = 0;
+
 		constructor() {
 
 		}
 
-		parse(def:Def, str:string):HeaderData {
+		reset() {
+			this.cursor = 0;
+		}
+
+		moveCursor(index) {
+			this.cursor += index;
+			this.applyCursor();
+		}
+
+		setCursor(index) {
+			this.cursor = index;
+			this.applyCursor();
+		}
+
+		applyCursor() {
+			this.nameVersion.lastIndex = this.cursor;
+			this.labelUrl.lastIndex = this.cursor;
+			this.authorNameUrl.lastIndex = this.cursor;
+			this.description.lastIndex = this.cursor;
+			this.referencePath.lastIndex = this.cursor;
+		}
+
+		parse(data:HeaderData, str:string):HeaderData {
+			//buffers.. do we need it or just voodoo zombie cargo cult mode code?
 			if (typeof str !== 'string') {
 				str = '' + str;
 			}
-			var data = new HeaderData(def);
 
-			var i = str.indexOf('//');
+			var cursor = str.indexOf('//');
 			var len = str.length;
-			if (i < 0) {
+			if (cursor < 0) {
 				data.errors.push(new ParseError('zero comment lines'));
 				return data;
 			}
-
-			this.nameVersion.lastIndex = i;
-			this.labelUrl.lastIndex = i;
-			this.authorNameUrl.lastIndex = i;
-			this.description.lastIndex = i;
-			this.referencePath.lastIndex = i;
+			this.setCursor(cursor);
 
 			var match;
 
@@ -52,7 +71,8 @@ module tsdimport {
 				data.name = match[1];
 				data.version = match[2];
 				data.submodule = match.length >= 3 && match[3] ? match[3] : '';
-				this.labelUrl.lastIndex = match.index + match[0].length;
+
+				this.setCursor(match.index + match[0].length);
 			}
 
 			match = this.labelUrl.exec(str);
@@ -62,7 +82,7 @@ module tsdimport {
 			}
 			else {
 				data.projectUrl = match[2];
-				this.authorNameUrl.lastIndex = match.index + match[0].length;
+				this.setCursor(match.index + match[0].length);
 			}
 
 			match = this.authorNameUrl.exec(str);
@@ -73,7 +93,7 @@ module tsdimport {
 			else {
 				data.authorName = match[1];
 				data.authorUrl = match[2];
-				this.labelUrl.lastIndex = match.index + match[0].length;
+				this.setCursor(match.index + match[0].length);
 			}
 
 			match = this.labelUrl.exec(str);
@@ -84,6 +104,7 @@ module tsdimport {
 			else {
 				//data.reposName = match[1];
 				data.reposUrl = match[2].replace(this.endSlash, '/');
+				this.setCursor(match.index + match[0].length);
 			}
 
 			this.referencePath.lastIndex = 0;

@@ -64,14 +64,14 @@ var tsdimport;
             this.projectUrl = '';
             this.authorName = '';
             this.authorUrl = '';
-            this.reposName = '';
             this.reposUrl = '';
             this.errors = [];
             this.references = [];
             this.dependencies = [];
+            this.source = '';
         }
         HeaderData.prototype.getDefUrl = function () {
-            if(!this.def) {
+            if(!this.def || !this.reposUrl) {
                 return '';
             }
             return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
@@ -202,9 +202,11 @@ var tsdimport;
 var tsdimport;
 (function (tsdimport) {
     var ParseError = (function () {
-        function ParseError(message, test) {
+        function ParseError(message, text) {
+            if (typeof message === "undefined") { message = ''; }
+            if (typeof text === "undefined") { text = ''; }
             this.message = message;
-            this.test = test;
+            this.text = text;
         }
         return ParseError;
     })();
@@ -217,24 +219,40 @@ var tsdimport;
             this.description = /^[ \t]*\/\/\/?[ \t]*Description[ \t]*:[ \t]+([\S *]*\S)[ \t]*$/gm;
             this.referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
             this.endSlash = /\/?$/;
+            this.cursor = 0;
         }
-        HeaderParser.prototype.parse = function (def, str) {
+        HeaderParser.prototype.reset = function () {
+            this.cursor = 0;
+        };
+        HeaderParser.prototype.moveCursor = function (index) {
+            this.cursor += index;
+            this.applyCursor();
+        };
+        HeaderParser.prototype.setCursor = function (index) {
+            this.cursor = index;
+            this.applyCursor();
+        };
+        HeaderParser.prototype.applyCursor = function () {
+            this.nameVersion.lastIndex = this.cursor;
+            this.labelUrl.lastIndex = this.cursor;
+            this.authorNameUrl.lastIndex = this.cursor;
+            this.description.lastIndex = this.cursor;
+            this.referencePath.lastIndex = this.cursor;
+        };
+        HeaderParser.prototype.parse = function (data, str) {
             if(typeof str !== 'string') {
                 str = '' + str;
             }
-            var data = new tsdimport.HeaderData(def);
-            var i = str.indexOf('//');
+            this.reset();
+            var cursor = str.indexOf('//');
             var len = str.length;
-            if(i < 0) {
+            if(cursor < 0) {
                 data.errors.push(new ParseError('zero comment lines'));
                 return data;
             }
-            this.nameVersion.lastIndex = i;
-            this.labelUrl.lastIndex = i;
-            this.authorNameUrl.lastIndex = i;
-            this.description.lastIndex = i;
-            this.referencePath.lastIndex = i;
+            this.setCursor(cursor);
             var match;
+            var next;
             match = this.nameVersion.exec(str);
             if(!match || match.length < 3) {
                 data.errors.push(new ParseError('unparsable name/version line'));
@@ -243,7 +261,7 @@ var tsdimport;
                 data.name = match[1];
                 data.version = match[2];
                 data.submodule = match.length >= 3 && match[3] ? match[3] : '';
-                this.labelUrl.lastIndex = match.index + match[0].length;
+                this.setCursor(match.index + match[0].length);
             }
             match = this.labelUrl.exec(str);
             if(!match || match.length < 2) {
@@ -251,7 +269,7 @@ var tsdimport;
                 return data;
             } else {
                 data.projectUrl = match[2];
-                this.authorNameUrl.lastIndex = match.index + match[0].length;
+                this.setCursor(match.index + match[0].length);
             }
             match = this.authorNameUrl.exec(str);
             if(!match || match.length < 3) {
@@ -260,7 +278,7 @@ var tsdimport;
             } else {
                 data.authorName = match[1];
                 data.authorUrl = match[2];
-                this.labelUrl.lastIndex = match.index + match[0].length;
+                this.setCursor(match.index + match[0].length);
             }
             match = this.labelUrl.exec(str);
             if(!match || match.length < 3) {
@@ -268,6 +286,7 @@ var tsdimport;
                 return data;
             } else {
                 data.reposUrl = match[2].replace(this.endSlash, '/');
+                this.setCursor(match.index + match[0].length);
             }
             this.referencePath.lastIndex = 0;
             while(match = this.referencePath.exec(str)) {
@@ -303,56 +322,53 @@ var tsdimport;
     var DefinitionImporter = (function () {
         function DefinitionImporter(repos) {
             this.repos = repos;
+            this.parser = new tsdimport.HeaderParser();
         }
-        DefinitionImporter.prototype.loadDef = function (def, res, callback) {
-            var src = path.resolve(this.repos.defs + def.project + '/' + def.name + '.d.ts');
+        DefinitionImporter.prototype.loadData = function (data, callback) {
+            var src = path.resolve(this.repos.defs + data.def.project + '/' + data.def.name + '.d.ts');
+            var key = data.def.combi();
             var self = this;
-            var key = def.combi();
             fs.readFile(src, 'utf-8', function (err, source) {
                 if(err) {
-                    return callback(err);
+                    data.errors.push(new tsdimport.ParseError('cannot load source', err));
+                    return callback(null, data);
                 }
-                var parser = new tsdimport.HeaderParser();
-                var data = parser.parse(def, source);
-                if(!data) {
-                    return callback([
-                        key, 
-                        'bad data'
-                    ]);
-                }
+                self.parser.parse(data, source);
+                data.source = src;
                 if(data.errors.length > 0) {
-                    return callback([
-                        def, 
-                        src, 
-                        data.errors
-                    ]);
+                    return callback(null, data);
                 }
                 if(!data.isValid()) {
-                    return callback([
-                        def, 
-                        'invalid data'
-                    ]);
+                    data.errors.push(new tsdimport.ParseError('invalid fields'));
+                    return callback(null, data);
                 }
                 return callback(null, data);
             });
         };
         DefinitionImporter.prototype.parseDefinitions = function (projects, finish) {
-            var self = this;
             var res = new ImportResult();
+            var self = this;
             async.forEach(projects, function (def, callback) {
                 var key = def.combi();
-                res.map[key] = def;
-                self.loadDef(def, res, function (err, data) {
+                var data = new tsdimport.HeaderData(def);
+                res.map[key] = data;
+                self.loadData(data, function (err, data) {
                     if(err) {
-                        res.error.push(err);
-                        return callback(null);
+                        console.log([
+                            'err', 
+                            err
+                        ]);
+                        return callback(err);
                     }
                     if(!data) {
-                        res.error.push('no data');
                         return callback('null data');
                     }
+                    if(!data.isValid()) {
+                        res.error.push(data);
+                        return callback(null, data);
+                    }
                     res.parsed.push(data);
-                    if(data.references.length > 0) {
+                    if(data.references.length > 100000000) {
                         async.forEach(data.references, function (ref, callback) {
                             var match, dep;
                             match = ref.match(dependency);
@@ -365,22 +381,22 @@ var tsdimport;
                                 }
                             }
                             if(dep) {
+                                var sub = new tsdimport.HeaderData(dep);
                                 var key = dep.combi();
                                 if(res.map.hasOwnProperty(key)) {
                                     return callback(null, res.map[key]);
                                 }
-                                self.loadDef(dep, res, function (err, sub) {
+                                self.loadData(sub, function (err, sub) {
                                     if(err) {
-                                        res.error.push(err);
-                                        return callback(null);
+                                        if(sub) {
+                                            sub.errors.push(new tsdimport.ParseError('cannot load dependency', err));
+                                        }
+                                        return callback(err);
                                     }
                                     if(!sub) {
-                                        res.error.push([
-                                            'cannot load dependency', 
-                                            ref
-                                        ]);
-                                        return callback(null);
+                                        return callback('cannot load dependency');
                                     }
+                                    res.map[key] = sub;
                                     data.dependencies.push(sub);
                                     return callback(null, data);
                                 });

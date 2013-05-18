@@ -65,19 +65,20 @@ module tsdimport {
 
 		authorName:string = '';
 		authorUrl:string = '';
-		reposName:string = '';
+		//reposName:string = '';
 		reposUrl:string = '';
 
-		errors:any[] = [];
-		references:any[] = [];
-		dependencies:any[] = [];
+		errors:ParseError[] = [];
+		references:string[] = [];
+		dependencies:HeaderData[] = [];
+		source:string = '';
 
 		constructor(public def:Def) {
 
 		}
 
 		getDefUrl():string {
-			if (!this.def) return '';
+			if (!this.def || !this.reposUrl) return '';
 			return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
 		}
 
