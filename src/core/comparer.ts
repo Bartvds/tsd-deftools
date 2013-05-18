@@ -28,7 +28,7 @@ module tsdimport {
 		return arr;
 	}
 
-	function getDefCollide(arr:Def[]):Object {
+	function getDefCollide(arr:Def[]):DefMap {
 		var map:Object = _.reduce(arr, (memo:Object, def:Def) => {
 			if (!memo.hasOwnProperty(def.name)) {
 				memo[def.name] = [def];
@@ -39,7 +39,7 @@ module tsdimport {
 			return memo;
 		}, {});
 
-		var ret = {};
+		var ret:DefMap = {};
 		_.each(map, (value:any, key) => {
 			if (value.length > 1) {
 				ret[key] = value;
@@ -57,6 +57,9 @@ module tsdimport {
 			return this.project + '/' + this.name;
 		}
 	}
+	export interface DefMap {
+		[name: string]: Def;
+	}
 	export class CompareResult {
 		repoAll:Def[] = [];
 		repoUnlisted:Def[] = [];
@@ -64,8 +67,8 @@ module tsdimport {
 		tsdAll:string[] = [];
 		tsdNotInRepo:string[] = [];
 
-		repoAllDupes:Object = {};
-		repoUnlistedDupes:Object = {};
+		repoAllDupes:DefMap = {};
+		repoUnlistedDupes:DefMap = {};
 		tsdAllDupes:string[] = [];
 		tsdNotInRepoDupes:string[] = [];
 
