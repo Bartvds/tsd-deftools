@@ -2,6 +2,14 @@
 
 module tsdimport {
 
+	export interface ConfPaths {
+		tsd:string;
+		out:string;
+		tmp:string;
+		DefinitlyTyped:string;
+		local:string;
+	}
+
 	var trailSlash = /(\w)(\/?)$/;
 
 	var path = require('path');

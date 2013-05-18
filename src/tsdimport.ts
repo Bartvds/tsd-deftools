@@ -13,7 +13,7 @@ module tsdimport {
 	var _:UnderscoreStatic = require('underscore');
 	var agent:SuperAgent = require('superagent');
 
-	var paths;
+	var paths:ConfPaths;
 	var tmp = path.resolve('./tsd-deftools-path.json');
 	try {
 		paths = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
@@ -27,7 +27,7 @@ module tsdimport {
 		fs.mkdir(paths.tmp);
 	}
 
-	var repos = new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp);
+	var repos = new Repos(paths.local, paths.tsd, paths.tmp);
 	var projects = ['underscore', 'easeljs'];
 
 	var importer = new DefinitionImporter(repos);
