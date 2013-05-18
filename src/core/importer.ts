@@ -12,6 +12,15 @@ module tsdimport {
 
 	var dependency = /^\.\.\/([\w _-]+)\/([\w _-]+)\.d\.ts$/
 
+	export class ImportResult {
+		error:any[] = [];
+		parsed:HeaderData[] = [];
+		map:Object = {};
+
+		constructor() {
+		}
+	}
+
 	export class DefinitionImporter {
 
 
@@ -19,15 +28,13 @@ module tsdimport {
 
 		}
 
-		loadDef(name:string, map:any, callback:(err, data?) => void) {
+		loadDef(name:string, res:ImportResult, callback:(err, data?) => void) {
 			var src = path.resolve(this.repos.defs + name + '/' + name + '.d.ts');
 			var self:DefinitionImporter = this;
-			console.log('name: ' + name);
-			console.log('src: ' + src);
 
-			if (map.hasOwnProperty(name)) {
+			if (res.map.hasOwnProperty(name)) {
 				console.log('from cache: ' + name);
-				return callback(null, map[name]);
+				return callback(null, res.map[name]);
 			}
 
 			fs.readFile(src, 'utf-8', (err, source) => {
@@ -48,61 +55,57 @@ module tsdimport {
 					return callback([<any>name, 'invalid data']);
 				}
 				if (data) {
-					map[data.name] = data;
+					res.map[data.name] = data;
 				}
-
 				//console.log(util.inspect(data, false, 6));
-
-				/*var encoder = new Encode_V2();
-				var v2 = encoder.encode(data);
-
-				console.log(util.inspect(v2, false, 6));*/
 
 				return callback(null, data);
 			});
 		}
 
-		parseDefinitions(projects:string[], finish:(err?, map?:HeaderData[]) => void) {
+		parseDefinitions(projects:string[], finish:(err?, res?:ImportResult) => void) {
 			var self:DefinitionImporter = this;
-			var map = {};
-			var res:HeaderData[] = [];
+
+			var res = new ImportResult();
 
 			async.forEach(projects, (name, callback:(err?, data?) => void) => {
 
-				self.loadDef(name, map, (err?:any, data?:HeaderData) => {
-					console.log('LOADED ' +  name);
+				self.loadDef(name, res, (err?:any, data?:HeaderData) => {
 					if (err) {
-						console.log([<any>'err', err]);
-						console.log(err);
+						//console.log([<any>'err', err]);
+						res.error.push(err);
 						return callback(null);
 						//return callback(err);
 					}
 					if (!data) {
-						console.log('no data');
+						res.error.push('no data');
 						return callback('null data');
 					}
-					res.push(data);
+
+					res.parsed.push(data);
 
 					if (data.references.length > 0) {
 
-						console.log('references: ' + data.references);
+						//console.log('references: ' + data.references);
 
 						async.forEach(data.references, (ref, callback:(err?, data?) => void) => {
 
 							var match = ref.match(dependency);
 							if (match && match.length >= 3) {
 								if (match[1] && match[2]) {
-									console.log('depencency: ' + match[1]);
+									//console.log('depencency: ' + match[1]);
 
-									self.loadDef(match[1], map, (err?:any, sub?:HeaderData) => {
+									self.loadDef(match[1], res, (err?:any, sub?:HeaderData) => {
 										if (err) {
-											return callback(err);
+											res.error.push(err);
+											return callback(null);
 										}
 										if (!sub) {
-											return callback(['cannot load dependency', ref]);
+											res.error.push(['cannot load dependency', ref]);
+											return callback(null);
 										}
-										console.log('save dependency: ' + match[1]);
-										console.log('save in: ' + data.name);
+										//console.log('save dependency: ' + match[1]);
+										//console.log('save in: ' + data.name);
 										data.dependencies.push(sub);
 										return callback(null, data);
 									});
@@ -112,7 +115,7 @@ module tsdimport {
 							return callback(['bad reference', ref]);
 
 						}, (err) => {
-							console.log('looped references');
+							//console.log('looped references');
 							callback(err);
 						});
 					} else {
@@ -121,6 +124,7 @@ module tsdimport {
 				});
 			}, (err) => {
 				if (err) {
+					console.log('err ' + err);
 					return finish(err);
 				}
 				finish(null, res);

@@ -72,7 +72,6 @@ module tsdimport {
 		}
 	}
 
-
 	export class HeaderParser {
 		//[<\[\{\(]? [\)\}\]>]?
 

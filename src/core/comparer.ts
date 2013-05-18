@@ -14,13 +14,19 @@ module tsdimport {
 	var ignoreFile = /^[\._]/;
 	var isJson = /\.json$/;
 
+	export class CompareResult {
+		unlisted:string[] = [];
+		notDefs:string[] = [];
+		tsd:string[] = [];
+		defs:string[] = [];
+	}
 	export class DefinitionComparer {
 
 		constructor(public repos:Repos) {
 
 		}
 
-		findUnpackaged(finish:(err, names:string[]) => void) {
+		compare(finish:(err, res:CompareResult) => void) {
 			var self:DefinitionComparer = this;
 			var ret = [];
 
@@ -67,13 +73,22 @@ module tsdimport {
 				}
 			},
 			(err, results) => {
-				var unpacked = _(results.defs).filter((value) => {
+				var res = new CompareResult();
+				res.unlisted = _(results.defs).filter((value) => {
 					return results.tsd.indexOf(value) < 0;
 				});
-				console.log('tsd %d', results.tsd.length);
-				console.log('defs %d', results.defs.length);
-				console.log('unlisted %d', unpacked.length);
-				finish(err, unpacked);
+				res.notDefs = _(results.tsd).filter((value) => {
+					return results.defs.indexOf(value) < 0;
+				});
+				res.tsd = _(results.tsd).toArray();
+				res.defs = _(results.defs).toArray();
+
+				console.log('tsd %d', res.tsd.length);
+				console.log('defs %d', res.defs.length);
+				console.log('notDefs %d', res.notDefs.length);
+				console.log('unlisted %d', res.unlisted.length);
+
+				finish(err, res);
 			});
 		}
 	}

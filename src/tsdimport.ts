@@ -34,25 +34,29 @@ module tsdimport {
 
 	async.waterfall([(callback:(err) => void) => {
 		console.log('findUnpackaged');
-		comparer.findUnpackaged(callback);
+		comparer.compare(callback);
 
-	}, (unpacked:string[], callback:(err?, list?:HeaderData[]) => void) => {
-		console.log(unpacked);
+	}, (res:CompareResult, callback:(err?, list?:HeaderData[]) => void) => {
 		console.log('parseDefinitions');
-		importer.parseDefinitions(unpacked, callback);
+		console.log(res.notDefs);
+		importer.parseDefinitions(res.unlisted, callback);
 
-	}, (list:HeaderData[], callback:(err?) => void) => {
-		console.log(list);
+	}, (res:ImportResult, callback:(err?) => void) => {
+		console.log(res.parsed);
+		console.log(res.error);
+
+		console.log('parsed: ' + res.parsed.length);
+		console.log('error: ' + res.error.length);
 		console.log('exportDefinitions');
 		//exporter.exportDefinitions(list, callback);
 		callback();
 	}], (err, data) => {
 		console.log('complete');
-		console.log(data);
 		if (err) {
-			console.log(err);
+			//console.log(err);
 			return;
 		}
+		console.log(data);
 	});
 }
 
