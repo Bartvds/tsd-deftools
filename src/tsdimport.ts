@@ -38,8 +38,8 @@ module tsdimport {
 
 	}, (res:CompareResult, callback:(err?, list?:HeaderData[]) => void) => {
 		console.log('parseDefinitions');
-		console.log(res.notDefs);
-		importer.parseDefinitions(res.unlisted, callback);
+		console.log(res.defs);
+		//importer.parseDefinitions(res.unlisted, callback);
 
 	}, (res:ImportResult, callback:(err?) => void) => {
 		console.log(res.parsed);

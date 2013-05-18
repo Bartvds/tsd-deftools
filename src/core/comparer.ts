@@ -13,6 +13,7 @@ module tsdimport {
 	var stripExt = /(\.[\w_-]+)$/;
 	var ignoreFile = /^[\._]/;
 	var isJson = /\.json$/;
+	var isDef = /\.d\.ts$/;
 
 	export class CompareResult {
 		unlisted:string[] = [];
@@ -36,7 +37,8 @@ module tsdimport {
 						if (err) return callback(err);
 
 						//check if these are folders containing a definition
-						async.filter(files, (file, callback:(pass) => void) => {
+						var ret = [];
+						async.forEach(files, (file, callback:(err) => void) => {
 							if (ignoreFile.test(file)) {
 								return callback(false);
 							}
@@ -48,15 +50,33 @@ module tsdimport {
 								if (!stats.isDirectory()) {
 									return callback(false);
 								}
-								fs.exists(src + '/' + file + '.d.ts', (exists) => {
+								fs.readdir(src, (err, files:string[]) => {
 									if (err) return callback(false);
-									//yess!
-									callback(exists);
+
+									files = _(files).filter((name) => {
+										return isDef.test(name);
+									});
+
+									async.forEach(files, (name, callback:(err) => void) => {
+										//src + '/' + file + '/' + sub;
+										var tmp =  path.join(src, name);
+										fs.stat(tmp, (err, stats) => {
+											if (err) return callback(false);
+											if (stats.isDirectory()) {
+												return callback(false);
+											}
+											//console.log('-> ' + sub);
+											ret.push(name);
+											callback(null);
+										});
+									}, (err) =>{
+										callback(err);
+									});
 								});
 							});
 
-						}, (files) => {
-							callback(null, files);
+						}, (err) => {
+							callback(err, ret);
 						});
 					});
 				},
