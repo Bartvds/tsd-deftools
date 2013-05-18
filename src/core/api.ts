@@ -12,7 +12,6 @@ module tsdimport {
 	var util = require('util');
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
-	//var agent:SuperAgent = require('superagent');
 
 	export class AppAPI {
 

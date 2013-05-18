@@ -9,7 +9,6 @@ module tsdimport {
 	var util = require('util');
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
-	var agent:SuperAgent = require('superagent');
 
 	var dependency = /^\.\.\/([\w _-]+)\/([\w _-]+)\.d\.ts$/
 	var definition = /^([\w _-]+)\.d\.ts$/
@@ -142,12 +141,6 @@ module tsdimport {
 				}
 				finish(null, res);
 			});
-		}
-
-		loadDescription(data:HeaderData, callback:(err) => void) {
-			if (data.description) {
-				callback(null);
-			}
 		}
 	}
 }

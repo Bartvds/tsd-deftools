@@ -12,7 +12,6 @@ module tsdimport {
 	var util = require('util');
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
-	//var agent:SuperAgent = require('superagent');
 
 	export class Expose {
 
@@ -28,7 +27,10 @@ module tsdimport {
 		execute(id:string) {
 			if (!this.map.hasOwnProperty(id)) {
 				console.log('nothing exposed as '+ id);
+				return;
 			}
+
+			console.log('-> execute: '+ id);
 			var f = this.map[id];
 			f.call(null);
 		}

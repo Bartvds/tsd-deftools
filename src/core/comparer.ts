@@ -9,12 +9,19 @@ module tsdimport {
 	var util = require('util');
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
-	var agent:SuperAgent = require('superagent');
 
-	var stripExt = /(\.[\w_-]+)$/;
-	var ignoreFile = /^[\._]/;
-	var isJson = /\.json$/;
-	var isDef = /\.d\.ts$/;
+	export class Def {
+		constructor(public project:string, public name:string) {
+
+		}
+		combi():string {
+			return this.project + '/' + this.name;
+		}
+	}
+
+	export interface DefMap {
+		[name: string]: Def;
+	}
 
 	export function getDupes(arr:string[]):string[] {
 		var uni = _.unique(arr);
@@ -49,19 +56,6 @@ module tsdimport {
 		return ret;
 	}
 
-	export class Def {
-		constructor(public project:string, public name:string) {
-
-		}
-
-		combi():string {
-			return this.project + '/' + this.name;
-		}
-	}
-
-	export interface DefMap {
-		[name: string]: Def;
-	}
 
 	export class CompareResult {
 		repoAll:Def[] = [];
@@ -102,27 +96,20 @@ module tsdimport {
 		}
 
 		compare(finish:(err, res:CompareResult) => void) {
-
 			var self:DefinitionComparer = this;
-			var repo = new LoadRepo(this.repos, this.info);
-			var tsd = new LoadTsd(this.repos, this.info);
 
 			async.parallel({
 				defs: (callback) => {
-					repo.load(callback);
+					loader.loadRepoDefList(self.repos, callback);
 				},
 				tsd: (callback) => {
-					tsd.load(callback);
+					loader.loadTsdList(self.repos, callback);
 				}
 			},
 			(err, results:LoopRes) => {
 				var res = new CompareResult();
 				res.tsdAll = results.tsd;
 				res.repoAll = results.defs;
-
-				var repoNames = res.repoAllNames();
-				//console.log('repoNames');
-				//console.log(repoNames);
 
 				res.repoAllDupes = getDefCollide(res.repoAll);
 
@@ -133,18 +120,13 @@ module tsdimport {
 					return
 				}
 
-
 				res.repoUnlisted = _(res.repoAll).filter((value:Def) => {
 					return !_(results.tsd).some((t) => {
 						return value.name == t;
 					});
 				});
 
-
 				res.tsdNotInRepo = _(res.tsdAll).filter((value:string) => {
-					console.log(value);
-					return repoNames.indexOf(value) < 0;
-
 					return !_(res.repoAll).some((def) => {
 						return def.name == value;
 					});

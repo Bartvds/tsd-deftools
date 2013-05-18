@@ -21,7 +21,7 @@ module tsdimport {
 			if (!this.pkg) throw Error('no pkg');
 		}
 
-		getString():string {
+		getNameVersion():string {
 			return this.name + ' ' + this.version
 		}
 	}

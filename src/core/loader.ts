@@ -8,30 +8,27 @@ module tsdimport {
 	var util = require('util');
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
-	var agent:SuperAgent = require('superagent');
 
 	var stripExt = /(\.[\w_-]+)$/;
 	var ignoreFile = /^[\._]/;
 	var isJson = /\.json$/;
 	var isDef = /\.d\.ts$/;
 
-	export class LoadRepo {
-		constructor(public repos:Repos, public info:ToolInfo) {
-		}
+	export module loader {
 
-		load(finish:(err, res:Def[]) => void) {
-			var self:LoadRepo = this;
-			fs.readdir(self.repos.defs, (err, files:string[]) => {
+		export function loadRepoDefList(repos:Repos, finish:(err, res:Def[]) => void) {
+			fs.readdir(repos.defs, (err, files:string[]) => {
 				if (err) return finish(err, []);
 
 				var ret:Def[] = [];
+
 				//check if these are folders containing a definition
 				async.forEach(files, (file, callback:(err) => void) => {
 					if (ignoreFile.test(file)) {
 						return callback(false);
 					}
 
-					var src = path.join(self.repos.defs, file);
+					var src = path.join(repos.defs, file);
 
 					fs.stat(src, (err, stats) => {
 						if (err) return callback(false);
@@ -68,14 +65,9 @@ module tsdimport {
 				});
 			});
 		}
-	}
-	export class LoadTsd {
-		constructor(public repos:Repos, public info:ToolInfo) {
-		}
 
-		load(finish:(err, res:string[]) => void) {
-			var self:LoadTsd = this
-			fs.readdir(self.repos.tsd + 'repo_data', (err, files:string[]) => {
+		export function loadTsdList(repos:Repos, finish:(err, res:string[]) => void) {
+			fs.readdir(repos.tsd + 'repo_data', (err, files:string[]) => {
 				if (err) return finish(err, []);
 
 				finish(null, _(files).filter((value) => {
@@ -84,7 +76,6 @@ module tsdimport {
 					return value.replace(stripExt, '');
 				}));
 			});
-
 		}
 	}
 }

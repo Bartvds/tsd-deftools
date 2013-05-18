@@ -17,11 +17,11 @@ module tsdimport {
 	var paths = Config.getPaths();
 	var app:AppAPI = new AppAPI(info, new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp));
 
-	console.log('-> compare');
+	console.log();
 
 	var expose = new Expose();
 	expose.add('info', () => {
-		info
+
 	})
 	expose.add('compare', () => {
 		app.compare((err?, res?:CompareResult) => {
@@ -44,7 +44,7 @@ module tsdimport {
 	});
 
 
-	expose.execute('compare');
+	expose.execute('createUnlisted');
 }
 
 exports = (module).exports = tsdimport;

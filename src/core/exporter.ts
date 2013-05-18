@@ -10,21 +10,15 @@ module tsdimport {
 	var util = require('util');
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
-	var agent:SuperAgent = require('superagent');
-
-	var dependency = /^\.\.\/([\w _-]+)\/([\w _-]+)\.d\.ts$/
 
 	export class ExportResult {
 		created:HeaderExport[] = [];
-
 		constructor() {
 
 		}
 	}
 	export class HeaderExport {
-
 		constructor(public header:HeaderData, public path:string) {
-
 		}
 	}
 
@@ -58,15 +52,13 @@ module tsdimport {
 			});
 		}
 
-	;
-
 		exportDefinitions(list:HeaderData[], finish:(err?, res?:ExportResult) => void) {
 			var self:DefinitionExporter = this;
 			var encoder = this.getEncoder();
 			var res = new ExportResult();
 			async.forEach(list, (data:HeaderData, callback:(err?, data?) => void) => {
 
-				//console.log(data.name);
+				console.log('writeDef ' + data.name);
 				self.writeDef(data, encoder, (err?, exp?:HeaderExport) => {
 					if (err)  return callback(err);
 					if (data) {
@@ -92,7 +84,7 @@ module tsdimport {
 			var ret = {
 				"name": header.def.name,
 				"description": header.name + (header.submodule ? ' (' + header.submodule + ')' : '') + (header.submodule ? ' ' + header.submodule : ''),
-				"generated": <any> this.info.getString() + ' @ ' + new Date().toUTCString(),
+				"generated": <any> this.info.getNameVersion() + ' @ ' + new Date().toUTCString(),
 				"versions": [
 					{
 						"version": header.version,
