@@ -13,17 +13,26 @@ for now involves editing of the script, but the basic blocks are seperated for r
 - compare the definitions and tsd repo_data
 - generate tsd repo data from definition lists
 
-## Install
+## How
 
+Checkout repos
+
+Edit `./tsd-deftools-path.json` to have `tsd` and `DefinitelyTyped` pointing to root folder of their work checkouts.
+
+Open commandline in the checkout.
+
+Basic use
 ````
-npm install //pull dependencies
+node . //cli help menu
+node . <command> //command
 ````
 
-## Run
+To get development code
 ````
-grunt build //compile
-grunt execute //run script
+npm install
+````
 
-//or combine + execute
-grunt dev
+To recompile edited features
+````
+grunt build
 ````
