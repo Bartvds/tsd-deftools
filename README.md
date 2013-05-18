@@ -1,4 +1,4 @@
-# tsd-def-tools
+# tsd-deftools
 
 > developer tools to process TypeScript definitions and bulk edit tsd
 
@@ -6,12 +6,12 @@ crude, not for general consumption unless you know what you're doing
 
 ## Functionality
 
-for now involves editing of the script, but the basic blocks are seperated for re-arrangement / configuration
-
+- compare the definitions and tsd repo_data
 - list DefinitelyTyped definitions and parse standard header format
 - list tsd repo_data
-- compare the definitions and tsd repo_data
 - generate tsd repo data from definition lists
+
+Basic commands are beings exposed to cli (work in progress), so others are funcitonal but involve editing of a script.
 
 ## How
 
@@ -32,7 +32,7 @@ To get development code
 npm install
 ````
 
-To recompile edited features
+To recompile edited code
 ````
 grunt build
 ````
