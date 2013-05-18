@@ -20,22 +20,6 @@ module tsdimport {
 		constructor(public info:ToolInfo, public repos:Repos) {
 			if (!this.info) throw Error('no info');
 			if (!this.repos) throw Error('no repos');
-
-			this.init();
-		}
-
-		init() {
-
-			var tmp = path.resolve('./tsd-deftools-path.json');
-			try {
-				this.paths = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
-			}
-			catch (e) {
-				throw(e);
-			}
-			if (!fs.existsSync(this.paths.tmp)) {
-				fs.mkdir(this.paths.tmp);
-			}
 		}
 
 		compare(callback:(err?, res?:CompareResult) => void) {
