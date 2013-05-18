@@ -19,12 +19,12 @@ module.exports = function (grunt) {
 			test : ['test/_tmp.*']
 		},
 		execute: {
-			importer: {
-				src: ['build/tsd-deftool.js']
+			deftools: {
+				src: ['build/tsd-deftools.js']
 			}
 		},
 		typescript: {
-			importer: {
+			deftools: {
 				options: {
 					module: 'commonjs', //or commonjs
 					target: 'es5', //or es3
@@ -32,15 +32,15 @@ module.exports = function (grunt) {
 					declaration: false,
 					sourcemap: false
 				},
-				src: ['src/tsd-deftool.ts'],
-				dest: 'build/tsd-deftool.js'
+				src: ['src/tsd-deftools.ts'],
+				dest: 'build/tsd-deftools.js'
 			}
 		}
 	});
 
 	grunt.registerTask('default', ['build']);
-	grunt.registerTask('build', ['clean', 'typescript:importer']);
+	grunt.registerTask('build', ['clean', 'typescript:deftools']);
 
-	grunt.registerTask('dev', ['build', 'execute:importer']);
+	grunt.registerTask('dev', ['build', 'execute:deftools']);
 
 };
