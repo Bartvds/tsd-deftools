@@ -28,7 +28,8 @@ npm install
 
 Basic use
 ````
-node . //cli help menu
+node . //default (latest dev probably)
+node . help //view commands
 node . <command> //command
 ````
 
