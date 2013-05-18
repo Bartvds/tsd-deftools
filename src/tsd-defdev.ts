@@ -18,5 +18,9 @@ module tsdimport {
 	var app:AppAPI = new AppAPI(info, new Repos(paths.DefinitelyTyped, paths.tsd, paths.tmp));
 
 
-	console.log('tessst');
+	app.compare((err?, res?:CompareResult) => {
+		if (err) return console.log(err);
+		console.log(res);
+		console.log(res.getStats());
+	});
 }

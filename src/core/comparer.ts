@@ -106,7 +106,7 @@ module tsdimport {
 			this.repoAll =  this.res.repoAll.length;
 			this.repoUnlisted =  this.res.repoUnlisted.length;
 			this.tsdAll =  this.res.tsdAll.length;
-			this.tsdNotInRepo =  this.res.tsdAll.length;
+			this.tsdNotInRepo =  this.res.tsdNotInRepo.length;
 			this.repoAllDupes =  _(this.res.repoAllDupes).size();
 			this.repoUnlistedDupes =  _(this.res.repoUnlistedDupes).size();
 
@@ -140,8 +140,6 @@ module tsdimport {
 				res.tsdAll = results.tsd;
 				res.repoAll = results.defs;
 
-				res.repoAllDupes = getDefCollide(res.repoAll);
-
 				if (_(res.repoAllDupes).keys().length > 0) {
 					console.log('name collisions in repo');
 					/*console.log(res.repoAllDupes);
@@ -154,7 +152,6 @@ module tsdimport {
 						return value.name == t;
 					});
 				});
-
 				res.tsdNotInRepo = _(res.tsdAll).filter((value:string) => {
 					return !_(res.repoAll).some((def) => {
 						return def.name == value;
@@ -162,8 +159,6 @@ module tsdimport {
 				});
 				res.repoAllDupes = getDefCollide(res.repoAll);
 				res.repoUnlistedDupes = getDefCollide(res.repoUnlisted);
-
-				//console.log(res.getStats());
 
 				finish(err, res);
 			});

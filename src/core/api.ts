@@ -26,8 +26,8 @@ module tsdimport {
 
 			var comparer = new DefinitionComparer(this.repos);
 			comparer.compare((err?, res?:CompareResult) => {
-				if (err) callback(err);
-
+				if (err) return callback(err);
+				//?
 				callback(null, res);
 			});
 		}

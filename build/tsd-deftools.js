@@ -571,7 +571,7 @@ var tsdimport;
             this.repoAll = this.res.repoAll.length;
             this.repoUnlisted = this.res.repoUnlisted.length;
             this.tsdAll = this.res.tsdAll.length;
-            this.tsdNotInRepo = this.res.tsdAll.length;
+            this.tsdNotInRepo = this.res.tsdNotInRepo.length;
             this.repoAllDupes = _(this.res.repoAllDupes).size();
             this.repoUnlistedDupes = _(this.res.repoUnlistedDupes).size();
         };
@@ -595,7 +595,6 @@ var tsdimport;
                 var res = new CompareResult();
                 res.tsdAll = results.tsd;
                 res.repoAll = results.defs;
-                res.repoAllDupes = getDefCollide(res.repoAll);
                 if(_(res.repoAllDupes).keys().length > 0) {
                     console.log('name collisions in repo');
                 }
@@ -640,7 +639,7 @@ var tsdimport;
             var comparer = new tsdimport.DefinitionComparer(this.repos);
             comparer.compare(function (err, res) {
                 if(err) {
-                    callback(err);
+                    return callback(err);
                 }
                 callback(null, res);
             });
