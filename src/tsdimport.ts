@@ -13,6 +13,14 @@ module tsdimport {
 	var _:UnderscoreStatic = require('underscore');
 	var agent:SuperAgent = require('superagent');
 
+	var pkg;
+	try {
+		pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
+	}
+	catch (e) {
+		throw(e);
+	}
+
 	var paths:ConfPaths;
 	var tmp = path.resolve('./tsd-deftools-path.json');
 	try {
@@ -21,18 +29,18 @@ module tsdimport {
 	catch (e) {
 		throw(e);
 	}
-
-	console.log(paths);
 	if(!fs.existsSync(paths.tmp)) {
 		fs.mkdir(paths.tmp);
 	}
 
+	var info = new ToolInfo(pkg.name, pkg.version, pkg);
+
 	var repos = new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp);
 	var projects = ['underscore', 'easeljs'];
 
-	var importer = new DefinitionImporter(repos);
-	var exporter = new DefinitionExporter(repos);
-	var comparer = new DefinitionComparer(repos);
+	var importer = new DefinitionImporter(repos, info);
+	var exporter = new DefinitionExporter(repos, info);
+	var comparer = new DefinitionComparer(repos, info);
 
 	async.waterfall([(callback:(err) => void) => {
 		console.log('findUnpackaged');
@@ -44,12 +52,13 @@ module tsdimport {
 		importer.parseDefinitions(res.repoAll, callback);
 
 	}, (res:ImportResult, callback:(err?) => void) => {
-		//console.log(res.parsed);
-		//console.log(res.error);
+		console.log(res.parsed);
+		console.log(res.error);
 
 		console.log('error: ' + res.error.length);
 		console.log('parsed: ' + res.parsed.length);
 		console.log('exportDefinitions');
+
 		exporter.exportDefinitions(res.parsed, callback);
 		callback();
 	}], (err, data) => {

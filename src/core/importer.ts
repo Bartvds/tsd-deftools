@@ -1,5 +1,6 @@
 ///<reference path="../_ref.ts" />
 ///<reference path="lib.ts" />
+///<reference path="parser.ts" />
 
 module tsdimport {
 
@@ -25,7 +26,7 @@ module tsdimport {
 	export class DefinitionImporter {
 
 
-		constructor(public repos:Repos) {
+		constructor(public repos:Repos, public info:ToolInfo) {
 
 		}
 

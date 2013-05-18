@@ -96,7 +96,7 @@ module tsdimport {
 
 	export class DefinitionComparer {
 
-		constructor(public repos:Repos) {
+		constructor(public repos:Repos, public info:ToolInfo) {
 
 		}
 
@@ -169,27 +169,19 @@ module tsdimport {
 				res.tsdAll = results.tsd;
 				res.repoAll = results.defs;
 
-				console.log(_(res.tsdAll).isArray());
-				console.log(_(res.repoAll).isArray());
-
 				var repoNames = res.repoAllNames();
-				console.log(_(repoNames).isArray());
+				//console.log('repoNames');
+				//console.log(repoNames);
 
 				res.repoAllDupes = getDefCollide(res.repoAll);
+
 				if (_(res.repoAllDupes).keys().length > 0) {
 					console.log('name collisions in repo');
 					console.log(res.repoAllDupes);
 					finish('name collisions in repo', null);
 					return
 				}
-				else {
-					console.log('name collisions in repo');
-				}
 
-				console.log('repoNames');
-				console.log(repoNames);
-
-				console.log(repoNames.indexOf('linqjs'));
 
 				res.repoUnlisted = _(res.repoAll).filter((value:Def) => {
 					return !_(results.tsd).some((t) => {

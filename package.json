@@ -1,7 +1,7 @@
 {
 	"name": "tsd-deftools",
-	"description": "execute code in node",
-	"version": "0.1.2",
+	"description": "TypeScript definition developer tools",
+	"version": "0.0.1",
 	"homepage": "https://github.com/Bartvds/tsd-deftools",
 	"author": {
 		"name": "Bart van der Schoor",
