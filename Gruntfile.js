@@ -21,19 +21,26 @@ module.exports = function (grunt) {
 		execute: {
 			deftools: {
 				src: ['build/tsd-deftools.js']
+			},
+			defdev: {
+				src: ['build/tsd-defdev.js']
 			}
 		},
 		typescript: {
+			options: {
+				module: 'commonjs', //or commonjs
+				target: 'es5', //or es3
+				base_path: 'src/',
+				declaration: false,
+				sourcemap: false
+			},
 			deftools: {
-				options: {
-					module: 'commonjs', //or commonjs
-					target: 'es5', //or es3
-					base_path: 'src/',
-					declaration: false,
-					sourcemap: false
-				},
 				src: ['src/tsd-deftools.ts'],
 				dest: 'build/tsd-deftools.js'
+			},
+			defdev: {
+				src: ['src/tsd-defdev.ts'],
+				dest: 'build/tsd-defdev.js'
 			}
 		}
 	});
@@ -42,5 +49,6 @@ module.exports = function (grunt) {
 	grunt.registerTask('build', ['clean', 'typescript:deftools']);
 
 	grunt.registerTask('dev', ['build', 'execute:deftools']);
+	grunt.registerTask('test', ['typescript:defdev', 'execute:defdev']);
 
 };

@@ -48,7 +48,7 @@ module tsdimport {
 		});
 	});*/
 
-
+	//kill this when included
 	var argv = require('optimist').argv;
 	expose.execute('info');
 
@@ -62,5 +62,5 @@ module tsdimport {
 	}
 	//expose.execute('compare');
 }
-
-exports = (module).exports = tsdimport;
+//kill this when in cli mode
+//exports = (module).exports = tsdimport;
