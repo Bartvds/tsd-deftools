@@ -2,6 +2,6 @@
 	"tsd": "../tsd",
 	"out": "./out",
 	"tmp": "./tmp",
-	"DefinitlyTyped": "../../DefinitelyTyped/fork",
+	"DefinitelyTyped": "../../DefinitelyTyped/fork",
 	"local": "./typings/DefinitelyTyped"
 }

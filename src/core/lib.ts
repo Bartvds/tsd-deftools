@@ -11,7 +11,7 @@ module tsdimport {
 		tsd:string;
 		out:string;
 		tmp:string;
-		DefinitlyTyped:string;
+		DefinitelyTyped:string;
 		local:string;
 	}
 	export class ToolInfo {
