@@ -86,7 +86,7 @@ var tsdimport;
             if(!this.authorName || !this.authorUrl) {
                 return false;
             }
-            if(!this.reposName || !this.reposUrl) {
+            if(!this.reposUrl) {
                 return false;
             }
             return true;
@@ -206,6 +206,7 @@ var tsdimport;
             this.nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
             this.labelUrl = /^[ \t]*\/\/\/?[ \t]*([\w _-]+):?[ \t]+[<\[\{\(]?(http[\S]*)[ \t]*$/gm;
             this.authorNameUrl = /^[ \t]*\/\/\/?[ \t]*Definitions[ \t\w]+:[ \t]+([\w \t]+[\w]+)[ \t]*[<\[\{\(]?(http[\w:\/\\\._-]+)[\)\}\]>]?[ \t]*$/gm;
+            this.description = /^[ \t]*\/\/\/?[ \t]*Description[ \t]*:[ \t]+([\S *]*\S)[ \t]*$/gm;
             this.referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
             this.endSlash = /\/?$/;
         }
@@ -293,10 +294,6 @@ var tsdimport;
             var src = path.resolve(this.repos.defs + def.project + '/' + def.name + '.d.ts');
             var self = this;
             var key = def.combi();
-            if(res.map.hasOwnProperty(key)) {
-                console.log('from cache: ' + key);
-                return callback(null, res.map[key]);
-            }
             fs.readFile(src, 'utf-8', function (err, source) {
                 if(err) {
                     return callback(err);
@@ -322,9 +319,6 @@ var tsdimport;
                         'invalid data'
                     ]);
                 }
-                if(data) {
-                    res.map[key] = data;
-                }
                 return callback(null, data);
             });
         };
@@ -332,6 +326,8 @@ var tsdimport;
             var self = this;
             var res = new ImportResult();
             async.forEach(projects, function (def, callback) {
+                var key = def.combi();
+                res.map[key] = def;
                 self.loadDef(def, res, function (err, data) {
                     if(err) {
                         res.error.push(err);
@@ -355,6 +351,10 @@ var tsdimport;
                                 }
                             }
                             if(dep) {
+                                var key = dep.combi();
+                                if(res.map.hasOwnProperty(key)) {
+                                    return callback(null, res.map[key]);
+                                }
                                 self.loadDef(dep, res, function (err, sub) {
                                     if(err) {
                                         res.error.push(err);
@@ -387,7 +387,6 @@ var tsdimport;
                 });
             }, function (err) {
                 if(err) {
-                    console.log('err ' + err);
                     return finish(err);
                 }
                 finish(null, res);
@@ -653,7 +652,8 @@ var tsdimport;
                     comparer.compare(callback);
                 }, 
                 function (res, callback) {
-                    importer.parseDefinitions(res.repoAll, callback);
+                    console.log(res.getStats());
+                    importer.parseDefinitions(res.repoUnlisted, callback);
                 }, 
                 function (res, callback) {
                     console.log('error: ' + res.error.length);
@@ -663,7 +663,27 @@ var tsdimport;
                 callback(err, res);
             });
         };
-        AppAPI.prototype.parseCurrent = function (callback) {
+        AppAPI.prototype.listRepoDependers = function (callback) {
+        };
+        AppAPI.prototype.testParser = function (callback) {
+            var comparer = new tsdimport.DefinitionComparer(this.repos);
+            var importer = new tsdimport.DefinitionImporter(this.repos);
+            var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
+            async.waterfall([
+                function (callback) {
+                    comparer.compare(callback);
+                }, 
+                function (res, callback) {
+                    console.log(res.getStats());
+                    importer.parseDefinitions(res.repoAll, callback);
+                }, 
+                function (res, callback) {
+                    console.log('error: ' + res.error.length);
+                    console.log('parsed: ' + res.parsed.length);
+                    callback(null, res);
+                }            ], function (err, res) {
+                callback(err, res);
+            });
         };
         return AppAPI;
     })();
@@ -782,14 +802,31 @@ var tsdimport;
             if(err) {
                 return console.log(err);
             }
-            console.log(res);
+            console.log(util.inspect(res, false, 8));
             console.log(res.getStats());
+        });
+    });
+    expose.add('testParser', function () {
+        app.testParser(function (err, res) {
+            if(err) {
+                return console.log(err);
+            }
+            console.log(util.inspect(res.error, false, 8));
+        });
+    });
+    expose.add('createUnlisted', function () {
+        app.createUnlisted(function (err, res) {
+            if(err) {
+                return console.log(err);
+            }
+            console.log(util.inspect(res, false, 8));
         });
     });
     var argv = require('optimist').argv;
     expose.execute('info');
     if(argv._.length == 0) {
         expose.execute('help');
+        expose.execute('testParser');
     } else {
         expose.execute(argv._[0]);
         if(!expose.has(argv._[0])) {

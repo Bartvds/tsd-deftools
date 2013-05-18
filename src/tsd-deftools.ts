@@ -3,6 +3,7 @@
 ///<reference path="core/lib.ts" />
 ///<reference path="core/config.ts" />
 ///<reference path="core/expose.ts" />
+///<reference path="core/importer.ts" />
 
 module tsdimport {
 
@@ -24,27 +25,35 @@ module tsdimport {
 		_(app.repos).keys().sort().forEach((value) => {
 			console.log('   ' + value + ': ' + app.repos[value]);
 		});
-	})
+	});
 
 	expose.add('compare', () => {
 		app.compare((err?, res?:CompareResult) => {
 			if (err) return console.log(err);
-			console.log(res);
+			console.log(util.inspect(res, false, 8));
 			console.log(res.getStats());
 		});
-	})
+	});
 
-	/*expose.add('createUnlisted', () => {
+	expose.add('testParser', () => {
+		app.testParser((err?, res?:ImportResult) => {
+			if (err) return console.log(err);
+			//console.log(util.inspect(res, false, 8));
+			console.log(util.inspect(res.error, false, 8));
+		});
+	});
+
+	expose.add('createUnlisted', () => {
 		app.createUnlisted((err?, res?:ExportResult) => {
 			if (err) return console.log(err);
-			console.log(res);
+			console.log(util.inspect(res, false, 8));
 		});
-	})
-
+	});
+/*
 	expose.add('parseCurrent', () => {
 		app.parseCurrent((err?, res?:CompareResult) => {
 			if (err) return console.log(err);
-			console.log(res);
+			console.log(util.inspect(res, false, 8));
 		});
 	});*/
 
@@ -54,13 +63,13 @@ module tsdimport {
 
 	if (argv._.length == 0) {
 		expose.execute('help');
+		expose.execute('testParser');
 	} else {
 		expose.execute(argv._[0]);
 		if (!expose.has(argv._[0])) {
 			expose.execute('help');
 		}
 	}
-	//expose.execute('compare');
 }
 //kill this when in cli mode
 //exports = (module).exports = tsdimport;

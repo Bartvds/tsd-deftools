@@ -35,11 +35,6 @@ module tsdimport {
 
 			var key = def.combi();
 
-			if (res.map.hasOwnProperty(key)) {
-				console.log('from cache: ' + key);
-				return callback(null, res.map[key]);
-			}
-
 			fs.readFile(src, 'utf-8', (err, source) => {
 				if (err) {
 					return callback(err);
@@ -57,9 +52,6 @@ module tsdimport {
 				if (!data.isValid()) {
 					return callback([<any>def, 'invalid data']);
 				}
-				if (data) {
-					res.map[key] = data;
-				}
 				//console.log(util.inspect(data, false, 6));
 
 				return callback(null, data);
@@ -72,6 +64,10 @@ module tsdimport {
 			var res = new ImportResult();
 
 			async.forEach(projects, (def:Def, callback:(err?, data?) => void) => {
+
+				//
+				var key = def.combi();
+				res.map[key] = def;
 
 				self.loadDef(def, res, (err?:any, data?:HeaderData) => {
 					if (err) {
@@ -106,6 +102,13 @@ module tsdimport {
 							}
 
 							if (dep) {
+
+								var key = dep.combi();
+								if (res.map.hasOwnProperty(key)) {
+									//console.log('dependency from cache: ' + key);
+									return callback(null, res.map[key]);
+								}
+
 								//console.log('depencency: ' + match[1]);
 								self.loadDef(dep, res, (err?:any, sub?:HeaderData) => {
 									if (err) {
@@ -122,7 +125,6 @@ module tsdimport {
 									return callback(null, data);
 								});
 								return;
-
 							}
 							return callback(['bad reference', def.project, def.name, ref]);
 
@@ -136,7 +138,7 @@ module tsdimport {
 				});
 			}, (err) => {
 				if (err) {
-					console.log('err ' + err);
+					//console.log('err ' + err);
 					return finish(err);
 				}
 				finish(null, res);

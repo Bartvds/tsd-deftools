@@ -92,7 +92,8 @@ module tsdimport {
 			if (!this.authorName || !this.authorUrl) {
 				return false;
 			}
-			if (!this.reposName || !this.reposUrl) {
+			//!this.reposName ||
+			if (!this.reposUrl) {
 				return false;
 			}
 			return true;

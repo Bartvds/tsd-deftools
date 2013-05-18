@@ -42,7 +42,8 @@ module tsdimport {
 				comparer.compare(callback);
 
 			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
-				importer.parseDefinitions(res.repoAll, callback);
+				console.log(res.getStats());
+				importer.parseDefinitions(res.repoUnlisted, callback);
 
 			}, (res:ImportResult, callback:(err?) => void) => {
 				console.log('error: ' + res.error.length);
@@ -54,23 +55,38 @@ module tsdimport {
 				callback(err, res);
 			});
 		}
-		parseCurrent(callback:(err?) => void) {
 
-			/*var comparer = new DefinitionComparer(this.repos, this.info);
-			var importer = new DefinitionImporter(this.repos, this.info);
+
+		listRepoDependers(callback:(err?, res?:ExportResult) => void) {
+
+		}
+
+		testParser(callback:(err?, res?:ImportResult) => void) {
+
+			var comparer = new DefinitionComparer(this.repos);
+			var importer = new DefinitionImporter(this.repos);
 			var exporter = new DefinitionExporter(this.repos, this.info);
 
 			async.waterfall([(callback:(err) => void) => {
-				console.log('compare');
 				comparer.compare(callback);
 
 			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
-				console.log('parseDefinitions');
+				console.log(res.getStats());
 				importer.parseDefinitions(res.repoAll, callback);
 
-			}], (err, data) => {
-				callback(err);
-			});*/
+			}, (res:ImportResult, callback:(err?, res?:ImportResult) => void) => {
+				console.log('error: ' + res.error.length);
+				console.log('parsed: ' + res.parsed.length);
+
+				//console.log(res.error);
+
+				//exporter.exportDefinitions(res.parsed, callback);
+
+				callback(null, res);
+
+			}], (err, res) => {
+				callback(err, res);
+			});
 		}
 
 	}
