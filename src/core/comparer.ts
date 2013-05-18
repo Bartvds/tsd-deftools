@@ -15,7 +15,7 @@ module tsdimport {
 	var isJson = /\.json$/;
 	var isDef = /\.d\.ts$/;
 
-	function getDupes(arr:string[]):string[] {
+	export function getDupes(arr:string[]):string[] {
 		var uni = _.unique(arr);
 		arr = _.filter(arr, (value) => {
 			var i = uni.indexOf(value);
@@ -28,7 +28,7 @@ module tsdimport {
 		return arr;
 	}
 
-	function getDefCollide(arr:Def[]):DefMap {
+	export function getDefCollide(arr:Def[]):DefMap {
 		var map:Object = _.reduce(arr, (memo:Object, def:Def) => {
 			if (!memo.hasOwnProperty(def.name)) {
 				memo[def.name] = [def];
@@ -57,9 +57,11 @@ module tsdimport {
 			return this.project + '/' + this.name;
 		}
 	}
+
 	export interface DefMap {
 		[name: string]: Def;
 	}
+
 	export class CompareResult {
 		repoAll:Def[] = [];
 		repoUnlisted:Def[] = [];
@@ -67,17 +69,11 @@ module tsdimport {
 		tsdAll:string[] = [];
 		tsdNotInRepo:string[] = [];
 
+		//beh
 		repoAllDupes:DefMap = {};
 		repoUnlistedDupes:DefMap = {};
-		tsdAllDupes:string[] = [];
-		tsdNotInRepoDupes:string[] = [];
 
 		checkDupes():any {
-			this.repoAllDupes = getDefCollide(this.repoAll);
-			this.repoUnlistedDupes = getDefCollide(this.repoUnlisted);
-
-			this.tsdAllDupes = getDupes(this.tsdAll);
-			this.tsdNotInRepoDupes = getDupes(this.tsdNotInRepo);
 		}
 
 		repoAllNames():any {
@@ -91,6 +87,11 @@ module tsdimport {
 				return value.name;
 			});
 		}
+	}
+
+	interface LoopRes {
+		tsd:string[];
+		defs:Def[];
 	}
 
 	export class DefinitionComparer {
@@ -163,20 +164,62 @@ module tsdimport {
 					});
 				}
 			},
-			(err, results) => {
+			(err, results:LoopRes) => {
 				var res = new CompareResult();
-				res.repoAll = _(results.defs).toArray();
-				res.repoUnlisted = _(results.defs).filter((value:Def) => {
-					return _(results.tsd).some((t) => {
-						return value.name === t;
-					})
+				res.tsdAll = results.tsd;
+				res.repoAll = results.defs;
+
+				console.log(_(res.tsdAll).isArray());
+				console.log(_(res.repoAll).isArray());
+
+				var repoNames = res.repoAllNames();
+				console.log(_(repoNames).isArray());
+
+				res.repoAllDupes = getDefCollide(res.repoAll);
+				if (_(res.repoAllDupes).keys().length > 0) {
+					console.log('name collisions in repo');
+					console.log(res.repoAllDupes);
+					finish('name collisions in repo', null);
+					return
+				}
+				else {
+					console.log('name collisions in repo');
+				}
+
+				console.log('repoNames');
+				console.log(repoNames);
+
+				console.log(repoNames.indexOf('linqjs'));
+
+				res.repoUnlisted = _(res.repoAll).filter((value:Def) => {
+					return !_(results.tsd).some((t) => {
+						return value.name == t;
+					});
 				});
 
-				res.tsdAll = results.tsd;
-				res.tsdNotInRepo = _(results.tsd).filter((value:Def) => {
-					return results.defs.indexOf(value.name) < 0;
+
+				res.tsdNotInRepo = _(res.tsdAll).filter((value:string) => {
+					console.log(value);
+					return repoNames.indexOf(value) < 0;
+
+					return !_(res.repoAll).some((def) => {
+						return def.name == value;
+					});
 				});
-				res.checkDupes();
+				res.repoAllDupes = getDefCollide(res.repoAll);
+				res.repoUnlistedDupes = getDefCollide(res.repoUnlisted);
+
+				console.log('tsdAll');
+				console.log(res.tsdAll);
+
+				console.log('repoAll:');
+				console.log(res.repoAll);
+
+				console.log('repoUnlisted:');
+				console.log(res.repoUnlisted);
+
+				console.log('tsdNotInRepo:');
+				console.log(res.tsdNotInRepo);
 
 				console.log('repoAll %d', res.repoAll.length);
 				console.log('repoUnlisted %d', res.repoUnlisted.length);
@@ -185,6 +228,10 @@ module tsdimport {
 
 				console.log('dupes:');
 				console.log(res.repoAllDupes);
+				console.log(res.repoUnlistedDupes);
+
+				//console.log('tsdAll:');
+				//console.log(res.tsdAll);
 
 				finish(err, res);
 			});

@@ -27,7 +27,7 @@ module tsdimport {
 		fs.mkdir(paths.tmp);
 	}
 
-	var repos = new Repos(paths.local, paths.tsd, paths.tmp);
+	var repos = new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp);
 	var projects = ['underscore', 'easeljs'];
 
 	var importer = new DefinitionImporter(repos);
