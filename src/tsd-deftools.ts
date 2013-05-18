@@ -22,7 +22,7 @@ module tsdimport {
 	expose.add('info', () => {
 		console.log('info: '+ info.getNameVersion());
 		_(app.repos).keys().sort().forEach((value) => {
-			console.log(' - ' + value + ': ' + app.repos[value]);
+			console.log('   ' + value + ': ' + app.repos[value]);
 		});
 	})
 
@@ -49,8 +49,9 @@ module tsdimport {
 	});*/
 
 	expose.execute('info');
+	expose.execute('help');
 
-	expose.execute('compare');
+	//expose.execute('compare');
 }
 
 exports = (module).exports = tsdimport;

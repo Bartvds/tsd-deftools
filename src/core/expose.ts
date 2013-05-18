@@ -27,6 +27,18 @@ module tsdimport {
 			this.map('h', 'help');
 		}
 
+		execute(id:string, head:bool = true) {
+			if (!this._commands.hasOwnProperty(id)) {
+				console.log('nothing exposed as ' + id);
+				return;
+			}
+			if (head) {
+				console.log('-> ' + id);
+			}
+			var f = this._commands[id];
+			f.call(null);
+		}
+
 		add(id:string, def:Function) {
 			if (this._commands.hasOwnProperty(id)) {
 				throw new Error('id collission on ' + id);
@@ -39,18 +51,6 @@ module tsdimport {
 			this.add(id, () => {
 				self.execute(to, false);
 			});
-		}
-
-		execute(id:string, head:bool = true) {
-			if (!this._commands.hasOwnProperty(id)) {
-				console.log('nothing exposed as ' + id);
-				return;
-			}
-			if (head) {
-				console.log('-> execute ' + id);
-			}
-			var f = this._commands[id];
-			f.call(null);
 		}
 	}
 }
