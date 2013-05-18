@@ -49,6 +49,6 @@ module.exports = function (grunt) {
 	grunt.registerTask('build', ['clean', 'typescript:deftools']);
 
 	grunt.registerTask('dev', ['build', 'execute:deftools']);
-	grunt.registerTask('test', ['typescript:defdev', 'execute:defdev']);
+	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
 
 };
