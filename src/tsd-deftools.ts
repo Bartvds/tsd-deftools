@@ -17,8 +17,7 @@ module tsdimport {
 	var paths = Config.getPaths();
 	var app:AppAPI = new AppAPI(info, new Repos(paths.DefinitelyTyped, paths.tsd, paths.tmp));
 
-	console.log();
-
+	//expose some easy access tools to cli
 	var expose = new Expose();
 	expose.add('info', () => {
 		console.log('info: '+ info.getNameVersion());
@@ -26,6 +25,7 @@ module tsdimport {
 			console.log(' - ' + value + ': ' + app.repos[value]);
 		});
 	})
+
 	expose.add('compare', () => {
 		app.compare((err?, res?:CompareResult) => {
 			if (err) return console.log(err);
@@ -34,7 +34,7 @@ module tsdimport {
 		});
 	})
 
-	expose.add('createUnlisted', () => {
+	/*expose.add('createUnlisted', () => {
 		app.createUnlisted((err?, res?:ExportResult) => {
 			if (err) return console.log(err);
 			console.log(res);
@@ -46,7 +46,9 @@ module tsdimport {
 			if (err) return console.log(err);
 			console.log(res);
 		});
-	});
+	});*/
+
+	expose.execute('info');
 
 	expose.execute('compare');
 }
