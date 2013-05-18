@@ -1,0 +1,9 @@
+///<reference path="../_ref.ts" />
+///<reference path="api.ts" />
+///<reference path="comparer.ts" />
+///<reference path="config.ts" />
+///<reference path="exporter.ts" />
+///<reference path="header.ts" />
+///<reference path="importer.ts" />
+///<reference path="lib.ts" />
+///<reference path="loader.ts" />

@@ -1,9 +1,4 @@
-///<reference path="../_ref.ts" />
-///<reference path="lib.ts" />
-///<reference path="exporter.ts" />
-///<reference path="importer.ts" />
-///<reference path="comparer.ts" />
-///<reference path="parser.ts" />
+///<reference path="_ref.ts" />
 
 module tsdimport {
 
@@ -75,6 +70,7 @@ module tsdimport {
 				importer.parseDefinitions(res.repoAll, callback);
 
 			}, (res:ImportResult, callback:(err?, res?:ImportResult) => void) => {
+				//console.log(res.error);
 				//console.log(res.error);
 
 				//exporter.exportDefinitions(res.parsed, callback);

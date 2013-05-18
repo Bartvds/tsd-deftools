@@ -1,9 +1,6 @@
 ///<reference path="_ref.ts" />
-///<reference path="core/api.ts" />
-///<reference path="core/lib.ts" />
-///<reference path="core/config.ts" />
+///<reference path="core/_ref.ts" />
 ///<reference path="core/expose.ts" />
-///<reference path="core/importer.ts" />
 
 module tsdimport {
 
@@ -39,10 +36,12 @@ module tsdimport {
 		app.listParsed((err?, res?:tsdimport.ImportResult) => {
 			if (err) return console.log(err);
 			//console.log(util.inspect(res, false, 8));
-			console.log(util.inspect(res.parsed, false, 8));
-			console.log(util.inspect(res.error, false, 8));
+			console.log('parsed(): ' + util.inspect(res.parsed, false, 8));
+			console.log('error(): ' + util.inspect(res.error, false, 8));
+			console.log('hasDependency(): ' + util.inspect(res.hasDependency(), false, 8));
 			console.log('parsed: ' + res.parsed.length);
 			console.log('error: ' + res.error.length);
+			console.log('hasDependency(): ' + res.hasDependency().length);
 		});
 	});
 
@@ -66,7 +65,7 @@ module tsdimport {
 
 	if (argv._.length == 0) {
 		expose.execute('help');
-		
+
 		expose.execute('listParsed');
 	} else {
 		expose.execute(argv._[0]);

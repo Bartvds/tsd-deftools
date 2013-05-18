@@ -1,6 +1,51 @@
-///<reference path="../_ref.ts" />
+///<reference path="_ref.ts" />
 
 module tsdimport {
+
+	export class HeaderData {
+		name:string = '';
+		version:string = '*';
+		submodule:string = '';
+		description:string = '';
+		projectUrl:string = '';
+
+		authorName:string = '';
+		authorUrl:string = '';
+		//reposName:string = '';
+		reposUrl:string = '';
+
+		errors:ParseError[] = [];
+		references:string[] = [];
+		dependencies:HeaderData[] = [];
+		source:string = '';
+
+		constructor(public def:Def) {
+
+		}
+
+		getDefUrl():string {
+			if (!this.def || !this.reposUrl) return '';
+			return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
+		}
+
+		isValid():bool {
+			if (this.errors.length > 0) {
+				return false;
+			}
+			// || !this.description
+			if (!this.name || !this.version || !this.projectUrl) {
+				return false;
+			}
+			if (!this.authorName || !this.authorUrl) {
+				return false;
+			}
+			//!this.reposName ||
+			if (!this.reposUrl) {
+				return false;
+			}
+			return true;
+		}
+	}
 
 	export class ParseError {
 		constructor(public message:string = '', public text?:string = '') {

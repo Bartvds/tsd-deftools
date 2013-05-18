@@ -1,6 +1,4 @@
-///<reference path="../_ref.ts" />
-///<reference path="lib.ts" />
-///<reference path="loader.ts" />
+///<reference path="_ref.ts" />
 
 module tsdimport {
 
@@ -14,8 +12,13 @@ module tsdimport {
 		constructor(public project:string, public name:string) {
 
 		}
+
 		combi():string {
 			return this.project + '/' + this.name;
+		}
+
+		toString():string {
+			return '[Def ' + this.combi() + ']';
 		}
 	}
 
@@ -94,7 +97,7 @@ module tsdimport {
 		repoAllDupes:number = 0;
 		repoUnlistedDupes:number = 0;
 
-		constructor(public res:CompareResult){
+		constructor(public res:CompareResult) {
 			this.update();
 
 			Object.defineProperty(this, "res", {
@@ -102,13 +105,13 @@ module tsdimport {
 			});
 		}
 
-		update(){
-			this.repoAll =  this.res.repoAll.length;
-			this.repoUnlisted =  this.res.repoUnlisted.length;
-			this.tsdAll =  this.res.tsdAll.length;
-			this.tsdNotInRepo =  this.res.tsdNotInRepo.length;
-			this.repoAllDupes =  _(this.res.repoAllDupes).size();
-			this.repoUnlistedDupes =  _(this.res.repoUnlistedDupes).size();
+		update() {
+			this.repoAll = this.res.repoAll.length;
+			this.repoUnlisted = this.res.repoUnlisted.length;
+			this.tsdAll = this.res.tsdAll.length;
+			this.tsdNotInRepo = this.res.tsdNotInRepo.length;
+			this.repoAllDupes = _(this.res.repoAllDupes).size();
+			this.repoUnlistedDupes = _(this.res.repoUnlistedDupes).size();
 
 		}
 	}

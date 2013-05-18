@@ -1,16 +1,8 @@
-///<reference path="../_ref.ts" />
-///<reference path="lib.ts" />
-///<reference path="exporter.ts" />
-///<reference path="importer.ts" />
-///<reference path="comparer.ts" />
-///<reference path="parser.ts" />
+///<reference path="_ref.ts" />
 
 module tsdimport {
 
-	var fs = require('fs');
-	var path = require('path');
-	var util = require('util');
-	var async:Async = require('async');
+	//var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 
 	export class Expose {

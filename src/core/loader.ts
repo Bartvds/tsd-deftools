@@ -1,4 +1,4 @@
-///<reference path="../_ref.ts" />
+///<reference path="_ref.ts" />
 ///<reference path="lib.ts" />
 
 module tsdimport {
@@ -11,8 +11,8 @@ module tsdimport {
 
 	var stripExt = /(\.[\w_-]+)$/;
 	var ignoreFile = /^[\._]/;
-	var isJson = /\.json$/;
-	var isDef = /\.d\.ts$/;
+	var extJson = /\.json$/;
+	var extDef = /\.d\.ts$/;
 
 	export module loader {
 
@@ -39,7 +39,7 @@ module tsdimport {
 							if (err) return callback(false);
 
 							files = _(files).filter((name) => {
-								return isDef.test(name);
+								return extDef.test(name);
 							});
 
 							async.forEach(files, (name, callback:(err) => void) => {
@@ -51,7 +51,7 @@ module tsdimport {
 										return callback(false);
 									}
 									//console.log('-> ' + sub);
-									ret.push(new Def(file, name.replace(isDef, '')));
+									ret.push(new Def(file, name.replace(extDef, '')));
 									callback(null);
 								});
 							}, (err) => {
@@ -71,7 +71,7 @@ module tsdimport {
 				if (err) return finish(err, []);
 
 				finish(null, _(files).filter((value) => {
-					return !ignoreFile.test(value) && isJson.test(value);
+					return !ignoreFile.test(value) && extJson.test(value);
 				}).map((value) => {
 					return value.replace(stripExt, '');
 				}));

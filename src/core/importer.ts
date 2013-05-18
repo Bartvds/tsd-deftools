@@ -1,6 +1,6 @@
-///<reference path="../_ref.ts" />
+///<reference path="_ref.ts" />
 ///<reference path="lib.ts" />
-///<reference path="parser.ts" />
+///<reference path="header.ts" />
 
 module tsdimport {
 
@@ -20,6 +20,18 @@ module tsdimport {
 
 		constructor() {
 		}
+
+		hasDependency():HeaderData[] {
+			return _(this.parsed).filter((value:HeaderData) => {
+				return value.dependencies.length > 0;
+			})
+		}
+		/*isDependency():HeaderData[] {
+			var deps:HeaderData[] = [];
+			return _(this.parsed).each((value:HeaderData) => {
+				return value.dependencies.length > 0;
+			})
+		}*/
 	}
 
 	export class DefinitionImporter {
@@ -83,11 +95,11 @@ module tsdimport {
 					//ok!
 					res.parsed.push(data);
 
-					if (data.references.length > 100000000) {
+					if (data.references.length > 0) {
 
-						//console.log('references: ' + data.references);
+						console.log('references: ' + data.references);
 
-						async.forEach(data.references, (ref, callback:(err?, data?) => void) => {
+						async.forEach(data.references, (ref, callback:(err?, data?:HeaderData) => void) => {
 
 							var match, dep;
 							match = ref.match(dependency);
@@ -100,14 +112,19 @@ module tsdimport {
 									dep = new Def(def.project, match[1]);
 								}
 							}
+							console.log('dependency: ' + dep);
 
 							if (dep) {
 
 								var sub = new HeaderData(dep);
 								var key = dep.combi();
+
 								if (res.map.hasOwnProperty(key)) {
-									//console.log('dependency from cache: ' + key);
-									return callback(null, res.map[key]);
+									console.log('dependency from cache: ' + key);
+									sub = res.map[key];
+									data.dependencies.push(sub);
+
+									return callback(null, sub);
 								}
 
 								self.loadData(sub, (err, sub?:HeaderData) => {
