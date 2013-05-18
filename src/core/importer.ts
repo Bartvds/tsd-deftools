@@ -25,7 +25,7 @@ module tsdimport {
 	export class DefinitionImporter {
 
 
-		constructor(public repos:Repos, public info:ToolInfo) {
+		constructor(public repos:Repos) {
 
 		}
 

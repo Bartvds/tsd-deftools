@@ -68,9 +68,6 @@ module tsdimport {
 		repoAllDupes:DefMap = {};
 		repoUnlistedDupes:DefMap = {};
 
-		checkDupes():any {
-		}
-
 		repoAllNames():any {
 			return _.map(this.repoAll, (value:Def) => {
 				return value.name;
@@ -82,6 +79,38 @@ module tsdimport {
 				return value.name;
 			});
 		}
+
+		getStats():CompareStats {
+			return new CompareStats(this);
+		}
+	}
+
+	export class CompareStats {
+
+		repoAll:number = 0;
+		repoUnlisted:number = 0;
+		tsdAll:number = 0;
+		tsdNotInRepo:number = 0;
+		repoAllDupes:number = 0;
+		repoUnlistedDupes:number = 0;
+
+		constructor(public res:CompareResult){
+			this.update();
+
+			Object.defineProperty(this, "res", {
+				enumerable: false
+			});
+		}
+
+		update(){
+			this.repoAll =  this.res.repoAll.length;
+			this.repoUnlisted =  this.res.repoUnlisted.length;
+			this.tsdAll =  this.res.tsdAll.length;
+			this.tsdNotInRepo =  this.res.tsdAll.length;
+			this.repoAllDupes =  _(this.res.repoAllDupes).size();
+			this.repoUnlistedDupes =  _(this.res.repoUnlistedDupes).size();
+
+		}
 	}
 
 	interface LoopRes {
@@ -91,7 +120,7 @@ module tsdimport {
 
 	export class DefinitionComparer {
 
-		constructor(public repos:Repos, public info:ToolInfo) {
+		constructor(public repos:Repos) {
 
 		}
 
@@ -134,29 +163,7 @@ module tsdimport {
 				res.repoAllDupes = getDefCollide(res.repoAll);
 				res.repoUnlistedDupes = getDefCollide(res.repoUnlisted);
 
-				console.log('tsdAll');
-				console.log(res.tsdAll);
-
-				console.log('repoAll:');
-				console.log(res.repoAll);
-
-				console.log('repoUnlisted:');
-				console.log(res.repoUnlisted);
-
-				console.log('tsdNotInRepo:');
-				console.log(res.tsdNotInRepo);
-
-				console.log('repoAll %d', res.repoAll.length);
-				console.log('repoUnlisted %d', res.repoUnlisted.length);
-				console.log('tsdAll %d', res.tsdAll.length);
-				console.log('tsdNotInRepo %d', res.tsdNotInRepo.length);
-
-				console.log('dupes:');
-				console.log(res.repoAllDupes);
-				console.log(res.repoUnlistedDupes);
-
-				//console.log('tsdAll:');
-				//console.log(res.tsdAll);
+				//console.log(res.getStats());
 
 				finish(err, res);
 			});

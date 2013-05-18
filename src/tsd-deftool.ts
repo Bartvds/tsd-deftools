@@ -21,14 +21,19 @@ module tsdimport {
 
 	var expose = new Expose();
 	expose.add('info', () => {
-
+		console.log('info: '+ info.getNameVersion());
+		_(app.repos).keys().sort().forEach((value) => {
+			console.log(' - ' + value + ': ' + app.repos[value]);
+		});
 	})
 	expose.add('compare', () => {
 		app.compare((err?, res?:CompareResult) => {
 			if (err) return console.log(err);
 			console.log(res);
+			console.log(res.getStats());
 		});
 	})
+
 	expose.add('createUnlisted', () => {
 		app.createUnlisted((err?, res?:ExportResult) => {
 			if (err) return console.log(err);
@@ -43,8 +48,7 @@ module tsdimport {
 		});
 	});
 
-
-	expose.execute('createUnlisted');
+	expose.execute('compare');
 }
 
 exports = (module).exports = tsdimport;

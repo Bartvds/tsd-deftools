@@ -15,23 +15,41 @@ module tsdimport {
 
 	export class Expose {
 
-		map:any = {};
+		_commands:any = {};
 
-		add(id:string, def:Function) {
-			if (this.map.hasOwnProperty(id)) {
-				throw new Error('id collission on ' + id);
-			}
-			this.map[id] = def;
+		constructor() {
+			this.add('help', () => {
+				console.log('availible commands:');
+				_(this._commands).keys().sort().forEach((value) => {
+					console.log('  - ' + value);
+				});
+			});
+			this.map('h', 'help');
 		}
 
-		execute(id:string) {
-			if (!this.map.hasOwnProperty(id)) {
-				console.log('nothing exposed as '+ id);
+		add(id:string, def:Function) {
+			if (this._commands.hasOwnProperty(id)) {
+				throw new Error('id collission on ' + id);
+			}
+			this._commands[id] = def;
+		}
+
+		map(id:string, to:string) {
+			var self = this;
+			this.add(id, () => {
+				self.execute(to, false);
+			});
+		}
+
+		execute(id:string, head:bool = true) {
+			if (!this._commands.hasOwnProperty(id)) {
+				console.log('nothing exposed as ' + id);
 				return;
 			}
-
-			console.log('-> execute: '+ id);
-			var f = this.map[id];
+			if (head) {
+				console.log('-> execute ' + id);
+			}
+			var f = this._commands[id];
 			f.call(null);
 		}
 	}

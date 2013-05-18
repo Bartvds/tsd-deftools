@@ -40,7 +40,7 @@ module tsdimport {
 
 		compare(callback:(err?, res?:CompareResult) => void) {
 
-			var comparer = new DefinitionComparer(this.repos, this.info);
+			var comparer = new DefinitionComparer(this.repos);
 			comparer.compare((err?, res?:CompareResult) => {
 				if (err) callback(err);
 
@@ -50,8 +50,8 @@ module tsdimport {
 
 		createUnlisted(callback:(err?, res?:ExportResult) => void) {
 
-			var comparer = new DefinitionComparer(this.repos, this.info);
-			var importer = new DefinitionImporter(this.repos, this.info);
+			var comparer = new DefinitionComparer(this.repos);
+			var importer = new DefinitionImporter(this.repos);
 			var exporter = new DefinitionExporter(this.repos, this.info);
 
 			async.waterfall([(callback:(err) => void) => {
