@@ -15,7 +15,7 @@ module tsdimport {
 
 	var info = Config.getInfo();
 	var paths = Config.getPaths();
-	var app:AppAPI = new AppAPI(info, new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp));
+	var app:AppAPI = new AppAPI(info, new Repos(paths.local, paths.tsd, paths.tmp));
 
 	console.log();
 

@@ -144,9 +144,9 @@ module tsdimport {
 
 				if (_(res.repoAllDupes).keys().length > 0) {
 					console.log('name collisions in repo');
-					console.log(res.repoAllDupes);
-					finish('name collisions in repo', null);
-					return
+					/*console.log(res.repoAllDupes);
+					finish('name collisions in repo', null);*/
+					//return
 				}
 
 				res.repoUnlisted = _(res.repoAll).filter((value:Def) => {
