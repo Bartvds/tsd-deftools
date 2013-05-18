@@ -14,23 +14,6 @@ module tsdimport {
 		DefinitlyTyped:string;
 		local:string;
 	}
-
-	export function getGUID():string {
-		var S4 = function () {
-			return Math.floor(
-			Math.random() * 0x10000 /* 65536 */
-			).toString(16);
-		};
-
-		return (
-		S4() + S4() + "-" +
-		S4() + "-" +
-		S4() + "-" +
-		S4() + "-" +
-		S4() + S4() + S4()
-		);
-	}
-
 	export class ToolInfo {
 		constructor(public name:string, public version:string, public pkg:any) {
 			if (!this.name) throw Error('no name');
@@ -115,4 +98,21 @@ module tsdimport {
 			return true;
 		}
 	}
+
+	export function getGUID():string {
+		var S4 = function () {
+			return Math.floor(
+			Math.random() * 0x10000 /* 65536 */
+			).toString(16);
+		};
+
+		return (
+		S4() + S4() + "-" +
+		S4() + "-" +
+		S4() + "-" +
+		S4() + "-" +
+		S4() + S4() + S4()
+		);
+	}
+
 }

@@ -20,7 +20,7 @@ module.exports = function (grunt) {
 		},
 		execute: {
 			importer: {
-				src: ['build/tsdimport.js']
+				src: ['build/tsd-deftool.js']
 			}
 		},
 		typescript: {
@@ -32,8 +32,8 @@ module.exports = function (grunt) {
 					declaration: false,
 					sourcemap: false
 				},
-				src: ['src/tsdimport.ts'],
-				dest: 'build/tsdimport.js'
+				src: ['src/tsd-deftool.ts'],
+				dest: 'build/tsd-deftool.js'
 			}
 		}
 	});

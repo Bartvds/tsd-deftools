@@ -1,6 +1,7 @@
 ///<reference path="_ref.ts" />
 ///<reference path="core/api.ts" />
 ///<reference path="core/lib.ts" />
+///<reference path="core/config.ts" />
 ///<reference path="core/expose.ts" />
 
 module tsdimport {
@@ -14,11 +15,14 @@ module tsdimport {
 
 	var info = Config.getInfo();
 	var paths = Config.getPaths();
-	var app = new AppAPI(info, new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp));
+	var app:AppAPI = new AppAPI(info, new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp));
 
 	console.log('-> compare');
 
 	var expose = new Expose();
+	expose.add('info', () => {
+		info
+	})
 	expose.add('compare', () => {
 		app.compare((err?, res?:CompareResult) => {
 			if (err) return console.log(err);

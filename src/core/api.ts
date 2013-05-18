@@ -14,40 +14,6 @@ module tsdimport {
 	var _:UnderscoreStatic = require('underscore');
 	//var agent:SuperAgent = require('superagent');
 
-	export module Config {
-
-		var paths:ConfPaths;
-		var info:ToolInfo;
-
-		export function getPaths():ConfPaths {
-			if (paths) return paths;
-			var tmp = path.resolve('./tsd-deftools-path.json');
-			try {
-				paths = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
-			}
-			catch
-			(e) {
-				throw(e);
-			}
-			if (!fs.existsSync(paths.tmp)) {
-				fs.mkdir(paths.tmp);
-			}
-			return paths;
-		}
-
-		export function getInfo():ToolInfo {
-			if (info) return info;
-			var pkg;
-			try {
-				pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
-			}
-			catch (e) {
-				throw(e);
-			}
-			return info = new ToolInfo(pkg.name, pkg.version, pkg);
-		}
-	}
-
 	export class AppAPI {
 
 		paths:ConfPaths;
