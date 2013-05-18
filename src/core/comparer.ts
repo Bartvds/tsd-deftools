@@ -24,11 +24,11 @@ module tsdimport {
 		}
 	}
 	export class CompareResult {
-		unlisted:Def[] = [];
-		defs:Def[] = [];
+		repoAll:Def[] = [];
+		repoUnlisted:Def[] = [];
 
-		notDefs:string[] = [];
-		tsd:string[] = [];
+		tsdAll:string[] = [];
+		tsdNotInRepo:string[] = [];
 	}
 	export class DefinitionComparer {
 
@@ -38,7 +38,6 @@ module tsdimport {
 
 		compare(finish:(err, res:CompareResult) => void) {
 			var self:DefinitionComparer = this;
-			var ret = [];
 
 			async.parallel({
 				defs: (callback) => {
@@ -46,7 +45,7 @@ module tsdimport {
 						if (err) return callback(err);
 
 						//check if these are folders containing a definition
-						var ret = [];
+						var ret:Def[] = [];
 						async.forEach(files, (file, callback:(err) => void) => {
 							if (ignoreFile.test(file)) {
 								return callback(false);
@@ -103,22 +102,22 @@ module tsdimport {
 			},
 			(err, results) => {
 				var res = new CompareResult();
-				res.unlisted = _(results.defs).filter((value:Def) => {
+				res.repoAll = _(results.defs).toArray();
+				res.repoUnlisted = _(results.defs).filter((value:Def) => {
 					return _(results.tsd).some((t) => {
 						return value.name === t;
 					})
 				});
-				res.defs = _(results.defs).toArray();
 
-				res.notDefs = _(results.tsd).filter((value:Def) => {
+				res.tsdAll = results.tsd;
+				res.tsdNotInRepo = _(results.tsd).filter((value:Def) => {
 					return results.defs.indexOf(value.name) < 0;
 				});
-				res.tsd = results.tsd;
 
-				console.log('tsd %d', res.tsd.length);
-				console.log('defs %d', res.defs.length);
-				console.log('notDefs %d', res.notDefs.length);
-				console.log('unlisted %d', res.unlisted.length);
+				console.log('repoAll %d', res.repoAll.length);
+				console.log('repoUnlisted %d', res.repoUnlisted.length);
+				console.log('tsdAll %d', res.tsdAll.length);
+				console.log('tsdNotInRepo %d', res.tsdNotInRepo.length);
 
 				finish(err, res);
 			});

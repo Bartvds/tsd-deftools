@@ -1,5 +1,22 @@
-raw developer tools to process TypeScript defintions and bulk edit tsd
+# tsd-def-tools
 
-functionality for now:
+> developer tools to process TypeScript definitions and bulk edit tsd
 
-import DefinitelyTyped definitions to tsd json's (0.4.0 / v2)
+crude, not for general consumption unless you know what you're doing
+
+## Functionality
+
+for now involves editing of the script, but the basic blocks are seperated for re-arrangement / configuration
+
+- list DefinitelyTyped definitions and parse standard header format
+- list tsd repos_data
+- compare the definitions and tsd repo data
+- generate tsd repo data from definition lists
+
+## Install
+
+````
+npm install //pull dependencies
+grunt build //compile
+grunt execute
+````

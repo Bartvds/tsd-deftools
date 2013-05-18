@@ -1,0 +1,7 @@
+{
+	"tsd": "../tsd",
+	"out": "./out",
+	"tmp": "./tmp",
+	"DefinitlyTyped": "../../DefinitelyTyped/fork",
+	"local": "./typings/DefinitelyTyped"
+}

@@ -29,7 +29,7 @@
 			"url": "https://github.com/Bartvds/tsd-deftools/blob/master/LICENSE-MIT"
 		}
 	],
-	"main_ignore": "Gruntfile.js",
+	"main": "Gruntfile.js",
 	"engines": {
 		"node": ">= 0.10.0"
 	},

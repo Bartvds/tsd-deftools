@@ -1,8 +1,0 @@
-{
-	"path": {
-		"tsd": "../tsd",
-		"out": "./out",
-		"DefinitlyTyped": "../../DefinitelyTyped/fork",
-		"local": "./typings/DefinitelyTyped"
-	}
-}

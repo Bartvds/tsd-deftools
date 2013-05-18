@@ -6,7 +6,6 @@ module tsdimport {
 
 	var path = require('path');
 	var fs = require('fs');
-
 	export class Repos {
 		constructor(public defs:string, public tsd:string, public out:string) {
 

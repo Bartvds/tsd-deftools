@@ -24,17 +24,17 @@ module tsdimport {
 		}
 
 		writeDef(data:HeaderData, encoder:DataEncoder, finish:(err?) => void) {
-			console.log(util.inspect(encoder.encode(data), false, 10));
+			//console.log(util.inspect(encoder.encode(data), false, 10));
 
 			var dest = this.repos.out + data.def.name + '.json';
-			console.log(dest);
+			//console.log(dest);
 
 			fs.exists(dest, (exists:bool) => {
 				if (exists){
 					return finish('file exists: ' + dest);
 				}
 				var obj = encoder.encode(data);
-				console.log(util.inspect(obj, true, 8));
+				//console.log(util.inspect(obj, true, 8));
 
 				fs.writeFile(dest, JSON.stringify(obj, null, 4), (err) => {
 					finish(err);
@@ -43,7 +43,6 @@ module tsdimport {
 		};
 
 		exportDefinitions(list:HeaderData[], finish:(err?) => void) {
-			console.log('exportDefinitions');
 			var self:DefinitionExporter = this;
 			var encoder = this.getEncoder();
 			async.forEach(list, (data:HeaderData, callback:(err?, data?) => void) => {

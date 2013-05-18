@@ -13,19 +13,18 @@ module tsdimport {
 	var _:UnderscoreStatic = require('underscore');
 	var agent:SuperAgent = require('superagent');
 
-	var conf;
-	var tmp = path.resolve('./tsd-deftools.json');
+	var paths;
+	var tmp = path.resolve('./tsd-deftools-path.json');
 	try {
-		conf = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
+		paths = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
 	}
 	catch (e) {
-		console.log(e);
 		throw(e);
-		throw('cannot load conf: ' + tmp);
 	}
 
-	console.log(conf);
-	var repos = new Repos(conf.path.DefinitlyTyped, conf.path.tsd, conf.path.out);
+	console.log(paths);
+
+	var repos = new Repos(paths.DefinitlyTyped, paths.tsd, paths.out);
 	var projects = ['underscore', 'easeljs'];
 
 	var importer = new DefinitionImporter(repos);
@@ -39,7 +38,7 @@ module tsdimport {
 	}, (res:CompareResult, callback:(err?, list?:HeaderData[]) => void) => {
 		console.log('parseDefinitions');
 		//console.log(res.defs);
-		importer.parseDefinitions(res.defs, callback);
+		importer.parseDefinitions(res.repoAll, callback);
 
 	}, (res:ImportResult, callback:(err?) => void) => {
 		//console.log(res.parsed);
@@ -47,7 +46,7 @@ module tsdimport {
 
 		console.log('error: ' + res.error.length);
 		console.log('parsed: ' + res.parsed.length);
-		console.log('exportDefinitions');
+		console.log('exportDefinitions  X');
 		exporter.exportDefinitions(res.parsed, callback);
 		callback();
 	}], (err, data) => {
@@ -56,7 +55,7 @@ module tsdimport {
 			//console.log(err);
 			return;
 		}
-		console.log(data);
+		//console.log(data);
 	});
 }
 
