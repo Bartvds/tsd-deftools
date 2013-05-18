@@ -2,6 +2,7 @@
 ///<reference path="core/lib.ts" />
 ///<reference path="core/exporter.ts" />
 ///<reference path="core/importer.ts" />
+///<reference path="core/comparer.ts" />
 
 module tsdimport {
 
@@ -20,7 +21,7 @@ module tsdimport {
 	catch (e) {
 		console.log(e);
 		throw(e);
-		throw('cannot load conf: '+ tmp);
+		throw('cannot load conf: ' + tmp);
 	}
 
 	console.log(conf);
@@ -29,23 +30,29 @@ module tsdimport {
 
 	var importer = new DefinitionImporter(repos);
 	var exporter = new DefinitionExporter(repos);
+	var comparer = new DefinitionComparer(repos);
 
-	importer.parseDefinitions(projects, (err?, map?:HeaderData[]) => {
-		console.log('parseDefinitions complete');
+	async.waterfall([(callback:(err) => void) => {
+		console.log('findUnpackaged');
+		comparer.findUnpackaged(callback);
+
+	}, (unpacked:string[], callback:(err?, list?:HeaderData[]) => void) => {
+		console.log(unpacked);
+		console.log('parseDefinitions');
+		importer.parseDefinitions(unpacked, callback);
+
+	}, (list:HeaderData[], callback:(err?) => void) => {
+		console.log(list);
+		console.log('exportDefinitions');
+		//exporter.exportDefinitions(list, callback);
+		callback();
+	}], (err, data) => {
+		console.log('complete');
+		console.log(data);
 		if (err) {
 			console.log(err);
 			return;
 		}
-		console.log(util.inspect(map, false, 10));
-
-		exporter.exportDefinitions(map, (err?) => {
-			console.log('exportDefinitions complete');
-			if (err) {
-				console.log(err);
-				return;
-			}
-
-		});
 	});
 }
 

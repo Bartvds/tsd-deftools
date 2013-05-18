@@ -42,7 +42,7 @@ module tsdimport {
 			});
 		};
 
-		exportDefinitions(list:HeaderData[], finish:(err?, map?) => void) {
+		exportDefinitions(list:HeaderData[], finish:(err?) => void) {
 			console.log('exportDefinitions');
 			var self:DefinitionExporter = this;
 			var encoder = this.getEncoder();

@@ -8,9 +8,9 @@ module tsdimport {
 	var fs = require('fs');
 
 	export class Repos {
-		constructor(public local:string, public tsd:string, public out:string) {
+		constructor(public defs:string, public tsd:string, public out:string) {
 
-			if (!this.local) {
+			if (!this.defs) {
 				throw('missing local')
 			}
 			if (!this.tsd) {
@@ -19,12 +19,12 @@ module tsdimport {
 			if (!this.out) {
 				throw('missing out')
 			}
-			this.local = path.resolve(this.local).replace(trailSlash, '$1/');
+			this.defs = path.resolve(this.defs).replace(trailSlash, '$1/');
 			this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
 			this.out = path.resolve(this.out).replace(trailSlash, '$1/');
 
-			if (!fs.existsSync(this.local) || !fs.statSync(this.local).isDirectory()) {
-				throw new Error('path not exist or not directoy: ' + this.local);
+			if (!fs.existsSync(this.defs) || !fs.statSync(this.defs).isDirectory()) {
+				throw new Error('path not exist or not directoy: ' + this.defs);
 			}
 			if (!fs.existsSync(this.tsd) || !fs.statSync(this.tsd).isDirectory()) {
 				throw new Error('path not exist or not directoy: ' + this.tsd);
