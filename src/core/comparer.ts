@@ -1,5 +1,6 @@
 ///<reference path="../_ref.ts" />
 ///<reference path="lib.ts" />
+///<reference path="loader.ts" />
 
 module tsdimport {
 
@@ -101,67 +102,17 @@ module tsdimport {
 		}
 
 		compare(finish:(err, res:CompareResult) => void) {
+
 			var self:DefinitionComparer = this;
+			var repo = new LoadRepo(this.repos, this.info);
+			var tsd = new LoadTsd(this.repos, this.info);
 
 			async.parallel({
 				defs: (callback) => {
-					fs.readdir(self.repos.defs, (err, files:string[]) => {
-						if (err) return callback(err);
-
-						//check if these are folders containing a definition
-						var ret:Def[] = [];
-						async.forEach(files, (file, callback:(err) => void) => {
-							if (ignoreFile.test(file)) {
-								return callback(false);
-							}
-
-							var src = path.join(self.repos.defs, file);
-
-							fs.stat(src, (err, stats) => {
-								if (err) return callback(false);
-								if (!stats.isDirectory()) {
-									return callback(false);
-								}
-								fs.readdir(src, (err, files:string[]) => {
-									if (err) return callback(false);
-
-									files = _(files).filter((name) => {
-										return isDef.test(name);
-									});
-
-									async.forEach(files, (name, callback:(err) => void) => {
-										//src + '/' + file + '/' + sub;
-										var tmp = path.join(src, name);
-										fs.stat(tmp, (err, stats) => {
-											if (err) return callback(false);
-											if (stats.isDirectory()) {
-												return callback(false);
-											}
-											//console.log('-> ' + sub);
-											ret.push(new Def(file, name.replace(isDef, '')));
-											callback(null);
-										});
-									}, (err) => {
-										callback(err);
-									});
-								});
-							});
-
-						}, (err) => {
-							callback(err, ret);
-						});
-					});
+					repo.load(callback);
 				},
 				tsd: (callback) => {
-					fs.readdir(self.repos.tsd + 'repo_data', (err, files:string[]) => {
-						if (err) return callback(err);
-
-						callback(null, _(files).filter((value) => {
-							return !ignoreFile.test(value) && isJson.test(value);
-						}).map((value) => {
-							return value.replace(stripExt, '');
-						}));
-					});
+					tsd.load(callback);
 				}
 			},
 			(err, results:LoopRes) => {

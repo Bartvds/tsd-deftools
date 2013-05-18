@@ -2,6 +2,11 @@
 
 module tsdimport {
 
+	var path = require('path');
+	var fs = require('fs');
+
+	var trailSlash = /(\w)(\/?)$/;
+
 	export interface ConfPaths {
 		tsd:string;
 		out:string;
@@ -10,10 +15,21 @@ module tsdimport {
 		local:string;
 	}
 
-	var trailSlash = /(\w)(\/?)$/;
+	export function getGUID():string {
+		var S4 = function () {
+			return Math.floor(
+			Math.random() * 0x10000 /* 65536 */
+			).toString(16);
+		};
 
-	var path = require('path');
-	var fs = require('fs');
+		return (
+		S4() + S4() + "-" +
+		S4() + "-" +
+		S4() + "-" +
+		S4() + "-" +
+		S4() + S4() + S4()
+		);
+	}
 
 	export class ToolInfo {
 		constructor(public name:string, public version:string, public pkg:any) {
@@ -21,6 +37,7 @@ module tsdimport {
 			if (!this.version) throw Error('no version');
 			if (!this.pkg) throw Error('no pkg');
 		}
+
 		getString():string {
 			return this.name + ' ' + this.version
 		}
@@ -72,7 +89,7 @@ module tsdimport {
 		references:any[] = [];
 		dependencies:any[] = [];
 
-		constructor(public def:Def){
+		constructor(public def:Def) {
 
 		}
 
