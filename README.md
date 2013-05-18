@@ -21,15 +21,15 @@ Edit `./tsd-deftools-path.json` to have `tsd` and `DefinitelyTyped` pointing to 
 
 Open commandline in the checkout.
 
+Get dependencies
+````
+npm install
+````
+
 Basic use
 ````
 node . //cli help menu
 node . <command> //command
-````
-
-To get development code
-````
-npm install
 ````
 
 To recompile edited code
