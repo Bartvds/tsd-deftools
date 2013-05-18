@@ -641,7 +641,6 @@ var tsdimport;
                     }
                     res.parsed.push(data);
                     if(data.references.length > 0) {
-                        console.log('references: ' + data.references);
                         async.forEach(data.references, function (ref, callback) {
                             var match, dep;
                             match = ref.match(dependency);
@@ -653,7 +652,6 @@ var tsdimport;
                                     dep = new tsdimport.Def(def.project, match[1]);
                                 }
                             }
-                            console.log('dependency: ' + dep);
                             if(dep) {
                                 var sub = new tsdimport.HeaderData(dep);
                                 var key = dep.combi();

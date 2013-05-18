@@ -102,7 +102,7 @@ module tsdimport {
 
 					if (data.references.length > 0) {
 
-						console.log('references: ' + data.references);
+						//console.log('references: ' + data.references);
 
 						async.forEach(data.references, (ref, callback:(err?, data?:HeaderData) => void) => {
 
@@ -117,7 +117,7 @@ module tsdimport {
 									dep = new Def(def.project, match[1]);
 								}
 							}
-							console.log('dependency: ' + dep);
+							//console.log('dependency: ' + dep);
 
 							if (dep) {
 
