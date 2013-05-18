@@ -29,7 +29,7 @@ module tsdimport {
 
 		execute(id:string, head:bool = true) {
 			if (!this._commands.hasOwnProperty(id)) {
-				console.log('nothing exposed as ' + id);
+				console.log('-> unknown command ' + id);
 				return;
 			}
 			if (head) {
@@ -44,6 +44,10 @@ module tsdimport {
 				throw new Error('id collission on ' + id);
 			}
 			this._commands[id] = def;
+		}
+
+		has(id:string) {
+			return this._commands.hasOwnProperty(id);
 		}
 
 		map(id:string, to:string) {

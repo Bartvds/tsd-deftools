@@ -1,53 +1,53 @@
 {
-	"name": "tsd-deftools",
-	"description": "TypeScript definition developer tools",
-	"version": "0.0.1",
-	"homepage": "https://github.com/Bartvds/tsd-deftools",
-	"author": {
-		"name": "Bart van der Schoor",
-		"email": "bartvanderschoor@gmail.com"
-	},
-	"repository": {
-		"type": "git",
-		"url": "grit://github.com/Bartvds/tsd-deftools.git"
-	},
-	"keywords": [
-		"gruntplugin",
-		"execute",
-		"code",
-		"node",
-		"scripts",
-		"spawn",
-		"exec"
-	],
-	"bugs": {
-		"url": "https://github.com/Bartvds/tsd-deftools/issues"
-	},
-	"licenses": [
-		{
-			"type": "MIT",
-			"url": "https://github.com/Bartvds/tsd-deftools/blob/master/LICENSE-MIT"
-		}
-	],
-	"main": "build/tsd-deftools",
-	"engines": {
-		"node": ">= 0.10.0"
-	},
-	"scripts": {
-	},
-	"dependencies": {
-		"superagent": "~0.14.2",
-		"underscore": "~1.4.4",
-		"async": "~0.2.8"
-	},
-	"devDependencies": {
-		"grunt": "~0.4.1",
-		"grunt-typescript": "~0.1.5",
-		"grunt-contrib-clean": "~0.4.1",
-		"grunt-contrib-copy": "~0.4.1",
-		"grunt-execute": "~0.1.2"
-	},
-	"peerDependencies": {
-		"grunt": "~0.4.1"
-	}
+  "name": "tsd-deftools",
+  "description": "TypeScript definition developer tools",
+  "version": "0.0.1",
+  "homepage": "https://github.com/Bartvds/tsd-deftools",
+  "author": {
+    "name": "Bart van der Schoor",
+    "email": "bartvanderschoor@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "grit://github.com/Bartvds/tsd-deftools.git"
+  },
+  "keywords": [
+    "gruntplugin",
+    "execute",
+    "code",
+    "node",
+    "scripts",
+    "spawn",
+    "exec"
+  ],
+  "bugs": {
+    "url": "https://github.com/Bartvds/tsd-deftools/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/Bartvds/tsd-deftools/blob/master/LICENSE-MIT"
+    }
+  ],
+  "main": "build/tsd-deftools",
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "scripts": {},
+  "dependencies": {
+    "superagent": "~0.14.2",
+    "underscore": "~1.4.4",
+    "async": "~0.2.8",
+    "optimist": "~0.4.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-typescript": "~0.1.5",
+    "grunt-contrib-clean": "~0.4.1",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-execute": "~0.1.2"
+  },
+  "peerDependencies": {
+    "grunt": "~0.4.1"
+  }
 }

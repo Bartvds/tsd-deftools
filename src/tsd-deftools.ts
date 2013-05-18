@@ -20,7 +20,7 @@ module tsdimport {
 	//expose some easy access tools to cli
 	var expose = new Expose();
 	expose.add('info', () => {
-		console.log('info: '+ info.getNameVersion());
+		console.log(info.getNameVersion());
 		_(app.repos).keys().sort().forEach((value) => {
 			console.log('   ' + value + ': ' + app.repos[value]);
 		});
@@ -48,9 +48,18 @@ module tsdimport {
 		});
 	});*/
 
-	expose.execute('info');
-	expose.execute('help');
 
+	var argv = require('optimist').argv;
+	expose.execute('info');
+
+	if (argv._.length == 0) {
+		expose.execute('help');
+	} else {
+		expose.execute(argv._[0]);
+		if (!expose.has(argv._[0])) {
+			expose.execute('help');
+		}
+	}
 	//expose.execute('compare');
 }
 
