@@ -9,14 +9,21 @@ crude, not for general consumption unless you know what you're doing
 for now involves editing of the script, but the basic blocks are seperated for re-arrangement / configuration
 
 - list DefinitelyTyped definitions and parse standard header format
-- list tsd repos_data
-- compare the definitions and tsd repo data
+- list tsd repo_data
+- compare the definitions and tsd repo_data
 - generate tsd repo data from definition lists
 
 ## Install
 
 ````
 npm install //pull dependencies
+````
+
+## Run
+````
 grunt build //compile
-grunt execute
+grunt execute //run script
+
+//or combine + execute
+grunt dev
 ````
