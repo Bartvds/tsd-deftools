@@ -23,8 +23,11 @@ module tsdimport {
 	}
 
 	console.log(paths);
+	if(!fs.existsSync(paths.tmp)) {
+		fs.mkdir(paths.tmp);
+	}
 
-	var repos = new Repos(paths.DefinitlyTyped, paths.tsd, paths.out);
+	var repos = new Repos(paths.DefinitlyTyped, paths.tsd, paths.tmp);
 	var projects = ['underscore', 'easeljs'];
 
 	var importer = new DefinitionImporter(repos);
@@ -46,7 +49,7 @@ module tsdimport {
 
 		console.log('error: ' + res.error.length);
 		console.log('parsed: ' + res.parsed.length);
-		console.log('exportDefinitions  X');
+		console.log('exportDefinitions');
 		exporter.exportDefinitions(res.parsed, callback);
 		callback();
 	}], (err, data) => {
