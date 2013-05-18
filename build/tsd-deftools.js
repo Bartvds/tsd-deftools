@@ -201,6 +201,14 @@ var tsdimport;
 })(tsdimport || (tsdimport = {}));
 var tsdimport;
 (function (tsdimport) {
+    var ParseError = (function () {
+        function ParseError(message, test) {
+            this.message = message;
+            this.test = test;
+        }
+        return ParseError;
+    })();
+    tsdimport.ParseError = ParseError;    
     var HeaderParser = (function () {
         function HeaderParser() {
             this.nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
@@ -214,20 +222,23 @@ var tsdimport;
             if(typeof str !== 'string') {
                 str = '' + str;
             }
+            var data = new tsdimport.HeaderData(def);
             var i = str.indexOf('//');
             var len = str.length;
             if(i < 0) {
-                return null;
+                data.errors.push(new ParseError('zero comment lines'));
+                return data;
             }
-            var data = new tsdimport.HeaderData(def);
             this.nameVersion.lastIndex = i;
             this.labelUrl.lastIndex = i;
             this.authorNameUrl.lastIndex = i;
-            var err = [];
+            this.description.lastIndex = i;
+            this.referencePath.lastIndex = i;
             var match;
             match = this.nameVersion.exec(str);
             if(!match || match.length < 3) {
-                data.errors.push('unparsable name/version line');
+                data.errors.push(new ParseError('unparsable name/version line'));
+                return data;
             } else {
                 data.name = match[1];
                 data.version = match[2];
@@ -236,14 +247,16 @@ var tsdimport;
             }
             match = this.labelUrl.exec(str);
             if(!match || match.length < 2) {
-                data.errors.push('unparsable project line');
+                data.errors.push(new ParseError('unparsable project line'));
+                return data;
             } else {
                 data.projectUrl = match[2];
                 this.authorNameUrl.lastIndex = match.index + match[0].length;
             }
             match = this.authorNameUrl.exec(str);
             if(!match || match.length < 3) {
-                data.errors.push('unparsable author line');
+                data.errors.push(new ParseError('unparsable author line'));
+                return data;
             } else {
                 data.authorName = match[1];
                 data.authorUrl = match[2];
@@ -251,7 +264,8 @@ var tsdimport;
             }
             match = this.labelUrl.exec(str);
             if(!match || match.length < 3) {
-                data.errors.push('unparsable repos line');
+                data.errors.push(new ParseError('unparsable repos line'));
+                return data;
             } else {
                 data.reposUrl = match[2].replace(this.endSlash, '/');
             }
@@ -665,7 +679,7 @@ var tsdimport;
         };
         AppAPI.prototype.listRepoDependers = function (callback) {
         };
-        AppAPI.prototype.testParser = function (callback) {
+        AppAPI.prototype.listParsed = function (callback) {
             var comparer = new tsdimport.DefinitionComparer(this.repos);
             var importer = new tsdimport.DefinitionImporter(this.repos);
             var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
@@ -678,8 +692,6 @@ var tsdimport;
                     importer.parseDefinitions(res.repoAll, callback);
                 }, 
                 function (res, callback) {
-                    console.log('error: ' + res.error.length);
-                    console.log('parsed: ' + res.parsed.length);
                     callback(null, res);
                 }            ], function (err, res) {
                 callback(err, res);
@@ -806,12 +818,15 @@ var tsdimport;
             console.log(res.getStats());
         });
     });
-    expose.add('testParser', function () {
-        app.testParser(function (err, res) {
+    expose.add('listParsed', function () {
+        app.listParsed(function (err, res) {
             if(err) {
                 return console.log(err);
             }
+            console.log(util.inspect(res.parsed, false, 8));
             console.log(util.inspect(res.error, false, 8));
+            console.log('parsed: ' + res.parsed.length);
+            console.log('error: ' + res.error.length);
         });
     });
     expose.add('createUnlisted', function () {
@@ -826,7 +841,7 @@ var tsdimport;
     expose.execute('info');
     if(argv._.length == 0) {
         expose.execute('help');
-        expose.execute('testParser');
+        expose.execute('listParsed');
     } else {
         expose.execute(argv._[0]);
         if(!expose.has(argv._[0])) {

@@ -61,7 +61,7 @@ module tsdimport {
 
 		}
 
-		testParser(callback:(err?, res?:ImportResult) => void) {
+		listParsed(callback:(err?, res?:ImportResult) => void) {
 
 			var comparer = new DefinitionComparer(this.repos);
 			var importer = new DefinitionImporter(this.repos);
@@ -75,9 +75,6 @@ module tsdimport {
 				importer.parseDefinitions(res.repoAll, callback);
 
 			}, (res:ImportResult, callback:(err?, res?:ImportResult) => void) => {
-				console.log('error: ' + res.error.length);
-				console.log('parsed: ' + res.parsed.length);
-
 				//console.log(res.error);
 
 				//exporter.exportDefinitions(res.parsed, callback);

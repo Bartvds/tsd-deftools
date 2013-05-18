@@ -24,7 +24,6 @@ module tsdimport {
 
 	export class DefinitionImporter {
 
-
 		constructor(public repos:Repos) {
 
 		}
@@ -39,7 +38,6 @@ module tsdimport {
 				if (err) {
 					return callback(err);
 				}
-
 				var parser = new HeaderParser();
 				var data = parser.parse(def, source)
 
@@ -52,15 +50,12 @@ module tsdimport {
 				if (!data.isValid()) {
 					return callback([<any>def, 'invalid data']);
 				}
-				//console.log(util.inspect(data, false, 6));
-
 				return callback(null, data);
 			});
 		}
 
 		parseDefinitions(projects:Def[], finish:(err?, res?:ImportResult) => void) {
 			var self:DefinitionImporter = this;
-
 			var res = new ImportResult();
 
 			async.forEach(projects, (def:Def, callback:(err?, data?) => void) => {

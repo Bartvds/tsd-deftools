@@ -2,6 +2,12 @@
 
 module tsdimport {
 
+	export class ParseError {
+		constructor(public message:string, public test?:string) {
+
+		}
+	}
+
 	export class HeaderParser {
 		//[<\[\{\(]? [\)\}\]>]?
 
@@ -20,24 +26,27 @@ module tsdimport {
 			if (typeof str !== 'string') {
 				str = '' + str;
 			}
+			var data = new HeaderData(def);
 
 			var i = str.indexOf('//');
 			var len = str.length;
 			if (i < 0) {
-				return null;
+				data.errors.push(new ParseError('zero comment lines'));
+				return data;
 			}
-			var data = new HeaderData(def);
 
 			this.nameVersion.lastIndex = i;
 			this.labelUrl.lastIndex = i;
 			this.authorNameUrl.lastIndex = i;
+			this.description.lastIndex = i;
+			this.referencePath.lastIndex = i;
 
-			var err = [];
 			var match;
 
 			match = this.nameVersion.exec(str);
 			if (!match || match.length < 3) {
-				data.errors.push('unparsable name/version line');
+				data.errors.push(new ParseError('unparsable name/version line'));
+				return data;
 			}
 			else {
 				data.name = match[1];
@@ -48,7 +57,8 @@ module tsdimport {
 
 			match = this.labelUrl.exec(str);
 			if (!match || match.length < 2) {
-				data.errors.push('unparsable project line');
+				data.errors.push(new ParseError('unparsable project line'));
+				return data;
 			}
 			else {
 				data.projectUrl = match[2];
@@ -57,7 +67,8 @@ module tsdimport {
 
 			match = this.authorNameUrl.exec(str);
 			if (!match || match.length < 3) {
-				data.errors.push('unparsable author line');
+				data.errors.push(new ParseError('unparsable author line'));
+				return data;
 			}
 			else {
 				data.authorName = match[1];
@@ -67,7 +78,8 @@ module tsdimport {
 
 			match = this.labelUrl.exec(str);
 			if (!match || match.length < 3) {
-				data.errors.push('unparsable repos line');
+				data.errors.push(new ParseError('unparsable repos line'));
+				return data;
 			}
 			else {
 				//data.reposName = match[1];

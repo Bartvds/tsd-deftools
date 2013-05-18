@@ -28,23 +28,26 @@ module tsdimport {
 	});
 
 	expose.add('compare', () => {
-		app.compare((err?, res?:CompareResult) => {
+		app.compare((err?, res?:tsdimport.CompareResult) => {
 			if (err) return console.log(err);
 			console.log(util.inspect(res, false, 8));
 			console.log(res.getStats());
 		});
 	});
 
-	expose.add('testParser', () => {
-		app.testParser((err?, res?:ImportResult) => {
+	expose.add('listParsed', () => {
+		app.listParsed((err?, res?:tsdimport.ImportResult) => {
 			if (err) return console.log(err);
 			//console.log(util.inspect(res, false, 8));
+			console.log(util.inspect(res.parsed, false, 8));
 			console.log(util.inspect(res.error, false, 8));
+			console.log('parsed: ' + res.parsed.length);
+			console.log('error: ' + res.error.length);
 		});
 	});
 
 	expose.add('createUnlisted', () => {
-		app.createUnlisted((err?, res?:ExportResult) => {
+		app.createUnlisted((err?, res?:tsdimport.ExportResult) => {
 			if (err) return console.log(err);
 			console.log(util.inspect(res, false, 8));
 		});
@@ -63,7 +66,8 @@ module tsdimport {
 
 	if (argv._.length == 0) {
 		expose.execute('help');
-		expose.execute('testParser');
+		
+		expose.execute('listParsed');
 	} else {
 		expose.execute(argv._[0]);
 		if (!expose.has(argv._[0])) {
