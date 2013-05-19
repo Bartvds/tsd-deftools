@@ -1,6 +1,6 @@
 # tsd-deftools
 
-> developer tools to process TypeScript definitions and bulk edit [tsd](https://github.com/Diullei/tsd) and [DefinitelyTyped(https://github.com/borisyankov/DefinitelyTyped)
+> developer tools to process TypeScript definitions and bulk edit [tsd](https://github.com/Diullei/tsd) and [DefinitelyTyped](https://github.com/borisyankov/DefinitelyTyped)
 
 crude, not for general consumption unless you know what you're doing
 
