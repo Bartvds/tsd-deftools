@@ -1,6 +1,6 @@
 # tsd-deftools
 
-> developer tools to process TypeScript definitions and bulk edit tsd
+> developer tools to process TypeScript definitions and bulk edit [tsd](https://github.com/Diullei/tsd) and [DefinitelyTyped(https://github.com/borisyankov/DefinitelyTyped)
 
 crude, not for general consumption unless you know what you're doing
 
@@ -11,13 +11,15 @@ crude, not for general consumption unless you know what you're doing
 - list tsd repo_data
 - generate tsd repo data from definition lists
 
-Basic commands are beings exposed to cli (work in progress), so others are funcitonal but involve editing of a script.
+Basic commands are beings exposed to cli (work in progress), others maybe be functional but involve editing of a script.
 
 ## How
 
 Checkout repos
 
 Edit `./tsd-deftools-path.json` to have `tsd` and `DefinitelyTyped` pointing to root folder of their work checkouts.
+
+Note: the contents of the folders configured as `out` and `tmp` can/will be automatically overwritten or removed.
 
 Open commandline in the checkout.
 
