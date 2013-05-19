@@ -36,7 +36,7 @@ module tsdimport {
 		app.listParsed((err?, res?:tsdimport.ImportResult) => {
 			if (err) return console.log(err);
 			//console.log(util.inspect(res, false, 8));
-			console.log('all:\n' + util.inspect(res.all, false, 8));
+			//console.log('all:\n' + util.inspect(res.all, false, 8));
 			//console.log('error: ' + util.inspect(res.error, false, 8));
 			//console.log('hasDependency():\n' + util.inspect(res.hasDependency(), false, 8));
 			//console.log('isDependency():\n' + util.inspect(res.isDependency(), false, 8));

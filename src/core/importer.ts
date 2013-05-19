@@ -136,14 +136,23 @@ module tsdimport {
 			}, ret);
 		}*/
 
-		checkDupes():any {
-			var res:any = {}
-			res.all = this.dupeCheck(this.all);
-			res.error = this.dupeCheck(this.error);
-			res.parsed = this.dupeCheck(this.parsed);
-			res.requested = this.dupeCheck(this.requested);
-			return res;
+		checkDupes():ImportResultDupes {
+			return new ImportResultDupes(this);;
 		}
+	}
+	export class ImportResultDupes {
+		all:HeaderDataListMap;
+		error:HeaderDataListMap;
+		parsed:HeaderDataListMap;
+		requested:HeaderDataListMap;
+
+		constructor(res:ImportResult){
+			this.all = res.dupeCheck(res.all);
+			this.error = res.dupeCheck(res.error);
+			this.parsed = res.dupeCheck(res.parsed);
+			this.requested = res.dupeCheck(res.requested);
+		}
+		//more
 	}
 
 	export class DefinitionImporter {
@@ -162,7 +171,7 @@ module tsdimport {
 			var self:DefinitionImporter = this;
 
 			if (res.ready.hasOwnProperty(key)) {
-				console.log('cache hit: ' + key);
+				//console.log('cache hit: ' + key);
 				data = res.ready[key];
 				return callback(null, data);
 			}
@@ -205,7 +214,7 @@ module tsdimport {
 						}
 						var key = dep.combi();
 						if (res.map.hasOwnProperty(key)) {
-							console.log('sub cache hit: ' + key);
+							//console.log('sub cache hit: ' + key);
 							data.dependencies.push(res.map[key]);
 							return callback(null, res.map[key]);
 						}

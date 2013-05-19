@@ -632,17 +632,22 @@ var tsdimport;
             return map;
         };
         ImportResult.prototype.checkDupes = function () {
-            var res = {
-            };
-            res.all = this.dupeCheck(this.all);
-            res.error = this.dupeCheck(this.error);
-            res.parsed = this.dupeCheck(this.parsed);
-            res.requested = this.dupeCheck(this.requested);
-            return res;
+            return new ImportResultDupes(this);
+            ;
         };
         return ImportResult;
     })();
     tsdimport.ImportResult = ImportResult;    
+    var ImportResultDupes = (function () {
+        function ImportResultDupes(res) {
+            this.all = res.dupeCheck(res.all);
+            this.error = res.dupeCheck(res.error);
+            this.parsed = res.dupeCheck(res.parsed);
+            this.requested = res.dupeCheck(res.requested);
+        }
+        return ImportResultDupes;
+    })();
+    tsdimport.ImportResultDupes = ImportResultDupes;    
     var DefinitionImporter = (function () {
         function DefinitionImporter(repos) {
             this.repos = repos;
@@ -653,7 +658,6 @@ var tsdimport;
             var key = data.def.combi();
             var self = this;
             if(res.ready.hasOwnProperty(key)) {
-                console.log('cache hit: ' + key);
                 data = res.ready[key];
                 return callback(null, data);
             }
@@ -686,7 +690,6 @@ var tsdimport;
                         }
                         var key = dep.combi();
                         if(res.map.hasOwnProperty(key)) {
-                            console.log('sub cache hit: ' + key);
                             data.dependencies.push(res.map[key]);
                             return callback(null, res.map[key]);
                         }
@@ -993,7 +996,6 @@ var tsdimport;
             if(err) {
                 return console.log(err);
             }
-            console.log('all:\n' + util.inspect(res.all, false, 8));
             console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
             console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
             console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
