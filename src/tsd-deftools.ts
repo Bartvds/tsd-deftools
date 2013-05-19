@@ -27,6 +27,7 @@ module tsdimport {
 	expose.add('compare', () => {
 		app.compare((err?, res?:tsdimport.CompareResult) => {
 			if (err) return console.log(err);
+			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res, false, 8));
 			console.log(res.getStats());
 		});
@@ -35,14 +36,15 @@ module tsdimport {
 	expose.add('listParsed', () => {
 		app.listParsed((err?, res?:tsdimport.ImportResult) => {
 			if (err) return console.log(err);
+			if (!res) return console.log('listParsed returned no result');
 			//console.log(util.inspect(res, false, 8));
 			//console.log('all:\n' + util.inspect(res.all, false, 8));
 			//console.log('error: ' + util.inspect(res.error, false, 8));
 			//console.log('hasDependency():\n' + util.inspect(res.hasDependency(), false, 8));
 			//console.log('isDependency():\n' + util.inspect(res.isDependency(), false, 8));
-			console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
-			console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
-			console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
+			console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 5));
+			console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 5));
+			//console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
 			console.log('all: ' + res.all.length);
 			console.log('parsed: ' + res.parsed.length);
 			console.log('error: ' + res.error.length);
@@ -52,24 +54,29 @@ module tsdimport {
 			console.log('countDependencies(): ' + res.countDependencies());
 			console.log('isDependency(): ' + res.isDependency().length);
 			console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
-			console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 3));
+			console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 4));
 
 		});
 	});
-
+	/*
 	expose.add('createUnlisted', () => {
 		app.createUnlisted((err?, res?:tsdimport.ExportResult) => {
 			if (err) return console.log(err);
 			console.log(util.inspect(res, false, 8));
-		});
-	});
-/*
-	expose.add('parseCurrent', () => {
-		app.parseCurrent((err?, res?:CompareResult) => {
-			if (err) return console.log(err);
-			console.log(util.inspect(res, false, 8));
+			console.log('created(): ' + res.created);
+			console.log('created(): ' + res.created.length);
 		});
 	});*/
+
+	expose.add('recreateAll', () => {
+		app.recreateAll((err?, res?:tsdimport.ExportResult) => {
+			if (err) return console.log(err);
+			if (!res) return console.log('recreateAll returned no result');
+
+			console.log(util.inspect(res, false, 8));
+			console.log('created(): ' + res.created.length);
+		});
+	});
 
 	//kill this when included
 	var argv = require('optimist').argv;
@@ -78,7 +85,7 @@ module tsdimport {
 	if (argv._.length == 0) {
 		expose.execute('help');
 
-		expose.execute('listParsed');
+		expose.execute('recreateAll');
 	} else {
 		expose.execute(argv._[0]);
 		if (!expose.has(argv._[0])) {

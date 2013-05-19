@@ -23,58 +23,23 @@ module tsdimport {
 			comparer.compare(callback);
 		}
 
-		createUnlisted(callback:(err?, res?:ExportResult) => void) {
-
-			var comparer = new DefinitionComparer(this.repos);
-			var importer = new DefinitionImporter(this.repos);
-			var exporter = new DefinitionExporter(this.repos, this.info);
-
-			async.waterfall([(callback:(err) => void) => {
-				comparer.compare(callback);
-
-			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
-				console.log(res.getStats());
-				importer.parseDefinitions(res.repoUnlisted, callback);
-
-			}, (res:ImportResult, callback:(err?) => void) => {
-				console.log('error: ' + res.error.length);
-				console.log('parsed: ' + res.parsed.length);
-
-				exporter.exportDefinitions(res.parsed, callback);
-
-			}], callback);
-		}
-
-
-		listRepoDependers(callback:(err?, res?:ExportResult) => void) {
-
-		}
-
 		listParsed(callback:(err?, res?:ImportResult) => void) {
 
 			var comparer = new DefinitionComparer(this.repos);
 			var importer = new DefinitionImporter(this.repos);
-			var exporter = new DefinitionExporter(this.repos, this.info);
 
 			async.waterfall([(callback:(err) => void) => {
 				comparer.compare(callback);
 
 			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
+				if (!res) return callback('DefinitionComparer.compare returned no result');
 				console.log(res.getStats());
 				importer.parseDefinitions(res.repoAll, callback);
 
-			}/*, (res:ImportResult, callback:(err?, res?:ImportResult) => void) => {
-				//console.log(res.error);
-				//console.log(res.error);
-
-				//exporter.exportDefinitions(res.parsed, callback);
-
-				callback(null, res);
-
-			}*/], callback);
+			}], callback);
 		}
 
-		exportParsed(callback:(err?, res?:ExportResult) => void) {
+		recreateAll(callback:(err?, res?:ExportResult) => void) {
 
 			var comparer = new DefinitionComparer(this.repos);
 			var importer = new DefinitionImporter(this.repos);
@@ -84,16 +49,22 @@ module tsdimport {
 				comparer.compare(callback);
 
 			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
+				if (!res) return callback('DefinitionComparer.compare returned no result');
 				console.log(res.getStats());
+
 				importer.parseDefinitions(res.repoAll, callback);
 
-			}, (res:ImportResult, callback:(err?, res?:ImportResult) => void) => {
-				//console.log(res.error);
-				//console.log(res.error);
+			}, (res:ImportResult, callback:(err?, res?:ExportResult) => void) => {
+				if (!res) return callback('DefinitionImporter.parseDefinitions returned no result');
+				console.log('error: ' + res.error.length);
+				console.log('parsed: ' + res.parsed.length);
 
-				exporter.exportDefinitions(res.parsed, callback);
+				//TODO add more validation
 
-				callback(null, res);
+				helper.removeFilesFromDir(exporter.repos.out, (err) => {
+					if (err) return callback(err, null);
+					exporter.exportDefinitions(res.all, callback);
+				});
 
 			}], callback);
 		}

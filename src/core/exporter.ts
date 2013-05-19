@@ -56,7 +56,6 @@ module tsdimport {
 			var res = new ExportResult();
 			async.forEach(list, (data:HeaderData, callback:(err?, data?) => void) => {
 
-				console.log('writeDef ' + data.name);
 				self.writeDef(data, encoder, (err?, exp?:HeaderExport) => {
 					if (err)  return callback(err);
 					if (data) {
@@ -83,13 +82,15 @@ module tsdimport {
 				"name": header.def.name,
 				"description": header.name + (header.submodule ? ' (' + header.submodule + ')' : '') + (header.submodule ? ' ' + header.submodule : ''),
 				"generated": <any> this.info.getNameVersion() + ' @ ' + new Date().toUTCString(),
+				"valid": header.isValid(),
 				"versions": [
 					{
 						"version": header.version,
 						"key": getGUID(),
 						"dependencies": _.map(header.dependencies, (data:HeaderData) => {
 							return {
-								"name": data.name,
+								"valid": data.isValid(),
+								"name": data.def.name,
 								"version": data.version
 							}
 						}),

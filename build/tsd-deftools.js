@@ -20,40 +20,22 @@ var tsdimport;
             var comparer = new tsdimport.DefinitionComparer(this.repos);
             comparer.compare(callback);
         };
-        AppAPI.prototype.createUnlisted = function (callback) {
-            var comparer = new tsdimport.DefinitionComparer(this.repos);
-            var importer = new tsdimport.DefinitionImporter(this.repos);
-            var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
-            async.waterfall([
-                function (callback) {
-                    comparer.compare(callback);
-                }, 
-                function (res, callback) {
-                    console.log(res.getStats());
-                    importer.parseDefinitions(res.repoUnlisted, callback);
-                }, 
-                function (res, callback) {
-                    console.log('error: ' + res.error.length);
-                    console.log('parsed: ' + res.parsed.length);
-                    exporter.exportDefinitions(res.parsed, callback);
-                }            ], callback);
-        };
-        AppAPI.prototype.listRepoDependers = function (callback) {
-        };
         AppAPI.prototype.listParsed = function (callback) {
             var comparer = new tsdimport.DefinitionComparer(this.repos);
             var importer = new tsdimport.DefinitionImporter(this.repos);
-            var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
             async.waterfall([
                 function (callback) {
                     comparer.compare(callback);
                 }, 
                 function (res, callback) {
+                    if(!res) {
+                        return callback('DefinitionComparer.compare returned no result');
+                    }
                     console.log(res.getStats());
                     importer.parseDefinitions(res.repoAll, callback);
                 }            ], callback);
         };
-        AppAPI.prototype.exportParsed = function (callback) {
+        AppAPI.prototype.recreateAll = function (callback) {
             var comparer = new tsdimport.DefinitionComparer(this.repos);
             var importer = new tsdimport.DefinitionImporter(this.repos);
             var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
@@ -62,12 +44,24 @@ var tsdimport;
                     comparer.compare(callback);
                 }, 
                 function (res, callback) {
+                    if(!res) {
+                        return callback('DefinitionComparer.compare returned no result');
+                    }
                     console.log(res.getStats());
                     importer.parseDefinitions(res.repoAll, callback);
                 }, 
                 function (res, callback) {
-                    exporter.exportDefinitions(res.parsed, callback);
-                    callback(null, res);
+                    if(!res) {
+                        return callback('DefinitionImporter.parseDefinitions returned no result');
+                    }
+                    console.log('error: ' + res.error.length);
+                    console.log('parsed: ' + res.parsed.length);
+                    tsdimport.helper.removeFilesFromDir(exporter.repos.out, function (err) {
+                        if(err) {
+                            return callback(err, null);
+                        }
+                        exporter.exportDefinitions(res.all, callback);
+                    });
                 }            ], callback);
         };
         return AppAPI;
@@ -241,6 +235,11 @@ var tsdimport;
             }
             if(!fs.existsSync(paths.tmp)) {
                 fs.mkdir(paths.tmp);
+            } else {
+            }
+            if(!fs.existsSync(paths.out)) {
+                fs.mkdir(paths.out);
+            } else {
             }
             return paths;
         }
@@ -309,7 +308,6 @@ var tsdimport;
             var encoder = this.getEncoder();
             var res = new ExportResult();
             async.forEach(list, function (data, callback) {
-                console.log('writeDef ' + data.name);
                 self.writeDef(data, encoder, function (err, exp) {
                     if(err) {
                         return callback(err);
@@ -336,13 +334,15 @@ var tsdimport;
                 "name": header.def.name,
                 "description": header.name + (header.submodule ? ' (' + header.submodule + ')' : '') + (header.submodule ? ' ' + header.submodule : ''),
                 "generated": this.info.getNameVersion() + ' @ ' + new Date().toUTCString(),
+                "valid": header.isValid(),
                 "versions": [
                     {
                         "version": header.version,
                         "key": tsdimport.getGUID(),
                         "dependencies": _.map(header.dependencies, function (data) {
                             return {
-                                "name": data.name,
+                                "valid": data.isValid(),
+                                "name": data.def.name,
                                 "version": data.version
                             };
                         }),
@@ -724,6 +724,9 @@ var tsdimport;
                         if(err) {
                             console.log('err looping references ' + err);
                         }
+                        if(data.references.length !== data.dependencies.length) {
+                            data.errors.push(new tsdimport.ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
+                        }
                         callback(err, data);
                     });
                 } else {
@@ -841,6 +844,49 @@ var tsdimport;
         return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
     }
     tsdimport.getGUID = getGUID;
+})(tsdimport || (tsdimport = {}));
+var tsdimport;
+(function (tsdimport) {
+    var fs = require('fs');
+    var path = require('path');
+    var util = require('util');
+    var async = require('async');
+    (function (helper) {
+        function removeFilesFromDir(dir, callback) {
+            dir = path.resolve(dir);
+            fs.exists(dir, function (exists) {
+                if(!exists) {
+                    return callback('path does not exists: ' + dir, null);
+                }
+                async.waterfall([
+                    function (callback) {
+                        return fs.stat(dir, callback);
+                    }, 
+                    function (stats, callback) {
+                        if(!stats.isDirectory()) {
+                            return callback('path is not a directory: ' + dir, null);
+                        }
+                        return fs.readdir(dir, callback);
+                    }, 
+                    function (files, callback) {
+                        async.forEach(files, function (file, callback) {
+                            var full = path.join(dir, file);
+                            fs.stat(full, function (err, stats) {
+                                if(err) {
+                                    return callback(err, null);
+                                }
+                                if(stats.isFile()) {
+                                    return fs.unlink(full, callback);
+                                }
+                                return callback(null, null);
+                            });
+                        }, callback);
+                    }                ], callback);
+            });
+        }
+        helper.removeFilesFromDir = removeFilesFromDir;
+    })(tsdimport.helper || (tsdimport.helper = {}));
+    var helper = tsdimport.helper;
 })(tsdimport || (tsdimport = {}));
 var tsdimport;
 (function (tsdimport) {
@@ -987,6 +1033,9 @@ var tsdimport;
             if(err) {
                 return console.log(err);
             }
+            if(!res) {
+                return console.log('compare returned no result');
+            }
             console.log(util.inspect(res, false, 8));
             console.log(res.getStats());
         });
@@ -996,9 +1045,11 @@ var tsdimport;
             if(err) {
                 return console.log(err);
             }
-            console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
-            console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
-            console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
+            if(!res) {
+                return console.log('listParsed returned no result');
+            }
+            console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 5));
+            console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 5));
             console.log('all: ' + res.all.length);
             console.log('parsed: ' + res.parsed.length);
             console.log('error: ' + res.error.length);
@@ -1008,22 +1059,26 @@ var tsdimport;
             console.log('countDependencies(): ' + res.countDependencies());
             console.log('isDependency(): ' + res.isDependency().length);
             console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
-            console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 3));
+            console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 4));
         });
     });
-    expose.add('createUnlisted', function () {
-        app.createUnlisted(function (err, res) {
+    expose.add('recreateAll', function () {
+        app.recreateAll(function (err, res) {
             if(err) {
                 return console.log(err);
             }
+            if(!res) {
+                return console.log('recreateAll returned no result');
+            }
             console.log(util.inspect(res, false, 8));
+            console.log('created(): ' + res.created.length);
         });
     });
     var argv = require('optimist').argv;
     expose.execute('info');
     if(argv._.length == 0) {
         expose.execute('help');
-        expose.execute('listParsed');
+        expose.execute('recreateAll');
     } else {
         expose.execute(argv._[0]);
         if(!expose.has(argv._[0])) {

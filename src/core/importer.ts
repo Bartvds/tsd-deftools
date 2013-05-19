@@ -137,7 +137,8 @@ module tsdimport {
 		}*/
 
 		checkDupes():ImportResultDupes {
-			return new ImportResultDupes(this);;
+			return new ImportResultDupes(this);
+			;
 		}
 	}
 	export class ImportResultDupes {
@@ -146,12 +147,13 @@ module tsdimport {
 		parsed:HeaderDataListMap;
 		requested:HeaderDataListMap;
 
-		constructor(res:ImportResult){
+		constructor(res:ImportResult) {
 			this.all = res.dupeCheck(res.all);
 			this.error = res.dupeCheck(res.error);
 			this.parsed = res.dupeCheck(res.parsed);
 			this.requested = res.dupeCheck(res.requested);
 		}
+
 		//more
 	}
 
@@ -237,6 +239,7 @@ module tsdimport {
 								if (res.all.indexOf(sub) < 0) {
 									res.all.push(sub);
 								}
+								//TODO ditch these
 								if (!sub.isValid()) {
 									if (res.error.indexOf(sub) < 0) {
 										res.error.push(sub);
@@ -254,6 +257,9 @@ module tsdimport {
 					}, (err) => {
 						if (err) {
 							console.log('err looping references ' + err);
+						}
+						if (data.references.length !== data.dependencies.length) {
+							data.errors.push(new ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
 						}
 						callback(err, data);
 					});
@@ -292,6 +298,7 @@ module tsdimport {
 					if (res.all.indexOf(data) < 0) {
 						res.all.push(data);
 					}
+					//TODO ditch these
 					if (!data.isValid()) {
 						if (res.error.indexOf(data) < 0) {
 							res.error.push(data);

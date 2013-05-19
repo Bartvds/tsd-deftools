@@ -23,6 +23,13 @@ module tsdimport {
 			}
 			if (!fs.existsSync(paths.tmp)) {
 				fs.mkdir(paths.tmp);
+			} else {
+				//TODO add some safety checks?
+			}
+			if (!fs.existsSync(paths.out)) {
+				fs.mkdir(paths.out);
+			} else {
+				//TODO add some safety checks?
 			}
 			return paths;
 		}

@@ -6,4 +6,5 @@
 ///<reference path="header.ts" />
 ///<reference path="importer.ts" />
 ///<reference path="lib.ts" />
+///<reference path="helper.ts" />
 ///<reference path="loader.ts" />
