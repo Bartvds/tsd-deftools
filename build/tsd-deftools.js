@@ -434,9 +434,17 @@ var tsdimport;
             this.references = [];
             this.dependencies = [];
             this.source = '';
+            if(!this.def) {
+            }
         }
+        HeaderData.prototype.combi = function () {
+            if(!this.def) {
+                return '[' + this.name + ']';
+            }
+            return this.def.combi();
+        };
         HeaderData.prototype.getDefUrl = function () {
-            if(!this.def || !this.reposUrl) {
+            if(!this.reposUrl) {
                 return '';
             }
             return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
@@ -460,11 +468,13 @@ var tsdimport;
     })();
     tsdimport.HeaderData = HeaderData;    
     var ParseError = (function () {
-        function ParseError(message, text) {
+        function ParseError(message, text, ref) {
             if (typeof message === "undefined") { message = ''; }
             if (typeof text === "undefined") { text = ''; }
+            if (typeof ref === "undefined") { ref = null; }
             this.message = message;
             this.text = text;
+            this.ref = ref;
         }
         return ParseError;
     })();
@@ -567,19 +577,34 @@ var tsdimport;
     var definition = /^([\w _-]+)\.d\.ts$/;
     var ImportResult = (function () {
         function ImportResult() {
+            this.all = [];
             this.error = [];
             this.parsed = [];
+            this.requested = [];
             this.map = {
             };
+            this.ready = {
+            };
         }
-        ImportResult.prototype.hasDependency = function () {
-            return _(this.parsed).filter(function (value) {
+        ImportResult.prototype.hasDependency = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
+            return _.filter(list, function (value) {
                 return value.dependencies.length > 0;
             });
         };
-        ImportResult.prototype.isDependency = function () {
+        ImportResult.prototype.hasReference = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
+            return _.filter(list, function (value) {
+                return value.references.length > 0;
+            });
+        };
+        ImportResult.prototype.isDependency = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
             var ret = [];
-            return _(this.parsed).reduce(function (ret, value) {
+            return _.reduce(list, function (ret, value) {
                 _(value.dependencies).forEach(function (dep) {
                     if(ret.indexOf(dep) < 0) {
                         ret.push(dep);
@@ -587,6 +612,63 @@ var tsdimport;
                 });
                 return ret;
             }, ret);
+        };
+        ImportResult.prototype.dupeCheck = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
+            var ret = _.reduce(list, function (memo, value) {
+                var key = value.def.name;
+                if(memo.hasOwnProperty(key)) {
+                    memo[key].push(value);
+                } else {
+                    memo[key] = [
+                        value
+                    ];
+                }
+                return memo;
+            }, {
+            });
+            return _.reduce(_.keys(ret), function (memo, key) {
+                if(ret[key].length > 1) {
+                    memo[key] = ret[key];
+                }
+                return memo;
+            }, {
+            });
+        };
+        ImportResult.prototype.hasDependencyStat = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            return _.reduce(this.hasDependency(list), function (memo, value) {
+                _.forEach(value.dependencies, function (dep) {
+                    var key = value.combi();
+                    if(memo.hasOwnProperty(key)) {
+                        memo[key]++;
+                        ;
+                    } else {
+                        memo[key] = 1;
+                        ;
+                    }
+                });
+                return memo;
+            }, {
+            });
+        };
+        ImportResult.prototype.isDependencyStat = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            return _.reduce(this.hasDependency(list), function (memo, value) {
+                _.forEach(value.dependencies, function (dep) {
+                    var key = dep.combi();
+                    if(memo.hasOwnProperty(key)) {
+                        memo[key]++;
+                        ;
+                    } else {
+                        memo[key] = 1;
+                        ;
+                    }
+                });
+                return memo;
+            }, {
+            });
         };
         return ImportResult;
     })();
@@ -596,106 +678,122 @@ var tsdimport;
             this.repos = repos;
             this.parser = new tsdimport.HeaderParser();
         }
-        DefinitionImporter.prototype.loadData = function (data, callback) {
+        DefinitionImporter.prototype.loadData = function (data, res, callback) {
             var src = path.resolve(this.repos.defs + data.def.project + '/' + data.def.name + '.d.ts');
             var key = data.def.combi();
             var self = this;
+            if(res.ready.hasOwnProperty(key)) {
+                console.log('cache hit: ' + key);
+                data = res.ready[key];
+                return callback(null, data);
+            }
+            res.map[key] = data;
             fs.readFile(src, 'utf-8', function (err, source) {
                 if(err) {
                     data.errors.push(new tsdimport.ParseError('cannot load source', err));
                     return callback(null, data);
                 }
-                self.parser.parse(data, source);
                 data.source = src;
-                if(data.errors.length > 0) {
-                    return callback(null, data);
-                }
+                self.parser.parse(data, source);
                 if(!data.isValid()) {
-                    data.errors.push(new tsdimport.ParseError('invalid fields'));
+                    data.errors.push(new tsdimport.ParseError('invalid parse'));
+                }
+                if(data.references.length > 0) {
+                    async.forEach(data.references, function (ref, callback) {
+                        var match, dep;
+                        match = ref.match(dependency);
+                        if(match && match.length >= 3) {
+                            dep = new tsdimport.Def(match[1], match[2]);
+                        } else {
+                            match = ref.match(definition);
+                            if(match && match.length >= 2) {
+                                dep = new tsdimport.Def(data.def.project, match[1]);
+                            }
+                        }
+                        if(!dep) {
+                            data.errors.push(new tsdimport.ParseError('bad reference', ref));
+                            return callback(null, data);
+                        }
+                        var key = dep.combi();
+                        if(res.map.hasOwnProperty(key)) {
+                            console.log('sub cache hit: ' + key);
+                            data.dependencies.push(res.map[key]);
+                            return callback(null, res.map[key]);
+                        }
+                        var sub = new tsdimport.HeaderData(dep);
+                        res.map[key] = sub;
+                        self.loadData(sub, res, function (err, sub) {
+                            if(err) {
+                                if(sub) {
+                                    sub.errors.push(new tsdimport.ParseError('cannot load dependency' + sub.combi(), err));
+                                } else {
+                                    data.errors.push(new tsdimport.ParseError('cannot load dependency', err));
+                                }
+                            }
+                            if(!sub) {
+                                data.errors.push(new tsdimport.ParseError('cannot load dependency', err));
+                            } else {
+                                data.dependencies.push(sub);
+                                res.all.push(data);
+                                if(!sub.isValid()) {
+                                    if(res.error.indexOf(sub) < 0) {
+                                        res.error.push(sub);
+                                    }
+                                } else if(res.parsed.indexOf(sub) < 0) {
+                                    res.parsed.push(sub);
+                                }
+                            }
+                            return callback(null, data);
+                        });
+                    }, function (err) {
+                        if(err) {
+                            console.log('err looping references ' + err);
+                        }
+                        callback(err, data);
+                    });
+                } else {
                     return callback(null, data);
                 }
-                return callback(null, data);
             });
         };
         DefinitionImporter.prototype.parseDefinitions = function (projects, finish) {
-            var res = new ImportResult();
             var self = this;
-            async.forEach(projects, function (def, callback) {
+            async.reduce(projects, new ImportResult(), function (res, def, callback) {
                 var key = def.combi();
+                if(res.map.hasOwnProperty(key)) {
+                    return callback(null, res);
+                }
                 var data = new tsdimport.HeaderData(def);
                 res.map[key] = data;
-                self.loadData(data, function (err, data) {
+                self.loadData(data, res, function (err, data) {
                     if(err) {
                         console.log([
                             'err', 
                             err
                         ]);
-                        return callback(err);
+                        return callback(null, res);
                     }
                     if(!data) {
-                        return callback('null data');
+                        console.log([
+                            'null data', 
+                            err
+                        ]);
+                        return callback(null, res);
                     }
+                    res.requested.push(data);
+                    res.all.push(data);
                     if(!data.isValid()) {
-                        res.error.push(data);
-                        return callback(null, data);
-                    }
-                    res.parsed.push(data);
-                    if(data.references.length > 0) {
-                        async.forEach(data.references, function (ref, callback) {
-                            var match, dep;
-                            match = ref.match(dependency);
-                            if(match && match.length >= 3) {
-                                dep = new tsdimport.Def(match[1], match[2]);
-                            } else {
-                                match = ref.match(definition);
-                                if(match && match.length >= 2) {
-                                    dep = new tsdimport.Def(def.project, match[1]);
-                                }
-                            }
-                            if(dep) {
-                                var sub = new tsdimport.HeaderData(dep);
-                                var key = dep.combi();
-                                if(res.map.hasOwnProperty(key)) {
-                                    console.log('dependency from cache: ' + key);
-                                    sub = res.map[key];
-                                    data.dependencies.push(sub);
-                                    return callback(null, sub);
-                                }
-                                self.loadData(sub, function (err, sub) {
-                                    if(err) {
-                                        if(sub) {
-                                            sub.errors.push(new tsdimport.ParseError('cannot load dependency', err));
-                                        }
-                                        return callback(err);
-                                    }
-                                    if(!sub) {
-                                        return callback('cannot load dependency');
-                                    }
-                                    res.map[key] = sub;
-                                    data.dependencies.push(sub);
-                                    return callback(null, data);
-                                });
-                                return;
-                            }
-                            return callback([
-                                'bad reference', 
-                                def.project, 
-                                def.name, 
-                                ref
-                            ]);
-                        }, function (err) {
-                            callback(err);
-                        });
+                        if(res.error.indexOf(data) < 0) {
+                            res.error.push(data);
+                        }
                     } else {
-                        callback(null, data);
+                        if(res.parsed.indexOf(data) < 0) {
+                            res.parsed.push(data);
+                        }
                     }
+                    return callback(null, res);
                 });
-            }, function (err) {
-                if(err) {
-                    return finish(err);
-                }
-                finish(null, res);
-            });
+            }, finish);
         };
         return DefinitionImporter;
     })();
@@ -855,14 +953,17 @@ var tsdimport;
             if(err) {
                 return console.log(err);
             }
-            console.log('parsed(): ' + util.inspect(res.parsed, false, 8));
-            console.log('error(): ' + util.inspect(res.error, false, 8));
-            console.log('hasDependency(): ' + util.inspect(res.hasDependency(), false, 8));
-            console.log('isDependency(): ' + util.inspect(res.isDependency(), false, 8));
+            console.log('all:\n' + util.inspect(res.all, false, 8));
+            console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
+            console.log('all: ' + res.all.length);
             console.log('parsed: ' + res.parsed.length);
             console.log('error: ' + res.error.length);
+            console.log('hasReference(): ' + res.hasReference().length);
             console.log('hasDependency(): ' + res.hasDependency().length);
             console.log('isDependency(): ' + res.isDependency().length);
+            console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
+            console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
+            console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
         });
     });
     expose.add('createUnlisted', function () {

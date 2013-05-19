@@ -14,6 +14,10 @@ module tsdimport {
 		DefinitelyTyped:string;
 		local:string;
 	}
+	export interface NumberMap {
+		[name: string]: number;
+	}
+
 	export class ToolInfo {
 		constructor(public name:string, public version:string, public pkg:any) {
 			if (!this.name) throw Error('no name');

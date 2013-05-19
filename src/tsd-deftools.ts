@@ -36,14 +36,20 @@ module tsdimport {
 		app.listParsed((err?, res?:tsdimport.ImportResult) => {
 			if (err) return console.log(err);
 			//console.log(util.inspect(res, false, 8));
-			console.log('parsed(): ' + util.inspect(res.parsed, false, 8));
-			console.log('error(): ' + util.inspect(res.error, false, 8));
-			console.log('hasDependency(): ' + util.inspect(res.hasDependency(), false, 8));
-			console.log('isDependency(): ' + util.inspect(res.isDependency(), false, 8));
+			console.log('all:\n' + util.inspect(res.all, false, 8));
+			//console.log('error: ' + util.inspect(res.error, false, 8));
+			//console.log('hasDependency():\n' + util.inspect(res.hasDependency(), false, 8));
+			//console.log('isDependency():\n' + util.inspect(res.isDependency(), false, 8));
+			console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
+			console.log('all: ' + res.all.length);
 			console.log('parsed: ' + res.parsed.length);
 			console.log('error: ' + res.error.length);
+			console.log('hasReference(): ' + res.hasReference().length);
 			console.log('hasDependency(): ' + res.hasDependency().length);
 			console.log('isDependency(): ' + res.isDependency().length);
+			console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
+			console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
+			console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
 		});
 	});
 

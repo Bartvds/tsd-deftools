@@ -2,6 +2,13 @@
 
 module tsdimport {
 
+	export interface HeaderDataMap {
+		[name: string]: HeaderData;
+	}
+	export interface HeaderDataListMap {
+		[name: string]:HeaderData[];
+	}
+
 	export class HeaderData {
 		name:string = '';
 		version:string = '*';
@@ -20,11 +27,20 @@ module tsdimport {
 		source:string = '';
 
 		constructor(public def:Def) {
+			if (!this.def) {
+				//throw Error('null def');
+			}
+		}
 
+		combi():string {
+			if (!this.def) {
+				return '[' + this.name + ']';
+			}
+			return this.def.combi();
 		}
 
 		getDefUrl():string {
-			if (!this.def || !this.reposUrl) return '';
+			if (!this.reposUrl) return '';
 			return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
 		}
 
@@ -48,7 +64,7 @@ module tsdimport {
 	}
 
 	export class ParseError {
-		constructor(public message:string = '', public text?:string = '') {
+		constructor(public message:string = '', public text?:string = '', public ref?:any = null) {
 
 		}
 	}
