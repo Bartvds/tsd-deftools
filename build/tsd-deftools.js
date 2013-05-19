@@ -18,12 +18,7 @@ var tsdimport;
         }
         AppAPI.prototype.compare = function (callback) {
             var comparer = new tsdimport.DefinitionComparer(this.repos);
-            comparer.compare(function (err, res) {
-                if(err) {
-                    return callback(err);
-                }
-                callback(null, res);
-            });
+            comparer.compare(callback);
         };
         AppAPI.prototype.createUnlisted = function (callback) {
             var comparer = new tsdimport.DefinitionComparer(this.repos);
@@ -41,9 +36,7 @@ var tsdimport;
                     console.log('error: ' + res.error.length);
                     console.log('parsed: ' + res.parsed.length);
                     exporter.exportDefinitions(res.parsed, callback);
-                }            ], function (err, res) {
-                callback(err, res);
-            });
+                }            ], callback);
         };
         AppAPI.prototype.listRepoDependers = function (callback) {
         };
@@ -58,12 +51,24 @@ var tsdimport;
                 function (res, callback) {
                     console.log(res.getStats());
                     importer.parseDefinitions(res.repoAll, callback);
+                }            ], callback);
+        };
+        AppAPI.prototype.exportParsed = function (callback) {
+            var comparer = new tsdimport.DefinitionComparer(this.repos);
+            var importer = new tsdimport.DefinitionImporter(this.repos);
+            var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
+            async.waterfall([
+                function (callback) {
+                    comparer.compare(callback);
                 }, 
                 function (res, callback) {
+                    console.log(res.getStats());
+                    importer.parseDefinitions(res.repoAll, callback);
+                }, 
+                function (res, callback) {
+                    exporter.exportDefinitions(res.parsed, callback);
                     callback(null, res);
-                }            ], function (err, res) {
-                callback(err, res);
-            });
+                }            ], callback);
         };
         return AppAPI;
     })();
@@ -215,70 +220,6 @@ var tsdimport;
         return DefinitionComparer;
     })();
     tsdimport.DefinitionComparer = DefinitionComparer;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
-    var path = require('path');
-    var fs = require('fs');
-    var trailSlash = /(\w)(\/?)$/;
-    var ToolInfo = (function () {
-        function ToolInfo(name, version, pkg) {
-            this.name = name;
-            this.version = version;
-            this.pkg = pkg;
-            if(!this.name) {
-                throw Error('no name');
-            }
-            if(!this.version) {
-                throw Error('no version');
-            }
-            if(!this.pkg) {
-                throw Error('no pkg');
-            }
-        }
-        ToolInfo.prototype.getNameVersion = function () {
-            return this.name + ' ' + this.version;
-        };
-        return ToolInfo;
-    })();
-    tsdimport.ToolInfo = ToolInfo;    
-    var Repos = (function () {
-        function Repos(defs, tsd, out) {
-            this.defs = defs;
-            this.tsd = tsd;
-            this.out = out;
-            if(!this.defs) {
-                throw ('missing local');
-            }
-            if(!this.tsd) {
-                throw ('missing tsd');
-            }
-            if(!this.out) {
-                throw ('missing out');
-            }
-            this.defs = path.resolve(this.defs).replace(trailSlash, '$1/');
-            this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
-            this.out = path.resolve(this.out).replace(trailSlash, '$1/');
-            if(!fs.existsSync(this.defs) || !fs.statSync(this.defs).isDirectory()) {
-                throw new Error('path not exist or not directoy: ' + this.defs);
-            }
-            if(!fs.existsSync(this.tsd) || !fs.statSync(this.tsd).isDirectory()) {
-                throw new Error('path not exist or not directoy: ' + this.tsd);
-            }
-            if(!fs.existsSync(this.out) || !fs.statSync(this.out).isDirectory()) {
-                throw new Error('path not exist or not directoy: ' + this.out);
-            }
-        }
-        return Repos;
-    })();
-    tsdimport.Repos = Repos;    
-    function getGUID() {
-        var S4 = function () {
-            return Math.floor(Math.random() * 0x10000).toString(16);
-        };
-        return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
-    }
-    tsdimport.getGUID = getGUID;
 })(tsdimport || (tsdimport = {}));
 var tsdimport;
 (function (tsdimport) {
@@ -586,6 +527,13 @@ var tsdimport;
             this.ready = {
             };
         }
+        ImportResult.prototype.hasReference = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
+            return _.filter(list, function (value) {
+                return value.references.length > 0;
+            });
+        };
         ImportResult.prototype.hasDependency = function (list) {
             if (typeof list === "undefined") { list = null; }
             list = list || this.all;
@@ -593,12 +541,19 @@ var tsdimport;
                 return value.dependencies.length > 0;
             });
         };
-        ImportResult.prototype.hasReference = function (list) {
+        ImportResult.prototype.countReferences = function (list) {
             if (typeof list === "undefined") { list = null; }
             list = list || this.all;
-            return _.filter(list, function (value) {
-                return value.references.length > 0;
-            });
+            return _.reduce(list, function (memo, value) {
+                return memo + value.references.length;
+            }, 0);
+        };
+        ImportResult.prototype.countDependencies = function (list) {
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
+            return _.reduce(list, function (memo, value) {
+                return memo + value.dependencies.length;
+            }, 0);
         };
         ImportResult.prototype.isDependency = function (list) {
             if (typeof list === "undefined") { list = null; }
@@ -638,37 +593,52 @@ var tsdimport;
         };
         ImportResult.prototype.hasDependencyStat = function (list) {
             if (typeof list === "undefined") { list = null; }
-            return _.reduce(this.hasDependency(list), function (memo, value) {
+            var map = _.reduce(this.hasDependency(list), function (memo, value) {
                 _.forEach(value.dependencies, function (dep) {
                     var key = value.combi();
                     if(memo.hasOwnProperty(key)) {
                         memo[key]++;
-                        ;
                     } else {
                         memo[key] = 1;
-                        ;
                     }
                 });
                 return memo;
             }, {
             });
+            map._total = _.reduce(map, function (memo, num) {
+                memo += num;
+                return memo;
+            }, 0);
+            return map;
         };
         ImportResult.prototype.isDependencyStat = function (list) {
             if (typeof list === "undefined") { list = null; }
-            return _.reduce(this.hasDependency(list), function (memo, value) {
+            var map = _.reduce(this.hasDependency(list), function (memo, value) {
                 _.forEach(value.dependencies, function (dep) {
                     var key = dep.combi();
                     if(memo.hasOwnProperty(key)) {
                         memo[key]++;
-                        ;
                     } else {
                         memo[key] = 1;
-                        ;
                     }
                 });
                 return memo;
             }, {
             });
+            map._total = _.reduce(map, function (memo, num) {
+                memo += num;
+                return memo;
+            }, 0);
+            return map;
+        };
+        ImportResult.prototype.checkDupes = function () {
+            var res = {
+            };
+            res.all = this.dupeCheck(this.all);
+            res.error = this.dupeCheck(this.error);
+            res.parsed = this.dupeCheck(this.parsed);
+            res.requested = this.dupeCheck(this.requested);
+            return res;
         };
         return ImportResult;
     })();
@@ -734,7 +704,9 @@ var tsdimport;
                                 data.errors.push(new tsdimport.ParseError('cannot load dependency', err));
                             } else {
                                 data.dependencies.push(sub);
-                                res.all.push(data);
+                                if(res.all.indexOf(sub) < 0) {
+                                    res.all.push(sub);
+                                }
                                 if(!sub.isValid()) {
                                     if(res.error.indexOf(sub) < 0) {
                                         res.error.push(sub);
@@ -743,7 +715,7 @@ var tsdimport;
                                     res.parsed.push(sub);
                                 }
                             }
-                            return callback(null, data);
+                            callback(null, data);
                         });
                     }, function (err) {
                         if(err) {
@@ -781,7 +753,9 @@ var tsdimport;
                         return callback(null, res);
                     }
                     res.requested.push(data);
-                    res.all.push(data);
+                    if(res.all.indexOf(data) < 0) {
+                        res.all.push(data);
+                    }
                     if(!data.isValid()) {
                         if(res.error.indexOf(data) < 0) {
                             res.error.push(data);
@@ -793,11 +767,77 @@ var tsdimport;
                     }
                     return callback(null, res);
                 });
-            }, finish);
+            }, function (err, res) {
+                finish(err, res);
+            });
         };
         return DefinitionImporter;
     })();
     tsdimport.DefinitionImporter = DefinitionImporter;    
+})(tsdimport || (tsdimport = {}));
+var tsdimport;
+(function (tsdimport) {
+    var path = require('path');
+    var fs = require('fs');
+    var trailSlash = /(\w)(\/?)$/;
+    var ToolInfo = (function () {
+        function ToolInfo(name, version, pkg) {
+            this.name = name;
+            this.version = version;
+            this.pkg = pkg;
+            if(!this.name) {
+                throw Error('no name');
+            }
+            if(!this.version) {
+                throw Error('no version');
+            }
+            if(!this.pkg) {
+                throw Error('no pkg');
+            }
+        }
+        ToolInfo.prototype.getNameVersion = function () {
+            return this.name + ' ' + this.version;
+        };
+        return ToolInfo;
+    })();
+    tsdimport.ToolInfo = ToolInfo;    
+    var Repos = (function () {
+        function Repos(defs, tsd, out) {
+            this.defs = defs;
+            this.tsd = tsd;
+            this.out = out;
+            if(!this.defs) {
+                throw ('missing local');
+            }
+            if(!this.tsd) {
+                throw ('missing tsd');
+            }
+            if(!this.out) {
+                throw ('missing out');
+            }
+            this.defs = path.resolve(this.defs).replace(trailSlash, '$1/');
+            this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
+            this.out = path.resolve(this.out).replace(trailSlash, '$1/');
+            if(!fs.existsSync(this.defs) || !fs.statSync(this.defs).isDirectory()) {
+                throw new Error('path not exist or not directoy: ' + this.defs);
+            }
+            if(!fs.existsSync(this.tsd) || !fs.statSync(this.tsd).isDirectory()) {
+                throw new Error('path not exist or not directoy: ' + this.tsd);
+            }
+            if(!fs.existsSync(this.out) || !fs.statSync(this.out).isDirectory()) {
+                throw new Error('path not exist or not directoy: ' + this.out);
+            }
+        }
+        return Repos;
+    })();
+    tsdimport.Repos = Repos;    
+    function getGUID() {
+        var S4 = function () {
+            return Math.floor(Math.random() * 0x10000).toString(16);
+        };
+        return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+    }
+    tsdimport.getGUID = getGUID;
 })(tsdimport || (tsdimport = {}));
 var tsdimport;
 (function (tsdimport) {
@@ -954,16 +994,19 @@ var tsdimport;
                 return console.log(err);
             }
             console.log('all:\n' + util.inspect(res.all, false, 8));
+            console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
+            console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
             console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
             console.log('all: ' + res.all.length);
             console.log('parsed: ' + res.parsed.length);
             console.log('error: ' + res.error.length);
             console.log('hasReference(): ' + res.hasReference().length);
             console.log('hasDependency(): ' + res.hasDependency().length);
+            console.log('countReferences(): ' + res.countReferences());
+            console.log('countDependencies(): ' + res.countDependencies());
             console.log('isDependency(): ' + res.isDependency().length);
             console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
-            console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 8));
-            console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 8));
+            console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 3));
         });
     });
     expose.add('createUnlisted', function () {

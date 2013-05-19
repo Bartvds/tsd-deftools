@@ -1,6 +1,4 @@
 ///<reference path="_ref.ts" />
-///<reference path="lib.ts" />
-///<reference path="header.ts" />
 
 module tsdimport {
 
@@ -24,6 +22,13 @@ module tsdimport {
 		constructor() {
 		}
 
+		hasReference(list:HeaderData[] = null):HeaderData[] {
+			list = list || this.all;
+			return _.filter(list, (value:HeaderData) => {
+				return value.references.length > 0;
+			})
+		}
+
 		hasDependency(list:HeaderData[] = null):HeaderData[] {
 			list = list || this.all;
 			return _.filter(list, (value:HeaderData) => {
@@ -31,11 +36,18 @@ module tsdimport {
 			})
 		}
 
-		hasReference(list:HeaderData[] = null):HeaderData[] {
+		countReferences(list:HeaderData[] = null):number {
 			list = list || this.all;
-			return _.filter(list, (value:HeaderData) => {
-				return value.references.length > 0;
-			})
+			return _.reduce(list, (memo:number, value:HeaderData) => {
+				return memo + value.references.length;
+			}, 0)
+		}
+
+		countDependencies(list:HeaderData[] = null):number {
+			list = list || this.all;
+			return _.reduce(list, (memo:number, value:HeaderData) => {
+				return memo + value.dependencies.length;
+			}, 0)
 		}
 
 		isDependency(list:HeaderData[] = null):HeaderData[] {
@@ -74,31 +86,63 @@ module tsdimport {
 		}
 
 		hasDependencyStat(list:HeaderData[] = null):NumberMap {
-			return _.reduce(this.hasDependency(list), (memo:NumberMap, value:HeaderData) => {
+			var map = _.reduce(this.hasDependency(list), (memo:NumberMap, value:HeaderData) => {
 				_.forEach(value.dependencies, (dep:HeaderData) => {
 					var key = value.combi();
 					if (memo.hasOwnProperty(key)) {
-						memo[key]++;;
+						memo[key]++;
 					} else {
-						memo[key] = 1;;
+						memo[key] = 1;
 					}
 				});
 				return memo;
 			}, {});
-		};
+			map._total = _.reduce(map, (memo:number, num:number) => {
+				memo += num;
+				return memo;
+			}, 0);
+			return map;
+		}
 
 		isDependencyStat(list:HeaderData[] = null):NumberMap {
-			return _.reduce(this.hasDependency(list), (memo:NumberMap, value:HeaderData) => {
+			var map = _.reduce(this.hasDependency(list), (memo:NumberMap, value:HeaderData) => {
 				_.forEach(value.dependencies, (dep:HeaderData) => {
 					var key = dep.combi();
 					if (memo.hasOwnProperty(key)) {
-						memo[key]++;;
+						memo[key]++;
 					} else {
-						memo[key] = 1;;
+						memo[key] = 1;
 					}
 				});
 				return memo;
 			}, {});
+			map._total = _.reduce(map, (memo:number, num:number) => {
+				memo += num;
+				return memo;
+			}, 0);
+			return map;
+		}
+
+		/*success(list:HeaderData[] = null):HeaderData[] {
+			list = list || this.all;
+			var ret:HeaderData[] = [];
+			return _.reduce(list, (ret:HeaderData[], value:HeaderData) => {
+				_(value.dependencies).forEach((dep:HeaderData) => {
+					if (ret.indexOf(dep) < 0) {
+						ret.push(dep);
+					}
+				});
+				return ret;
+			}, ret);
+		}*/
+
+		checkDupes():any {
+			var res:any = {}
+			res.all = this.dupeCheck(this.all);
+			res.error = this.dupeCheck(this.error);
+			res.parsed = this.dupeCheck(this.parsed);
+			res.requested = this.dupeCheck(this.requested);
+			return res;
 		}
 	}
 
@@ -165,7 +209,7 @@ module tsdimport {
 							data.dependencies.push(res.map[key]);
 							return callback(null, res.map[key]);
 						}
-						var sub = new HeaderData(dep);
+						var sub:HeaderData = new HeaderData(dep);
 						res.map[key] = sub;
 
 						self.loadData(sub, res, (err, sub?:HeaderData) => {
@@ -181,7 +225,9 @@ module tsdimport {
 							}
 							else {
 								data.dependencies.push(sub);
-								res.all.push(data);
+								if (res.all.indexOf(sub) < 0) {
+									res.all.push(sub);
+								}
 								if (!sub.isValid()) {
 									if (res.error.indexOf(sub) < 0) {
 										res.error.push(sub);
@@ -194,7 +240,7 @@ module tsdimport {
 								//console.log('save in: ' + data.name);
 								//return callback(null, data);
 							}
-							return callback(null, data);
+							callback(null, data);
 						});
 					}, (err) => {
 						if (err) {
@@ -234,7 +280,9 @@ module tsdimport {
 						return callback(null, res);
 					}
 					res.requested.push(data);
-					res.all.push(data);
+					if (res.all.indexOf(data) < 0) {
+						res.all.push(data);
+					}
 					if (!data.isValid()) {
 						if (res.error.indexOf(data) < 0) {
 							res.error.push(data);
@@ -246,7 +294,10 @@ module tsdimport {
 					}
 					return callback(null, res);
 				});
-			}, finish);
+			}, (err?, res?:ImportResult) => {
+
+				finish(err, res)
+			});
 		}
 	}
 }

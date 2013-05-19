@@ -1,5 +1,4 @@
 ///<reference path="_ref.ts" />
-///<reference path="lib.ts" />
 
 module tsdimport {
 
