@@ -30,12 +30,19 @@ npm install
 
 Basic use
 ````
-node . //default (latest dev probably)
+node . //default (for now latest under-development probably (so lazy :)
 node . help //view commands
 node . <command> //command
 ````
 
 To recompile edited code
 ````
-grunt build
+//have grunt-cli global
+npm install grunt-cli -g
+````
+
+Rebuild
+````
+grunt build //build only
+grunt dev //build and run default command
 ````
