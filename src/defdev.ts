@@ -1,10 +1,10 @@
 ///<reference path="_ref.ts" />
-///<reference path="deftool/api.ts" />
-///<reference path="deftool/lib.ts" />
-///<reference path="deftool/config.ts" />
-///<reference path="deftool/expose.ts" />
+///<reference path="deftools/api.ts" />
+///<reference path="deftools/lib.ts" />
+///<reference path="deftools/config.ts" />
+///<reference path="deftools/expose.ts" />
 
-module deftool {
+module deftools {
 
 	var fs = require('fs');
 	var path = require('path');

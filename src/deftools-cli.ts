@@ -1,8 +1,8 @@
 ///<reference path="_ref.ts" />
-///<reference path="deftool/_ref.ts" />
-///<reference path="deftool/expose.ts" />
+///<reference path="deftools/_ref.ts" />
+///<reference path="xm/expose.ts" />
 
-module deftool {
+module deftools {
 
 	var fs = require('fs');
 	var path = require('path');
@@ -13,10 +13,10 @@ module deftool {
 
 	var info = Config.getInfo();
 	var paths = Config.getPaths();
-	var app:AppAPI = new AppAPI(info, new Repos(paths.local, paths.tsd, paths.tmp));
+	var app:API = new API(info, new Repos(paths.typings, paths.tsd, paths.tmp));
 
 	//expose some easy access tools to cli
-	var expose = new Expose();
+	var expose = new xm.Expose();
 	expose.add('info', () => {
 		console.log(info.getNameVersion());
 		_(app.repos).keys().sort().forEach((value) => {
@@ -25,7 +25,7 @@ module deftool {
 	});
 
 	expose.add('compare', () => {
-		app.compare((err?, res?:deftool.CompareResult) => {
+		app.compare((err?, res?:deftools.CompareResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res, false, 8));
@@ -34,7 +34,7 @@ module deftool {
 	});
 
 	expose.add('listParsed', () => {
-		app.listParsed((err?, res?:deftool.ImportResult) => {
+		app.listParsed((err?, res?:deftools.ImportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('listParsed returned no result');
 			//console.log(util.inspect(res, false, 8));
@@ -69,7 +69,7 @@ module deftool {
 	});*/
 
 	expose.add('recreateAll', () => {
-		app.recreateAll((err?, res?:deftool.ExportResult) => {
+		app.recreateAll((err?, res?:deftools.ExportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('recreateAll returned no result');
 

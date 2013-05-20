@@ -1,0 +1,12 @@
+{
+	"baseline": {
+		"tsd": "https://github.com/Diullei/tsd/commit/1bf20a902ee76041892f166d05270888f44db5a5",
+		"typings": "https://github.com/borisyankov/DefinitelyTyped/commit/54910ed18ac319006892458a5fe35ebb4a9e7548"
+		"path": {
+			"tsd": "./../deftools-data/baseline/tsd",
+			"typings": "./../deftools-data/baseline/typings",
+			"out": "./../deftools-data/baseline/out",
+			"tmp": "./../deftools-data/baseline/tmp"
+		}
+	}
+}

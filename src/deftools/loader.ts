@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
 
-module deftool {
+module deftools {
 
 	var fs = require('fs');
 	var path = require('path');

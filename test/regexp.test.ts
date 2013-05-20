@@ -31,10 +31,11 @@ describe('xm.RexExpGlue', () => {
 		expect(exp.getFlags(/xyz/gim)).to.equal('gim');
 	});
 	it('should clean RegExp flags', () => {
-		/*exp = xm.RegExpGlue.get();
+		exp = xm.RegExpGlue.get();
 		expect(exp.getCleanFlags('abci')).to.equal('i');
 		expect(exp.getCleanFlags('abcgmi')).to.equal('gmi');
-		expect(exp.getCleanFlags('gixsm')).to.equal('gixsm');*/
+		expect(exp.getCleanFlags('gixsm')).to.equal('gim');
+		expect(exp.getCleanFlags('gixsmqrst')).to.equal('gim');
 	});
 
 	describe('be initialised', () => {
@@ -94,11 +95,11 @@ describe('xm.RexExpGlue', () => {
 			e = exp.join();
 			expect(''+e).to.equal('/alpha123bravo/');
 		});
-		it('with flags', () => {
+		it('with flags appended', () => {
 			e = exp.join('gm');
 			expect(''+e).to.equal('/alpha123bravo/gm');
 		});
-		it('use seperators to glued', () => {
+		it('use seperators to glue', () => {
 			e = exp.join('', / +/);
 			expect(''+e).to.equal('/alpha +123 +bravo/');
 			e = exp.join('gi', / +/);

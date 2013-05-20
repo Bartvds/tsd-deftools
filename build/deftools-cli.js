@@ -1,12 +1,12 @@
-var deftool;
-(function (deftool) {
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
     var async = require('async');
     var _ = require('underscore');
-    var AppAPI = (function () {
-        function AppAPI(info, repos) {
+    var API = (function () {
+        function API(info, repos) {
             this.info = info;
             this.repos = repos;
             if(!this.info) {
@@ -16,13 +16,13 @@ var deftool;
                 throw Error('no repos');
             }
         }
-        AppAPI.prototype.compare = function (callback) {
-            var comparer = new deftool.DefinitionComparer(this.repos);
+        API.prototype.compare = function (callback) {
+            var comparer = new deftools.DefinitionComparer(this.repos);
             comparer.compare(callback);
         };
-        AppAPI.prototype.listParsed = function (callback) {
-            var comparer = new deftool.DefinitionComparer(this.repos);
-            var importer = new deftool.DefinitionImporter(this.repos);
+        API.prototype.listParsed = function (callback) {
+            var comparer = new deftools.DefinitionComparer(this.repos);
+            var importer = new deftools.DefinitionImporter(this.repos);
             async.waterfall([
                 function (callback) {
                     comparer.compare(callback);
@@ -35,10 +35,10 @@ var deftool;
                     importer.parseDefinitions(res.repoAll, callback);
                 }            ], callback);
         };
-        AppAPI.prototype.recreateAll = function (callback) {
-            var comparer = new deftool.DefinitionComparer(this.repos);
-            var importer = new deftool.DefinitionImporter(this.repos);
-            var exporter = new deftool.DefinitionExporter(this.repos, this.info);
+        API.prototype.recreateAll = function (callback) {
+            var comparer = new deftools.DefinitionComparer(this.repos);
+            var importer = new deftools.DefinitionImporter(this.repos);
+            var exporter = new deftools.DefinitionExporter(this.repos, this.info);
             async.waterfall([
                 function (callback) {
                     comparer.compare(callback);
@@ -56,7 +56,7 @@ var deftool;
                     }
                     console.log('error: ' + res.error.length);
                     console.log('parsed: ' + res.parsed.length);
-                    deftool.helper.removeFilesFromDir(exporter.repos.out, function (err) {
+                    deftools.helper.removeFilesFromDir(exporter.repos.out, function (err) {
                         if(err) {
                             return callback(err, null);
                         }
@@ -64,12 +64,12 @@ var deftool;
                     });
                 }            ], callback);
         };
-        return AppAPI;
+        return API;
     })();
-    deftool.AppAPI = AppAPI;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.API = API;    
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -88,7 +88,7 @@ var deftool;
         };
         return Def;
     })();
-    deftool.Def = Def;    
+    deftools.Def = Def;    
     function getDupes(arr) {
         var uni = _.unique(arr);
         arr = _.filter(arr, function (value) {
@@ -101,7 +101,7 @@ var deftool;
         });
         return arr;
     }
-    deftool.getDupes = getDupes;
+    deftools.getDupes = getDupes;
     function getDefCollide(arr) {
         var map = _.reduce(arr, function (memo, def) {
             if(!memo.hasOwnProperty(def.name)) {
@@ -123,7 +123,7 @@ var deftool;
         });
         return ret;
     }
-    deftool.getDefCollide = getDefCollide;
+    deftools.getDefCollide = getDefCollide;
     var CompareResult = (function () {
         function CompareResult() {
             this.repoAll = [];
@@ -150,7 +150,7 @@ var deftool;
         };
         return CompareResult;
     })();
-    deftool.CompareResult = CompareResult;    
+    deftools.CompareResult = CompareResult;    
     var CompareStats = (function () {
         function CompareStats(res) {
             this.res = res;
@@ -175,7 +175,7 @@ var deftool;
         };
         return CompareStats;
     })();
-    deftool.CompareStats = CompareStats;    
+    deftools.CompareStats = CompareStats;    
     var DefinitionComparer = (function () {
         function DefinitionComparer(repos) {
             this.repos = repos;
@@ -184,10 +184,10 @@ var deftool;
             var self = this;
             async.parallel({
                 defs: function (callback) {
-                    deftool.loader.loadRepoDefList(self.repos, callback);
+                    deftools.loader.loadRepoDefList(self.repos, callback);
                 },
                 tsd: function (callback) {
-                    deftool.loader.loadTsdList(self.repos, callback);
+                    deftools.loader.loadTsdList(self.repos, callback);
                 }
             }, function (err, results) {
                 var res = new CompareResult();
@@ -213,32 +213,40 @@ var deftool;
         };
         return DefinitionComparer;
     })();
-    deftool.DefinitionComparer = DefinitionComparer;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.DefinitionComparer = DefinitionComparer;    
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
     (function (Config) {
-        var paths;
         var info;
-        function getPaths() {
-            if(paths) {
-                return paths;
+        function getPaths(src) {
+            var paths;
+            if(typeof src === 'undefined') {
+                src = './tsd-deftools-path.json';
             }
-            var tmp = path.resolve('./tsd-deftools-path.json');
+            src = path.resolve(src);
             try  {
-                paths = JSON.parse(fs.readFileSync(tmp, 'utf-8'));
+                paths = JSON.parse(fs.readFileSync(src, 'utf-8'));
             } catch (e) {
                 throw (e);
             }
+            if(!fs.existsSync(paths.typings)) {
+                throw ('typings does not exist ' + paths.typings);
+            }
+            if(!fs.existsSync(paths.tsd)) {
+                throw ('tsd does not exist ' + paths.tsd);
+            }
             if(!fs.existsSync(paths.tmp)) {
                 fs.mkdir(paths.tmp);
+                console.log('Config created paths.tmp ' + paths.tmp);
             } else {
             }
             if(!fs.existsSync(paths.out)) {
                 fs.mkdir(paths.out);
+                console.log('Config created paths.out ' + paths.out);
             } else {
             }
             return paths;
@@ -254,14 +262,14 @@ var deftool;
             } catch (e) {
                 throw (e);
             }
-            return info = new deftool.ToolInfo(pkg.name, pkg.version, pkg);
+            return info = new deftools.ToolInfo(pkg.name, pkg.version, pkg);
         }
         Config.getInfo = getInfo;
-    })(deftool.Config || (deftool.Config = {}));
-    var Config = deftool.Config;
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    })(deftools.Config || (deftools.Config = {}));
+    var Config = deftools.Config;
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -273,7 +281,7 @@ var deftool;
         }
         return ExportResult;
     })();
-    deftool.ExportResult = ExportResult;    
+    deftools.ExportResult = ExportResult;    
     var HeaderExport = (function () {
         function HeaderExport(header, path) {
             this.header = header;
@@ -281,7 +289,7 @@ var deftool;
         }
         return HeaderExport;
     })();
-    deftool.HeaderExport = HeaderExport;    
+    deftools.HeaderExport = HeaderExport;    
     var DefinitionExporter = (function () {
         function DefinitionExporter(repos, info) {
             this.repos = repos;
@@ -323,7 +331,7 @@ var deftool;
         };
         return DefinitionExporter;
     })();
-    deftool.DefinitionExporter = DefinitionExporter;    
+    deftools.DefinitionExporter = DefinitionExporter;    
     var Encode = (function () {
         function Encode(repos, info) {
             this.repos = repos;
@@ -338,7 +346,7 @@ var deftool;
                 "versions": [
                     {
                         "version": header.version,
-                        "key": deftool.getGUID(),
+                        "key": deftools.getGUID(),
                         "dependencies": _.map(header.dependencies, function (data) {
                             return {
                                 "valid": data.isValid(),
@@ -356,10 +364,10 @@ var deftool;
         };
         return Encode;
     })();
-    deftool.Encode = Encode;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.Encode = Encode;    
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var _ = require('underscore');
     var LineParserCore = (function () {
         function LineParserCore() {
@@ -482,7 +490,7 @@ var deftool;
         };
         return LineParserCore;
     })();
-    deftool.LineParserCore = LineParserCore;    
+    deftools.LineParserCore = LineParserCore;    
     var LineParserMatcher = (function () {
         function LineParserMatcher(type, exp, extractor) {
             this.type = type;
@@ -498,7 +506,7 @@ var deftool;
         };
         return LineParserMatcher;
     })();
-    deftool.LineParserMatcher = LineParserMatcher;    
+    deftools.LineParserMatcher = LineParserMatcher;    
     var LineParser = (function () {
         function LineParser(id, type, callback, nextIds) {
             if (typeof nextIds === "undefined") { nextIds = []; }
@@ -523,7 +531,7 @@ var deftool;
         };
         return LineParser;
     })();
-    deftool.LineParser = LineParser;    
+    deftools.LineParser = LineParser;    
     var LineParserMatch = (function () {
         function LineParserMatch(parser, match) {
             this.parser = parser;
@@ -537,10 +545,92 @@ var deftool;
         };
         return LineParserMatch;
     })();
-    deftool.LineParserMatch = LineParserMatch;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.LineParserMatch = LineParserMatch;    
+})(deftools || (deftools = {}));
+var xm;
+(function (xm) {
+    var expTrim = /^\/(.*)\/([a-z]+)*$/gm;
+    var flagFilter = /[gim]/;
+    var RegExpGlue = (function () {
+        function RegExpGlue() {
+            var exp = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                exp[_i] = arguments[_i + 0];
+            }
+            this.parts = [];
+            if(exp.length > 0) {
+                this.append.apply(this, exp);
+            }
+        }
+        RegExpGlue.get = function get() {
+            var exp = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                exp[_i] = arguments[_i + 0];
+            }
+            var e = new RegExpGlue();
+            return e.append.apply(e, exp);
+        };
+        RegExpGlue.prototype.append = function () {
+            var _this = this;
+            var exp = [];
+            for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                exp[_i] = arguments[_i + 0];
+            }
+            exp.forEach(function (value) {
+                _this.parts.push('' + value);
+            }, this);
+            return this;
+        };
+        RegExpGlue.prototype.getBody = function (exp) {
+            expTrim.lastIndex = 0;
+            var trim = expTrim.exec('' + exp);
+            if(!trim) {
+                return '';
+            }
+            return typeof trim[1] !== 'undefined' ? trim[1] : '';
+        };
+        RegExpGlue.prototype.getFlags = function (exp) {
+            expTrim.lastIndex = 0;
+            var trim = expTrim.exec('' + exp);
+            if(!trim) {
+                return '';
+            }
+            return typeof trim[2] !== 'undefined' ? this.getCleanFlags(trim[2]) : '';
+        };
+        RegExpGlue.prototype.getCleanFlags = function (flags) {
+            var ret = '';
+            for(var i = 0; i < flags.length; i++) {
+                var char = flags.charAt(i);
+                if(flagFilter.test(char) && ret.indexOf(char) < 0) {
+                    ret += char;
+                }
+            }
+            return ret;
+        };
+        RegExpGlue.prototype.join = function (flags, seperator) {
+            var glueBody = seperator ? this.getBody(seperator) : '';
+            var chunks = [];
+            flags = typeof flags !== 'undefined' ? this.getCleanFlags(flags) : '';
+            this.parts.forEach(function (exp, index, arr) {
+                expTrim.lastIndex = 0;
+                var trim = expTrim.exec('' + exp);
+                if(!trim) {
+                    return;
+                }
+                if(trim.length < 2) {
+                    console.log(trim);
+                    return;
+                }
+                chunks.push(trim[1]);
+            }, this);
+            return new RegExp(chunks.join(glueBody), flags);
+        };
+        return RegExpGlue;
+    })();
+    xm.RegExpGlue = RegExpGlue;    
+})(xm || (xm = {}));
+var deftools;
+(function (deftools) {
     var HeaderData = (function () {
         function HeaderData(def) {
             this.def = def;
@@ -588,7 +678,7 @@ var deftool;
         };
         return HeaderData;
     })();
-    deftool.HeaderData = HeaderData;    
+    deftools.HeaderData = HeaderData;    
     var ParseError = (function () {
         function ParseError(message, text, ref) {
             if (typeof message === "undefined") { message = ''; }
@@ -600,7 +690,7 @@ var deftool;
         }
         return ParseError;
     })();
-    deftool.ParseError = ParseError;    
+    deftools.ParseError = ParseError;    
     var typeHead = /^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+(?:\.\d+)*)?[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$/;
     var HeaderParser = (function () {
         function HeaderParser() {
@@ -608,12 +698,21 @@ var deftool;
         HeaderParser.prototype.parse = function (data, source) {
             console.log('parse');
             console.log(data.combi());
-            var parser = new deftool.LineParserCore();
-            parser.addMatcher(new deftool.LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, function (match) {
+            var parser = new deftools.LineParserCore();
+            var space = /[ \t]+/;
+            var spaceOpt = /[ \t]*/;
+            var commentStart = /^[ \t]*?\/\/+[ \t]*/;
+            var headStart = /Type definitions?[ \t]*(?:for)?:?[ \t]*/;
+            var exp;
+            var glue;
+            glue = xm.RegExpGlue.get();
+            glue.append();
+            exp = xm.RegExpGlue.get().join();
+            parser.addMatcher(new deftools.LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, function (match) {
             }));
-            parser.addMatcher(new deftool.LineParserMatcher('headNameVersion', typeHead, function (match) {
+            parser.addMatcher(new deftools.LineParserMatcher('headNameVersion', typeHead, function (match) {
             }));
-            parser.addParser(new deftool.LineParser('head', 'headNameVersion', function (match, parent, parser) {
+            parser.addParser(new deftools.LineParser('head', 'headNameVersion', function (match, parent, parser) {
                 console.log('apply');
                 console.log(parser.getName());
                 console.log(match);
@@ -621,7 +720,7 @@ var deftool;
             }, [
                 'comment'
             ]));
-            parser.addParser(new deftool.LineParser('comment', 'comment', function (match, parent, parser) {
+            parser.addParser(new deftools.LineParser('comment', 'comment', function (match, parent, parser) {
                 console.log('apply');
                 console.log(parser.getName());
                 console.log(match);
@@ -637,7 +736,7 @@ var deftool;
         };
         return HeaderParser;
     })();
-    deftool.HeaderParser = HeaderParser;    
+    deftools.HeaderParser = HeaderParser;    
     var HeaderParserOri = (function () {
         function HeaderParserOri() {
             this.nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
@@ -723,10 +822,10 @@ var deftool;
         };
         return HeaderParserOri;
     })();
-    deftool.HeaderParserOri = HeaderParserOri;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.HeaderParserOri = HeaderParserOri;    
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -855,7 +954,7 @@ var deftool;
         };
         return ImportResult;
     })();
-    deftool.ImportResult = ImportResult;    
+    deftools.ImportResult = ImportResult;    
     var ImportResultDupes = (function () {
         function ImportResultDupes(res) {
             this.all = res.dupeCheck(res.all);
@@ -865,11 +964,11 @@ var deftool;
         }
         return ImportResultDupes;
     })();
-    deftool.ImportResultDupes = ImportResultDupes;    
+    deftools.ImportResultDupes = ImportResultDupes;    
     var DefinitionImporter = (function () {
         function DefinitionImporter(repos) {
             this.repos = repos;
-            this.parser = new deftool.HeaderParser();
+            this.parser = new deftools.HeaderParser();
         }
         DefinitionImporter.prototype.loadData = function (data, res, callback) {
             var src = path.resolve(this.repos.defs + data.def.project + '/' + data.def.name + '.d.ts');
@@ -882,28 +981,28 @@ var deftool;
             res.map[key] = data;
             fs.readFile(src, 'utf-8', function (err, source) {
                 if(err) {
-                    data.errors.push(new deftool.ParseError('cannot load source', err));
+                    data.errors.push(new deftools.ParseError('cannot load source', err));
                     return callback(null, data);
                 }
                 data.source = src;
                 self.parser.parse(data, source);
                 if(!data.isValid()) {
-                    data.errors.push(new deftool.ParseError('invalid parse'));
+                    data.errors.push(new deftools.ParseError('invalid parse'));
                 }
                 if(data.references.length > 0) {
                     async.forEach(data.references, function (ref, callback) {
                         var match, dep;
                         match = ref.match(dependency);
                         if(match && match.length >= 3) {
-                            dep = new deftool.Def(match[1], match[2]);
+                            dep = new deftools.Def(match[1], match[2]);
                         } else {
                             match = ref.match(definition);
                             if(match && match.length >= 2) {
-                                dep = new deftool.Def(data.def.project, match[1]);
+                                dep = new deftools.Def(data.def.project, match[1]);
                             }
                         }
                         if(!dep) {
-                            data.errors.push(new deftool.ParseError('bad reference', ref));
+                            data.errors.push(new deftools.ParseError('bad reference', ref));
                             return callback(null, data);
                         }
                         var key = dep.combi();
@@ -911,18 +1010,18 @@ var deftool;
                             data.dependencies.push(res.map[key]);
                             return callback(null, res.map[key]);
                         }
-                        var sub = new deftool.HeaderData(dep);
+                        var sub = new deftools.HeaderData(dep);
                         res.map[key] = sub;
                         self.loadData(sub, res, function (err, sub) {
                             if(err) {
                                 if(sub) {
-                                    sub.errors.push(new deftool.ParseError('cannot load dependency' + sub.combi(), err));
+                                    sub.errors.push(new deftools.ParseError('cannot load dependency' + sub.combi(), err));
                                 } else {
-                                    data.errors.push(new deftool.ParseError('cannot load dependency', err));
+                                    data.errors.push(new deftools.ParseError('cannot load dependency', err));
                                 }
                             }
                             if(!sub) {
-                                data.errors.push(new deftool.ParseError('cannot load dependency', err));
+                                data.errors.push(new deftools.ParseError('cannot load dependency', err));
                             } else {
                                 data.dependencies.push(sub);
                                 if(res.all.indexOf(sub) < 0) {
@@ -943,7 +1042,7 @@ var deftool;
                             console.log('err looping references ' + err);
                         }
                         if(data.references.length !== data.dependencies.length) {
-                            data.errors.push(new deftool.ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
+                            data.errors.push(new deftools.ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
                         }
                         callback(err, data);
                     });
@@ -959,7 +1058,7 @@ var deftool;
                 if(res.map.hasOwnProperty(key)) {
                     return callback(null, res);
                 }
-                var data = new deftool.HeaderData(def);
+                var data = new deftools.HeaderData(def);
                 res.map[key] = data;
                 self.loadData(data, res, function (err, data) {
                     if(err) {
@@ -997,13 +1096,18 @@ var deftool;
         };
         return DefinitionImporter;
     })();
-    deftool.DefinitionImporter = DefinitionImporter;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.DefinitionImporter = DefinitionImporter;    
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var path = require('path');
     var fs = require('fs');
     var trailSlash = /(\w)(\/?)$/;
+    var ConfPaths = (function () {
+        function ConfPaths() { }
+        return ConfPaths;
+    })();
+    deftools.ConfPaths = ConfPaths;    
     var ToolInfo = (function () {
         function ToolInfo(name, version, pkg) {
             this.name = name;
@@ -1024,7 +1128,7 @@ var deftool;
         };
         return ToolInfo;
     })();
-    deftool.ToolInfo = ToolInfo;    
+    deftools.ToolInfo = ToolInfo;    
     var Repos = (function () {
         function Repos(defs, tsd, out) {
             this.defs = defs;
@@ -1054,17 +1158,17 @@ var deftool;
         }
         return Repos;
     })();
-    deftool.Repos = Repos;    
+    deftools.Repos = Repos;    
     function getGUID() {
         var S4 = function () {
             return Math.floor(Math.random() * 0x10000).toString(16);
         };
         return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
     }
-    deftool.getGUID = getGUID;
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    deftools.getGUID = getGUID;
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -1104,11 +1208,11 @@ var deftool;
             });
         }
         helper.removeFilesFromDir = removeFilesFromDir;
-    })(deftool.helper || (deftool.helper = {}));
-    var helper = deftool.helper;
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    })(deftools.helper || (deftools.helper = {}));
+    var helper = deftools.helper;
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -1153,7 +1257,7 @@ var deftool;
                                     if(stats.isDirectory()) {
                                         return callback(false);
                                     }
-                                    ret.push(new deftool.Def(file, name.replace(extDef, '')));
+                                    ret.push(new deftools.Def(file, name.replace(extDef, '')));
                                     callback(null);
                                 });
                             }, function (err) {
@@ -1180,11 +1284,11 @@ var deftool;
             });
         }
         loader.loadTsdList = loadTsdList;
-    })(deftool.loader || (deftool.loader = {}));
-    var loader = deftool.loader;
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    })(deftools.loader || (deftools.loader = {}));
+    var loader = deftools.loader;
+})(deftools || (deftools = {}));
+var xm;
+(function (xm) {
     var _ = require('underscore');
     var Expose = (function () {
         function Expose() {
@@ -1228,19 +1332,19 @@ var deftool;
         };
         return Expose;
     })();
-    deftool.Expose = Expose;    
-})(deftool || (deftool = {}));
-var deftool;
-(function (deftool) {
+    xm.Expose = Expose;    
+})(xm || (xm = {}));
+var deftools;
+(function (deftools) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
     var async = require('async');
     var _ = require('underscore');
-    var info = deftool.Config.getInfo();
-    var paths = deftool.Config.getPaths();
-    var app = new deftool.AppAPI(info, new deftool.Repos(paths.local, paths.tsd, paths.tmp));
-    var expose = new deftool.Expose();
+    var info = deftools.Config.getInfo();
+    var paths = deftools.Config.getPaths();
+    var app = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
+    var expose = new xm.Expose();
     expose.add('info', function () {
         console.log(info.getNameVersion());
         _(app.repos).keys().sort().forEach(function (value) {
@@ -1304,4 +1408,4 @@ var deftool;
             expose.execute('help');
         }
     }
-})(deftool || (deftool = {}));
+})(deftools || (deftools = {}));

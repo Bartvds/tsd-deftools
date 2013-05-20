@@ -1,7 +1,8 @@
 ///<reference path="_ref.ts" />
 ///<reference path="parser.ts" />
+///<reference path="../xm/regexp.ts" />
 
-module deftool {
+module deftools {
 
 	export interface HeaderDataMap {
 		[name: string]: HeaderData;
@@ -78,8 +79,22 @@ module deftool {
 
 		}
 /*
-^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$
-
+^([ \t]*)?\/\/\/?
+[ \t]*
+Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
+[ \t]+
+([\w\._-]*(?:[ \t]*[\w\._-]+))
+[ \t]+
+([\w\._-]*(?:[ \t]*[\w\._-]+))
+[ \t]+
+?[ \t]*(\d+\.\d+\.?\d*\.?\d*)
+[ \t]+
+[<\[\{\(]?
+[ \t]*
+([\w\._-]+(?:[ \t]*[\w\._-]+))*
+[ \t]*
+[\)\}\]>]?
+[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$
 */
 
 
@@ -88,6 +103,19 @@ module deftool {
 			console.log(data.combi());
 
 			var parser = new LineParserCore();
+
+			var space = /[ \t]+/;
+			var spaceOpt = /[ \t]*/;
+			var commentStart = /^[ \t]*?\/\/+[ \t]*/;
+			var headStart = /Type definitions?[ \t]*(?:for)?:?[ \t]*/;
+
+			var exp:RegExp;
+			var glue:xm.RegExpGlue;
+
+			glue = xm.RegExpGlue.get();
+			glue.append()
+
+			exp = xm.RegExpGlue.get().join();
 
 			parser.addMatcher(new LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, (match:RegExpExecArray) => {
 

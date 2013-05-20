@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
 
-module deftool {
+module deftools {
 
 	var _:UnderscoreStatic = require('underscore');
 

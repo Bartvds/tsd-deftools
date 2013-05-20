@@ -1,18 +1,17 @@
 ///<reference path="_ref.ts" />
 
-module deftool {
+module deftools {
 
 	var path = require('path');
 	var fs = require('fs');
 
 	var trailSlash = /(\w)(\/?)$/;
 
-	export interface ConfPaths {
+	export class ConfPaths {
 		tsd:string;
+		typings:string;
 		out:string;
 		tmp:string;
-		DefinitelyTyped:string;
-		local:string;
 	}
 	export interface NumberMap {
 		[name: string]: number;

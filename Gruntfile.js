@@ -17,11 +17,14 @@ module.exports = function (grunt) {
 			test : ['test/_tmp.*']
 		},
 		execute: {
-			deftools: {
-				src: ['build/tsd-deftools.js']
+			cli: {
+				src: ['build/deftools-cli.js']
+			},
+			mod: {
+				src: ['build/deftools-module.js']
 			},
 			defdev: {
-				src: ['build/tsd-defdev.js']
+				src: ['build/defdev.js']
 			}
 		},
 		typescript: {
@@ -32,13 +35,17 @@ module.exports = function (grunt) {
 				declaration: false,
 				sourcemap: false
 			},
-			deftools: {
-				src: ['src/tsd-deftools.ts'],
-				dest: 'build/tsd-deftools.js'
+			cli: {
+				src: ['src/deftools-cli.ts'],
+				dest: 'build/deftools-cli.js'
+			},
+			mod: {
+				src: ['src/deftools-module.ts'],
+				dest: 'build/deftools-module.js'
 			},
 			defdev: {
-				src: ['src/tsd-defdev.ts'],
-				dest: 'build/tsd-defdev.js'
+				src: ['src/defdev.ts'],
+				dest: 'build/defdev.js'
 			},
 			test: {
 				options: {
@@ -59,11 +66,11 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask('default', ['build']);
-	grunt.registerTask('build', ['clean:build', 'typescript:deftools']);
+	grunt.registerTask('build', ['clean:build', 'typescript:cli', 'typescript:mod']);
 
 	grunt.registerTask('test', ['clean:test', 'typescript:test', 'mocha_spawn:all']);
 
-	grunt.registerTask('dev', ['build', 'execute:deftools']);
+	grunt.registerTask('dev', ['build', 'execute:cli', 'execute:mod']);
 	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
 
 };

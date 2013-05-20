@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
 
-module deftool {
+module deftools {
 
 	var fs = require('fs');
 	var path = require('path');
@@ -8,26 +8,38 @@ module deftool {
 
 	export module Config {
 
-		var paths:ConfPaths;
 		var info:ToolInfo;
 
-		export function getPaths():ConfPaths {
-			if (paths) return paths;
-			var tmp = path.resolve('./tsd-deftools-path.json');
+		export function getPaths(src?:string):ConfPaths {
+			var paths:ConfPaths;
+			if (typeof src === 'undefined') {
+				src = './tsd-deftools-path.json';
+			}
+			src = path.resolve(src);
 			try {
-				paths = JSON.parse(fs.readFileSync(tmp, 'utf-8'))
+				paths = JSON.parse(fs.readFileSync(src, 'utf-8'))
 			}
 			catch
 			(e) {
 				throw(e);
 			}
+
+			if (!fs.existsSync(paths.typings)) {
+				throw('typings does not exist ' + paths.typings);
+			}
+			if (!fs.existsSync(paths.tsd)) {
+				throw('tsd does not exist ' + paths.tsd);
+			}
+
 			if (!fs.existsSync(paths.tmp)) {
 				fs.mkdir(paths.tmp);
+				console.log('Config created paths.tmp ' + paths.tmp);
 			} else {
 				//TODO add some safety checks?
 			}
 			if (!fs.existsSync(paths.out)) {
 				fs.mkdir(paths.out);
+				console.log('Config created paths.out ' + paths.out);
 			} else {
 				//TODO add some safety checks?
 			}

@@ -1,6 +1,6 @@
-///<reference path="_ref.ts" />
+///<reference path="../_ref.ts" />
 
-module deftool {
+module xm {
 
 	//var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');

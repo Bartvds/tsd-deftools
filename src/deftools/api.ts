@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
 
-module deftool {
+module deftools {
 
 	var fs = require('fs');
 	var path = require('path');
@@ -8,7 +8,7 @@ module deftool {
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 
-	export class AppAPI {
+	export class API {
 
 		paths:ConfPaths;
 
