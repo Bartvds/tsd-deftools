@@ -9,8 +9,6 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-execute');
 
-	//grunt.loadTasks('tasks');
-
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		clean: {
@@ -40,6 +38,19 @@ module.exports = function (grunt) {
 			defdev: {
 				src: ['src/tsd-defdev.ts'],
 				dest: 'build/tsd-defdev.js'
+			}
+		},
+		mocha_spawm: {
+			options: {
+				module: 'commonjs', //or commonjs
+				target: 'es5', //or es3
+				base_path: 'src/',
+				declaration: false,
+				sourcemap: false
+			},
+			deftools: {
+				src: ['src/tsd-deftools.ts'],
+				dest: 'build/tsd-deftools.js'
 			}
 		}
 	});

@@ -360,6 +360,187 @@ var tsdimport;
 })(tsdimport || (tsdimport = {}));
 var tsdimport;
 (function (tsdimport) {
+    var _ = require('underscore');
+    var LineParserCore = (function () {
+        function LineParserCore() {
+            this.matchers = {
+            };
+            this.parsers = {
+            };
+            this.trimmedine = /^([\ t]*)?(\S+(?:[ \t]+\S+)*)*[ \t]*$/gm;
+        }
+        LineParserCore.prototype.addMatcher = function (type) {
+            this.matchers[type.type] = type;
+        };
+        LineParserCore.prototype.addParser = function (parser) {
+            this.parsers[parser.id] = parser;
+        };
+        LineParserCore.prototype.info = function () {
+            var ret = {
+            };
+            ret.types = _.keys(this.matchers).sort();
+            ret.parsers = _.keys(this.parsers).sort();
+            return ret;
+        };
+        LineParserCore.prototype.getMatcher = function (type) {
+            if(!this.matchers.hasOwnProperty(type)) {
+                console.log('missing matcher id ' + type);
+                return null;
+            }
+            return this.matchers[type];
+        };
+        LineParserCore.prototype.getParser = function (id) {
+            if(!this.parsers.hasOwnProperty(id)) {
+                console.log('missing parser id ' + id);
+                return null;
+            }
+            return this.parsers[id];
+        };
+        LineParserCore.prototype.link = function () {
+            var self = this;
+            _.each(this.parsers, function (parser) {
+                parser.matcher = self.getMatcher(parser.type);
+                _.each(parser.nextIds, function (type) {
+                    var p = self.getParser(type);
+                    if(p) {
+                        parser.next.push(p);
+                    }
+                });
+            });
+        };
+        LineParserCore.prototype.get = function (ids) {
+            var self = this;
+            return _.reduce(ids, function (memo, id) {
+                if(!self.parsers.hasOwnProperty(id)) {
+                    console.log('missing parser ' + id);
+                    return memo;
+                }
+                memo.push(self.parsers[id]);
+                return memo;
+            }, []);
+        };
+        LineParserCore.prototype.all = function () {
+            return _.toArray(this.parsers);
+        };
+        LineParserCore.prototype.listIds = function (parsers) {
+            return _.reduce(parsers, function (memo, parser) {
+                memo.push(parser.id);
+                return memo;
+            }, []);
+        };
+        LineParserCore.prototype.parse = function (source, asType) {
+            console.log('source');
+            console.log(source.length);
+            this.link();
+            var res = [];
+            var possibles = asType ? this.get(asType) : this.all();
+            var line;
+            var offset = 0;
+            var end = 0;
+            var count = 0;
+            this.trimmedine.lastIndex = 0;
+            while(line = this.trimmedine.exec(source)) {
+                end = line.index + line.length;
+                this.trimmedine.lastIndex = end;
+                count++;
+                if(line.length < 2) {
+                    continue;
+                }
+                if(typeof line[2] === 'undefined') {
+                    continue;
+                }
+                var text = line[2];
+                console.log('line ' + count);
+                var choice = [];
+                _.reduce(possibles, function (memo, parser) {
+                    var res = parser.match(text, offset, end);
+                    if(res) {
+                        console.log('match at line ' + count + ' ' + offset + '-' + end + ' ' + parser.getName());
+                        memo.push(res);
+                    }
+                    return memo;
+                }, choice);
+                console.log('choices ' + choice.length);
+                if(choice.length == 0) {
+                    possibles = [];
+                } else if(choice.length == 1) {
+                    console.log('single match line');
+                    console.log(choice[0]);
+                    possibles = choice[0].parser.next;
+                    console.log('switching possibles ' + this.listIds(possibles));
+                } else {
+                    console.log('multi match line');
+                    console.log(choice);
+                }
+                if(possibles.length == 0) {
+                    console.log('no more possibles');
+                    break;
+                }
+            }
+            console.log('lines' + count);
+            return res;
+        };
+        return LineParserCore;
+    })();
+    tsdimport.LineParserCore = LineParserCore;    
+    var LineParserMatcher = (function () {
+        function LineParserMatcher(type, exp, extractor) {
+            this.type = type;
+            this.exp = exp;
+            this.extractor = extractor;
+        }
+        LineParserMatcher.prototype.match = function (str, offset, limit) {
+            this.exp.lastIndex = offset;
+            return this.exp.exec(str);
+        };
+        LineParserMatcher.prototype.getName = function () {
+            return this.type + ':' + this.exp;
+        };
+        return LineParserMatcher;
+    })();
+    tsdimport.LineParserMatcher = LineParserMatcher;    
+    var LineParser = (function () {
+        function LineParser(id, type, callback, nextIds) {
+            if (typeof nextIds === "undefined") { nextIds = []; }
+            this.id = id;
+            this.type = type;
+            this.callback = callback;
+            this.nextIds = nextIds;
+            this.next = [];
+        }
+        LineParser.prototype.match = function (str, offset, limit) {
+            if(!this.matcher) {
+                return null;
+            }
+            var match = this.matcher.match(str, offset, limit);
+            if(!match) {
+                return null;
+            }
+            return new LineParserMatch(this, match);
+        };
+        LineParser.prototype.getName = function () {
+            return this.id + ':' + this.type + '/' + (this.matcher ? this.matcher.getName() : 'unlinked');
+        };
+        return LineParser;
+    })();
+    tsdimport.LineParser = LineParser;    
+    var LineParserMatch = (function () {
+        function LineParserMatch(parser, match) {
+            this.parser = parser;
+            this.match = match;
+        }
+        LineParserMatch.prototype.execute = function (parent) {
+            return this.parser.callback(this.match, parent, this.parser);
+        };
+        LineParserMatch.prototype.getName = function () {
+            return this.parser.getName();
+        };
+        return LineParserMatch;
+    })();
+    tsdimport.LineParserMatch = LineParserMatch;    
+})(tsdimport || (tsdimport = {}));
+var tsdimport;
+(function (tsdimport) {
     var HeaderData = (function () {
         function HeaderData(def) {
             this.def = def;
@@ -420,8 +601,45 @@ var tsdimport;
         return ParseError;
     })();
     tsdimport.ParseError = ParseError;    
+    var typeHead = /^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+(?:\.\d+)*)?[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$/;
     var HeaderParser = (function () {
         function HeaderParser() {
+        }
+        HeaderParser.prototype.parse = function (data, source) {
+            console.log('parse');
+            console.log(data.combi());
+            var parser = new tsdimport.LineParserCore();
+            parser.addMatcher(new tsdimport.LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, function (match) {
+            }));
+            parser.addMatcher(new tsdimport.LineParserMatcher('headNameVersion', typeHead, function (match) {
+            }));
+            parser.addParser(new tsdimport.LineParser('head', 'headNameVersion', function (match, parent, parser) {
+                console.log('apply');
+                console.log(parser.getName());
+                console.log(match);
+                console.log(parser.matcher.extractor(match));
+            }, [
+                'comment'
+            ]));
+            parser.addParser(new tsdimport.LineParser('comment', 'comment', function (match, parent, parser) {
+                console.log('apply');
+                console.log(parser.getName());
+                console.log(match);
+                console.log(parser.matcher.extractor(match));
+            }, [
+                'comment'
+            ]));
+            console.log(parser.info());
+            parser.parse(source, [
+                'head'
+            ]);
+            return data;
+        };
+        return HeaderParser;
+    })();
+    tsdimport.HeaderParser = HeaderParser;    
+    var HeaderParserOri = (function () {
+        function HeaderParserOri() {
             this.nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
             this.labelUrl = /^[ \t]*\/\/\/?[ \t]*([\w _-]+):?[ \t]+[<\[\{\(]?(http[\S]*)[ \t]*$/gm;
             this.authorNameUrl = /^[ \t]*\/\/\/?[ \t]*Definitions[ \t\w]+:[ \t]+([\w \t]+[\w]+)[ \t]*[<\[\{\(]?(http[\w:\/\\\._-]+)[\)\}\]>]?[ \t]*$/gm;
@@ -430,25 +648,25 @@ var tsdimport;
             this.endSlash = /\/?$/;
             this.cursor = 0;
         }
-        HeaderParser.prototype.reset = function () {
+        HeaderParserOri.prototype.reset = function () {
             this.cursor = 0;
         };
-        HeaderParser.prototype.moveCursor = function (index) {
+        HeaderParserOri.prototype.moveCursor = function (index) {
             this.cursor += index;
             this.applyCursor();
         };
-        HeaderParser.prototype.setCursor = function (index) {
+        HeaderParserOri.prototype.setCursor = function (index) {
             this.cursor = index;
             this.applyCursor();
         };
-        HeaderParser.prototype.applyCursor = function () {
+        HeaderParserOri.prototype.applyCursor = function () {
             this.nameVersion.lastIndex = this.cursor;
             this.labelUrl.lastIndex = this.cursor;
             this.authorNameUrl.lastIndex = this.cursor;
             this.description.lastIndex = this.cursor;
             this.referencePath.lastIndex = this.cursor;
         };
-        HeaderParser.prototype.parse = function (data, str) {
+        HeaderParserOri.prototype.parse = function (data, str) {
             if(typeof str !== 'string') {
                 str = '' + str;
             }
@@ -503,9 +721,9 @@ var tsdimport;
             }
             return data;
         };
-        return HeaderParser;
+        return HeaderParserOri;
     })();
-    tsdimport.HeaderParser = HeaderParser;    
+    tsdimport.HeaderParserOri = HeaderParserOri;    
 })(tsdimport || (tsdimport = {}));
 var tsdimport;
 (function (tsdimport) {
@@ -851,6 +1069,7 @@ var tsdimport;
     var path = require('path');
     var util = require('util');
     var async = require('async');
+    var _ = require('underscore');
     (function (helper) {
         function removeFilesFromDir(dir, callback) {
             dir = path.resolve(dir);
@@ -1020,7 +1239,7 @@ var tsdimport;
     var _ = require('underscore');
     var info = tsdimport.Config.getInfo();
     var paths = tsdimport.Config.getPaths();
-    var app = new tsdimport.AppAPI(info, new tsdimport.Repos(paths.DefinitelyTyped, paths.tsd, paths.tmp));
+    var app = new tsdimport.AppAPI(info, new tsdimport.Repos(paths.local, paths.tsd, paths.tmp));
     var expose = new tsdimport.Expose();
     expose.add('info', function () {
         console.log(info.getNameVersion());

@@ -6,8 +6,10 @@ module tsdimport {
 	var path = require('path');
 	var util = require('util');
 	var async = require('async');
+	var _:UnderscoreStatic = require('underscore');
 
 	export module helper {
+
 		export function removeFilesFromDir(dir:string, callback:AsyncCallback) {
 
 			dir = path.resolve(dir);

@@ -13,7 +13,7 @@ module tsdimport {
 
 	var info = Config.getInfo();
 	var paths = Config.getPaths();
-	var app:AppAPI = new AppAPI(info, new Repos(paths.DefinitelyTyped, paths.tsd, paths.tmp));
+	var app:AppAPI = new AppAPI(info, new Repos(paths.local, paths.tsd, paths.tmp));
 
 	//expose some easy access tools to cli
 	var expose = new Expose();

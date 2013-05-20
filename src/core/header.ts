@@ -1,4 +1,5 @@
 ///<reference path="_ref.ts" />
+///<reference path="parser.ts" />
 
 module tsdimport {
 
@@ -69,7 +70,61 @@ module tsdimport {
 		}
 	}
 
+	var typeHead  = /^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+(?:\.\d+)*)?[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$/;
+
 	export class HeaderParser {
+
+		constructor(){
+
+		}
+/*
+^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$
+
+*/
+
+
+		parse(data:HeaderData, source:string):HeaderData {
+			console.log('parse');
+			console.log(data.combi());
+
+			var parser = new LineParserCore();
+
+			parser.addMatcher(new LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, (match:RegExpExecArray) => {
+
+			}));
+			//parser.addMatcher(new LineParserMatcher('line', /^(.*)$/));
+			parser.addMatcher(new LineParserMatcher('headNameVersion', typeHead, (match:RegExpExecArray) => {
+
+			}));
+
+			parser.addParser(new LineParser('head', 'headNameVersion', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
+				console.log('apply');
+				console.log(parser.getName());
+				console.log(match);
+				console.log(parser.matcher.extractor(match));
+			}, ['comment']));
+			parser.addParser(new LineParser('comment', 'comment', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
+				console.log('apply');
+				console.log(parser.getName());
+				console.log(match);
+				console.log(parser.matcher.extractor(match));
+			}, ['comment']));
+
+			/*parser.addParser(new LineParser('any', 'line', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
+				console.log('apply');
+				console.log(parser.getName());
+				console.log(match);
+			}));*/
+			console.log(parser.info());
+
+			parser.parse(source, ['head']);
+
+
+			return data;
+		}
+	}
+
+	export class HeaderParserOri {
 		//[<\[\{\(]? [\)\}\]>]?
 
 		nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
