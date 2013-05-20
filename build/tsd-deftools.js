@@ -1,5 +1,5 @@
-var tsdimport;
-(function (tsdimport) {
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -17,12 +17,12 @@ var tsdimport;
             }
         }
         AppAPI.prototype.compare = function (callback) {
-            var comparer = new tsdimport.DefinitionComparer(this.repos);
+            var comparer = new deftool.DefinitionComparer(this.repos);
             comparer.compare(callback);
         };
         AppAPI.prototype.listParsed = function (callback) {
-            var comparer = new tsdimport.DefinitionComparer(this.repos);
-            var importer = new tsdimport.DefinitionImporter(this.repos);
+            var comparer = new deftool.DefinitionComparer(this.repos);
+            var importer = new deftool.DefinitionImporter(this.repos);
             async.waterfall([
                 function (callback) {
                     comparer.compare(callback);
@@ -36,9 +36,9 @@ var tsdimport;
                 }            ], callback);
         };
         AppAPI.prototype.recreateAll = function (callback) {
-            var comparer = new tsdimport.DefinitionComparer(this.repos);
-            var importer = new tsdimport.DefinitionImporter(this.repos);
-            var exporter = new tsdimport.DefinitionExporter(this.repos, this.info);
+            var comparer = new deftool.DefinitionComparer(this.repos);
+            var importer = new deftool.DefinitionImporter(this.repos);
+            var exporter = new deftool.DefinitionExporter(this.repos, this.info);
             async.waterfall([
                 function (callback) {
                     comparer.compare(callback);
@@ -56,7 +56,7 @@ var tsdimport;
                     }
                     console.log('error: ' + res.error.length);
                     console.log('parsed: ' + res.parsed.length);
-                    tsdimport.helper.removeFilesFromDir(exporter.repos.out, function (err) {
+                    deftool.helper.removeFilesFromDir(exporter.repos.out, function (err) {
                         if(err) {
                             return callback(err, null);
                         }
@@ -66,10 +66,10 @@ var tsdimport;
         };
         return AppAPI;
     })();
-    tsdimport.AppAPI = AppAPI;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.AppAPI = AppAPI;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -88,7 +88,7 @@ var tsdimport;
         };
         return Def;
     })();
-    tsdimport.Def = Def;    
+    deftool.Def = Def;    
     function getDupes(arr) {
         var uni = _.unique(arr);
         arr = _.filter(arr, function (value) {
@@ -101,7 +101,7 @@ var tsdimport;
         });
         return arr;
     }
-    tsdimport.getDupes = getDupes;
+    deftool.getDupes = getDupes;
     function getDefCollide(arr) {
         var map = _.reduce(arr, function (memo, def) {
             if(!memo.hasOwnProperty(def.name)) {
@@ -123,7 +123,7 @@ var tsdimport;
         });
         return ret;
     }
-    tsdimport.getDefCollide = getDefCollide;
+    deftool.getDefCollide = getDefCollide;
     var CompareResult = (function () {
         function CompareResult() {
             this.repoAll = [];
@@ -150,7 +150,7 @@ var tsdimport;
         };
         return CompareResult;
     })();
-    tsdimport.CompareResult = CompareResult;    
+    deftool.CompareResult = CompareResult;    
     var CompareStats = (function () {
         function CompareStats(res) {
             this.res = res;
@@ -175,7 +175,7 @@ var tsdimport;
         };
         return CompareStats;
     })();
-    tsdimport.CompareStats = CompareStats;    
+    deftool.CompareStats = CompareStats;    
     var DefinitionComparer = (function () {
         function DefinitionComparer(repos) {
             this.repos = repos;
@@ -184,10 +184,10 @@ var tsdimport;
             var self = this;
             async.parallel({
                 defs: function (callback) {
-                    tsdimport.loader.loadRepoDefList(self.repos, callback);
+                    deftool.loader.loadRepoDefList(self.repos, callback);
                 },
                 tsd: function (callback) {
-                    tsdimport.loader.loadTsdList(self.repos, callback);
+                    deftool.loader.loadTsdList(self.repos, callback);
                 }
             }, function (err, results) {
                 var res = new CompareResult();
@@ -213,10 +213,10 @@ var tsdimport;
         };
         return DefinitionComparer;
     })();
-    tsdimport.DefinitionComparer = DefinitionComparer;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.DefinitionComparer = DefinitionComparer;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -254,14 +254,14 @@ var tsdimport;
             } catch (e) {
                 throw (e);
             }
-            return info = new tsdimport.ToolInfo(pkg.name, pkg.version, pkg);
+            return info = new deftool.ToolInfo(pkg.name, pkg.version, pkg);
         }
         Config.getInfo = getInfo;
-    })(tsdimport.Config || (tsdimport.Config = {}));
-    var Config = tsdimport.Config;
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    })(deftool.Config || (deftool.Config = {}));
+    var Config = deftool.Config;
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -273,7 +273,7 @@ var tsdimport;
         }
         return ExportResult;
     })();
-    tsdimport.ExportResult = ExportResult;    
+    deftool.ExportResult = ExportResult;    
     var HeaderExport = (function () {
         function HeaderExport(header, path) {
             this.header = header;
@@ -281,7 +281,7 @@ var tsdimport;
         }
         return HeaderExport;
     })();
-    tsdimport.HeaderExport = HeaderExport;    
+    deftool.HeaderExport = HeaderExport;    
     var DefinitionExporter = (function () {
         function DefinitionExporter(repos, info) {
             this.repos = repos;
@@ -323,7 +323,7 @@ var tsdimport;
         };
         return DefinitionExporter;
     })();
-    tsdimport.DefinitionExporter = DefinitionExporter;    
+    deftool.DefinitionExporter = DefinitionExporter;    
     var Encode = (function () {
         function Encode(repos, info) {
             this.repos = repos;
@@ -338,7 +338,7 @@ var tsdimport;
                 "versions": [
                     {
                         "version": header.version,
-                        "key": tsdimport.getGUID(),
+                        "key": deftool.getGUID(),
                         "dependencies": _.map(header.dependencies, function (data) {
                             return {
                                 "valid": data.isValid(),
@@ -356,10 +356,10 @@ var tsdimport;
         };
         return Encode;
     })();
-    tsdimport.Encode = Encode;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.Encode = Encode;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var _ = require('underscore');
     var LineParserCore = (function () {
         function LineParserCore() {
@@ -482,7 +482,7 @@ var tsdimport;
         };
         return LineParserCore;
     })();
-    tsdimport.LineParserCore = LineParserCore;    
+    deftool.LineParserCore = LineParserCore;    
     var LineParserMatcher = (function () {
         function LineParserMatcher(type, exp, extractor) {
             this.type = type;
@@ -498,7 +498,7 @@ var tsdimport;
         };
         return LineParserMatcher;
     })();
-    tsdimport.LineParserMatcher = LineParserMatcher;    
+    deftool.LineParserMatcher = LineParserMatcher;    
     var LineParser = (function () {
         function LineParser(id, type, callback, nextIds) {
             if (typeof nextIds === "undefined") { nextIds = []; }
@@ -523,7 +523,7 @@ var tsdimport;
         };
         return LineParser;
     })();
-    tsdimport.LineParser = LineParser;    
+    deftool.LineParser = LineParser;    
     var LineParserMatch = (function () {
         function LineParserMatch(parser, match) {
             this.parser = parser;
@@ -537,10 +537,10 @@ var tsdimport;
         };
         return LineParserMatch;
     })();
-    tsdimport.LineParserMatch = LineParserMatch;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.LineParserMatch = LineParserMatch;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var HeaderData = (function () {
         function HeaderData(def) {
             this.def = def;
@@ -588,7 +588,7 @@ var tsdimport;
         };
         return HeaderData;
     })();
-    tsdimport.HeaderData = HeaderData;    
+    deftool.HeaderData = HeaderData;    
     var ParseError = (function () {
         function ParseError(message, text, ref) {
             if (typeof message === "undefined") { message = ''; }
@@ -600,7 +600,7 @@ var tsdimport;
         }
         return ParseError;
     })();
-    tsdimport.ParseError = ParseError;    
+    deftool.ParseError = ParseError;    
     var typeHead = /^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+(?:\.\d+)*)?[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$/;
     var HeaderParser = (function () {
         function HeaderParser() {
@@ -608,12 +608,12 @@ var tsdimport;
         HeaderParser.prototype.parse = function (data, source) {
             console.log('parse');
             console.log(data.combi());
-            var parser = new tsdimport.LineParserCore();
-            parser.addMatcher(new tsdimport.LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, function (match) {
+            var parser = new deftool.LineParserCore();
+            parser.addMatcher(new deftool.LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, function (match) {
             }));
-            parser.addMatcher(new tsdimport.LineParserMatcher('headNameVersion', typeHead, function (match) {
+            parser.addMatcher(new deftool.LineParserMatcher('headNameVersion', typeHead, function (match) {
             }));
-            parser.addParser(new tsdimport.LineParser('head', 'headNameVersion', function (match, parent, parser) {
+            parser.addParser(new deftool.LineParser('head', 'headNameVersion', function (match, parent, parser) {
                 console.log('apply');
                 console.log(parser.getName());
                 console.log(match);
@@ -621,7 +621,7 @@ var tsdimport;
             }, [
                 'comment'
             ]));
-            parser.addParser(new tsdimport.LineParser('comment', 'comment', function (match, parent, parser) {
+            parser.addParser(new deftool.LineParser('comment', 'comment', function (match, parent, parser) {
                 console.log('apply');
                 console.log(parser.getName());
                 console.log(match);
@@ -637,7 +637,7 @@ var tsdimport;
         };
         return HeaderParser;
     })();
-    tsdimport.HeaderParser = HeaderParser;    
+    deftool.HeaderParser = HeaderParser;    
     var HeaderParserOri = (function () {
         function HeaderParserOri() {
             this.nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
@@ -723,10 +723,10 @@ var tsdimport;
         };
         return HeaderParserOri;
     })();
-    tsdimport.HeaderParserOri = HeaderParserOri;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.HeaderParserOri = HeaderParserOri;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -855,7 +855,7 @@ var tsdimport;
         };
         return ImportResult;
     })();
-    tsdimport.ImportResult = ImportResult;    
+    deftool.ImportResult = ImportResult;    
     var ImportResultDupes = (function () {
         function ImportResultDupes(res) {
             this.all = res.dupeCheck(res.all);
@@ -865,11 +865,11 @@ var tsdimport;
         }
         return ImportResultDupes;
     })();
-    tsdimport.ImportResultDupes = ImportResultDupes;    
+    deftool.ImportResultDupes = ImportResultDupes;    
     var DefinitionImporter = (function () {
         function DefinitionImporter(repos) {
             this.repos = repos;
-            this.parser = new tsdimport.HeaderParser();
+            this.parser = new deftool.HeaderParser();
         }
         DefinitionImporter.prototype.loadData = function (data, res, callback) {
             var src = path.resolve(this.repos.defs + data.def.project + '/' + data.def.name + '.d.ts');
@@ -882,28 +882,28 @@ var tsdimport;
             res.map[key] = data;
             fs.readFile(src, 'utf-8', function (err, source) {
                 if(err) {
-                    data.errors.push(new tsdimport.ParseError('cannot load source', err));
+                    data.errors.push(new deftool.ParseError('cannot load source', err));
                     return callback(null, data);
                 }
                 data.source = src;
                 self.parser.parse(data, source);
                 if(!data.isValid()) {
-                    data.errors.push(new tsdimport.ParseError('invalid parse'));
+                    data.errors.push(new deftool.ParseError('invalid parse'));
                 }
                 if(data.references.length > 0) {
                     async.forEach(data.references, function (ref, callback) {
                         var match, dep;
                         match = ref.match(dependency);
                         if(match && match.length >= 3) {
-                            dep = new tsdimport.Def(match[1], match[2]);
+                            dep = new deftool.Def(match[1], match[2]);
                         } else {
                             match = ref.match(definition);
                             if(match && match.length >= 2) {
-                                dep = new tsdimport.Def(data.def.project, match[1]);
+                                dep = new deftool.Def(data.def.project, match[1]);
                             }
                         }
                         if(!dep) {
-                            data.errors.push(new tsdimport.ParseError('bad reference', ref));
+                            data.errors.push(new deftool.ParseError('bad reference', ref));
                             return callback(null, data);
                         }
                         var key = dep.combi();
@@ -911,18 +911,18 @@ var tsdimport;
                             data.dependencies.push(res.map[key]);
                             return callback(null, res.map[key]);
                         }
-                        var sub = new tsdimport.HeaderData(dep);
+                        var sub = new deftool.HeaderData(dep);
                         res.map[key] = sub;
                         self.loadData(sub, res, function (err, sub) {
                             if(err) {
                                 if(sub) {
-                                    sub.errors.push(new tsdimport.ParseError('cannot load dependency' + sub.combi(), err));
+                                    sub.errors.push(new deftool.ParseError('cannot load dependency' + sub.combi(), err));
                                 } else {
-                                    data.errors.push(new tsdimport.ParseError('cannot load dependency', err));
+                                    data.errors.push(new deftool.ParseError('cannot load dependency', err));
                                 }
                             }
                             if(!sub) {
-                                data.errors.push(new tsdimport.ParseError('cannot load dependency', err));
+                                data.errors.push(new deftool.ParseError('cannot load dependency', err));
                             } else {
                                 data.dependencies.push(sub);
                                 if(res.all.indexOf(sub) < 0) {
@@ -943,7 +943,7 @@ var tsdimport;
                             console.log('err looping references ' + err);
                         }
                         if(data.references.length !== data.dependencies.length) {
-                            data.errors.push(new tsdimport.ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
+                            data.errors.push(new deftool.ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
                         }
                         callback(err, data);
                     });
@@ -959,7 +959,7 @@ var tsdimport;
                 if(res.map.hasOwnProperty(key)) {
                     return callback(null, res);
                 }
-                var data = new tsdimport.HeaderData(def);
+                var data = new deftool.HeaderData(def);
                 res.map[key] = data;
                 self.loadData(data, res, function (err, data) {
                     if(err) {
@@ -997,10 +997,10 @@ var tsdimport;
         };
         return DefinitionImporter;
     })();
-    tsdimport.DefinitionImporter = DefinitionImporter;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.DefinitionImporter = DefinitionImporter;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var path = require('path');
     var fs = require('fs');
     var trailSlash = /(\w)(\/?)$/;
@@ -1024,7 +1024,7 @@ var tsdimport;
         };
         return ToolInfo;
     })();
-    tsdimport.ToolInfo = ToolInfo;    
+    deftool.ToolInfo = ToolInfo;    
     var Repos = (function () {
         function Repos(defs, tsd, out) {
             this.defs = defs;
@@ -1054,17 +1054,17 @@ var tsdimport;
         }
         return Repos;
     })();
-    tsdimport.Repos = Repos;    
+    deftool.Repos = Repos;    
     function getGUID() {
         var S4 = function () {
             return Math.floor(Math.random() * 0x10000).toString(16);
         };
         return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
     }
-    tsdimport.getGUID = getGUID;
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.getGUID = getGUID;
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -1104,11 +1104,11 @@ var tsdimport;
             });
         }
         helper.removeFilesFromDir = removeFilesFromDir;
-    })(tsdimport.helper || (tsdimport.helper = {}));
-    var helper = tsdimport.helper;
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    })(deftool.helper || (deftool.helper = {}));
+    var helper = deftool.helper;
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
@@ -1153,7 +1153,7 @@ var tsdimport;
                                     if(stats.isDirectory()) {
                                         return callback(false);
                                     }
-                                    ret.push(new tsdimport.Def(file, name.replace(extDef, '')));
+                                    ret.push(new deftool.Def(file, name.replace(extDef, '')));
                                     callback(null);
                                 });
                             }, function (err) {
@@ -1180,11 +1180,11 @@ var tsdimport;
             });
         }
         loader.loadTsdList = loadTsdList;
-    })(tsdimport.loader || (tsdimport.loader = {}));
-    var loader = tsdimport.loader;
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    })(deftool.loader || (deftool.loader = {}));
+    var loader = deftool.loader;
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var _ = require('underscore');
     var Expose = (function () {
         function Expose() {
@@ -1228,19 +1228,19 @@ var tsdimport;
         };
         return Expose;
     })();
-    tsdimport.Expose = Expose;    
-})(tsdimport || (tsdimport = {}));
-var tsdimport;
-(function (tsdimport) {
+    deftool.Expose = Expose;    
+})(deftool || (deftool = {}));
+var deftool;
+(function (deftool) {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
     var async = require('async');
     var _ = require('underscore');
-    var info = tsdimport.Config.getInfo();
-    var paths = tsdimport.Config.getPaths();
-    var app = new tsdimport.AppAPI(info, new tsdimport.Repos(paths.local, paths.tsd, paths.tmp));
-    var expose = new tsdimport.Expose();
+    var info = deftool.Config.getInfo();
+    var paths = deftool.Config.getPaths();
+    var app = new deftool.AppAPI(info, new deftool.Repos(paths.local, paths.tsd, paths.tmp));
+    var expose = new deftool.Expose();
     expose.add('info', function () {
         console.log(info.getNameVersion());
         _(app.repos).keys().sort().forEach(function (value) {
@@ -1304,4 +1304,4 @@ var tsdimport;
             expose.execute('help');
         }
     }
-})(tsdimport || (tsdimport = {}));
+})(deftool || (deftool = {}));

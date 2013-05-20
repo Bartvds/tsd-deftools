@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
 
-module tsdimport {
+module deftool {
 
 	var path = require('path');
 	var fs = require('fs');

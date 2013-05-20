@@ -1,8 +1,8 @@
 ///<reference path="_ref.ts" />
-///<reference path="core/_ref.ts" />
-///<reference path="core/expose.ts" />
+///<reference path="deftool/_ref.ts" />
+///<reference path="deftool/expose.ts" />
 
-module tsdimport {
+module deftool {
 
 	var fs = require('fs');
 	var path = require('path');
@@ -25,7 +25,7 @@ module tsdimport {
 	});
 
 	expose.add('compare', () => {
-		app.compare((err?, res?:tsdimport.CompareResult) => {
+		app.compare((err?, res?:deftool.CompareResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res, false, 8));
@@ -34,7 +34,7 @@ module tsdimport {
 	});
 
 	expose.add('listParsed', () => {
-		app.listParsed((err?, res?:tsdimport.ImportResult) => {
+		app.listParsed((err?, res?:deftool.ImportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('listParsed returned no result');
 			//console.log(util.inspect(res, false, 8));
@@ -60,7 +60,7 @@ module tsdimport {
 	});
 	/*
 	expose.add('createUnlisted', () => {
-		app.createUnlisted((err?, res?:tsdimport.ExportResult) => {
+		app.createUnlisted((err?, res?:deftool.ExportResult) => {
 			if (err) return console.log(err);
 			console.log(util.inspect(res, false, 8));
 			console.log('created(): ' + res.created);
@@ -69,7 +69,7 @@ module tsdimport {
 	});*/
 
 	expose.add('recreateAll', () => {
-		app.recreateAll((err?, res?:tsdimport.ExportResult) => {
+		app.recreateAll((err?, res?:deftool.ExportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('recreateAll returned no result');
 
@@ -94,4 +94,4 @@ module tsdimport {
 	}
 }
 //kill this when in cli mode
-//exports = (module).exports = tsdimport;
+//exports = (module).exports = deftool;

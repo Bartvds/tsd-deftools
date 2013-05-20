@@ -1,7 +1,7 @@
 ///<reference path="_ref.ts" />
 ///<reference path="parser.ts" />
 
-module tsdimport {
+module deftool {
 
 	export interface HeaderDataMap {
 		[name: string]: HeaderData;

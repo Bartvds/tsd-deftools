@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
 
-module tsdimport {
+module deftool {
 
 	var _:UnderscoreStatic = require('underscore');
 

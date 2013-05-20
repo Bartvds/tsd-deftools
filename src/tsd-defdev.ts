@@ -1,10 +1,10 @@
 ///<reference path="_ref.ts" />
-///<reference path="core/api.ts" />
-///<reference path="core/lib.ts" />
-///<reference path="core/config.ts" />
-///<reference path="core/expose.ts" />
+///<reference path="deftool/api.ts" />
+///<reference path="deftool/lib.ts" />
+///<reference path="deftool/config.ts" />
+///<reference path="deftool/expose.ts" />
 
-module tsdimport {
+module deftool {
 
 	var fs = require('fs');
 	var path = require('path');
