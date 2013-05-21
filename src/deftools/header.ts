@@ -4,6 +4,24 @@
 
 module deftools {
 
+	export class Def {
+		constructor(public project:string, public name:string) {
+
+		}
+
+		combi():string {
+			return this.project + '/' + this.name;
+		}
+
+		toString():string {
+			return '[Def ' + this.combi() + ']';
+		}
+	}
+
+	export interface DefMap {
+		[name: string]: Def;
+	}
+
 	export interface HeaderDataMap {
 		[name: string]: HeaderData;
 	}

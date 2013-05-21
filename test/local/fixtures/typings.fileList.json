@@ -1,0 +1,42 @@
+[
+	{
+		"project": "async",
+		"name": "async"
+	},
+	{
+		"project": "expect.js",
+		"name": "expect.js"
+	},
+	{
+		"project": "jquery",
+		"name": "jquery"
+	},
+	{
+		"project": "jquery.cookie",
+		"name": "jquery.cookie"
+	},
+	{
+		"project": "linq",
+		"name": "linq.3.0.3-Beta4"
+	},
+	{
+		"project": "linq",
+		"name": "linq"
+	},
+	{
+		"project": "linq",
+		"name": "linq.jquery"
+	},
+	{
+		"project": "mocha",
+		"name": "mocha"
+	},
+	{
+		"project": "node",
+		"name": "node"
+	},
+	{
+		"project": "underscore",
+		"name": "underscore"
+	}
+]

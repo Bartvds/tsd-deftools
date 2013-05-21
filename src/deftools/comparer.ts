@@ -8,24 +8,6 @@ module deftools {
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 
-	export class Def {
-		constructor(public project:string, public name:string) {
-
-		}
-
-		combi():string {
-			return this.project + '/' + this.name;
-		}
-
-		toString():string {
-			return '[Def ' + this.combi() + ']';
-		}
-	}
-
-	export interface DefMap {
-		[name: string]: Def;
-	}
-
 	export function getDupes(arr:string[]):string[] {
 		var uni = _.unique(arr);
 		arr = _.filter(arr, (value) => {

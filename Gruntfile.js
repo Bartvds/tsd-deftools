@@ -48,10 +48,12 @@ module.exports = function (grunt) {
 				dest: 'build/defdev.js'
 			},
 			test_all: {
+				option: {base_path: 'test/'},
 				src: ['test/*.test.ts'],
 				dest: 'test/_tmp.all.test.js'
 			},
 			test_api: {
+				option: {base_path: 'test/'},
 				src: ['test/api*.test.ts'],
 				dest: 'test/_tmp.api.test.js'
 			}
