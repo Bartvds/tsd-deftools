@@ -22,7 +22,7 @@ var helper;
     }
     helper.dump = dump;
 })(helper || (helper = {}));
-var expect = require('expect.js');
+var assert = require('chai').assert;
 process.env['mocha-unfunk-color'] = true;
 var deftools;
 (function (deftools) {
@@ -1321,12 +1321,12 @@ describe('deftools', function () {
     var Config = deftools.Config;
     before(function () {
         testConfig = helper.readJSON(__dirname, 'tool-config.json');
-        expect(testConfig).to.be.ok();
+        assert.ok(testConfig);
     });
     it('loads Config.getInfo()', function () {
         info = Config.getInfo();
-        expect(info).to.be.ok();
-        expect(info).to.be.a(deftools.ToolInfo);
+        assert.ok(testConfig);
+        assert.instanceOf(info, deftools.ToolInfo);
     });
     describe('test "' + testId + '"', function () {
         var testDir;
@@ -1334,52 +1334,52 @@ describe('deftools', function () {
         var stats;
         var paths;
         before(function () {
-            expect(info).to.be.ok();
-            expect(testConfig).to.have.property(testId);
+            assert.ok(info);
+            assert.property(testConfig, testId);
             conf = testConfig[testId];
-            expect(conf).to.be.ok();
+            assert.ok(conf);
         });
         describe('config init', function () {
             it('should have test config', function () {
-                expect(conf).to.be.ok();
+                assert.ok(conf);
             });
             it('should define path', function () {
-                expect(conf.path).to.be.ok();
-                expect(fs.existsSync(conf.path)).to.equal(true);
+                assert.ok(conf.path);
+                assert.equal(fs.existsSync(conf.path), true);
             });
             it('should define test', function () {
-                expect(conf.test).to.be.ok();
-                expect(fs.existsSync(conf.test)).to.equal(true);
+                assert.ok(conf.test);
+                assert.equal(fs.existsSync(conf.test), true);
             });
             it('should resolve testdir', function () {
                 testDir = path.resolve(conf.test);
-                expect(fs.existsSync(testDir)).to.equal(true);
-                expect(fs.statSync(testDir).isDirectory()).to.equal(true);
+                assert.equal(fs.existsSync(testDir), true);
+                assert.equal(fs.statSync(testDir).isDirectory(), true);
             });
             it('should load test stats', function () {
                 stats = helper.readJSON(testDir, 'stats.json');
                 paths = Config.getPaths(conf.path);
-                expect(paths).to.be.ok();
+                assert.ok(paths);
             });
             it('uses valid stats', function () {
-                expect(stats).to.be.ok();
-                expect(stats).to.have.own.property('tsd');
-                expect(stats.tsd).to.have.own.property('fileCount');
-                expect(stats.tsd.fileCount).to.be.above(0);
+                assert.ok(stats);
+                assert.property(stats, 'tsd');
+                assert.property(stats.tsd, 'fileCount');
+                assert.operator(stats.tsd.fileCount, '>', 0);
             });
             describe('Repos', function () {
                 it('should be accept data', function () {
-                    expect(deftools.Repos).to.be.a(Function);
+                    assert.instanceOf(deftools.Repos, Function);
                     var repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-                    expect(repos).to.be.ok();
+                    assert.ok(repos);
                 });
             });
         });
         describe('data', function () {
             before(function () {
-                expect(conf).to.be.ok();
-                expect(paths).to.be.ok();
-                expect(stats).to.be.ok();
+                assert.ok(conf);
+                assert.ok(paths);
+                assert.ok(stats);
             });
             describe('loader loadTsdList', function () {
                 var repos;
@@ -1387,31 +1387,16 @@ describe('deftools', function () {
                 before(function () {
                     repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
                     fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json');
-                    expect(fileList).to.have.length(stats.tsd.fileCount);
+                    assert.lengthOf(fileList, stats.tsd.fileCount);
                 });
                 it('should load content', function (done) {
-                    expect(repos).to.be.ok();
+                    assert.ok(repos);
                     deftools.loader.loadTsdList(repos, function (err, res) {
-                        expect(err).not.to.be.ok();
-                        expect(res).to.be.ok();
-                        expect(res).to.have.length(stats.tsd.fileCount);
-                        expect(res).to.have.length(fileList.length);
-                        expect(res).to.have.equal(fileList);
-                        done();
-                    });
-                });
-            });
-            describe('loader loadTsdList', function () {
-                var repos;
-                before(function () {
-                    repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-                });
-                it('should load content', function (done) {
-                    expect(repos).to.be.ok();
-                    deftools.loader.loadTsdList(repos, function (err, res) {
-                        expect(err).not.to.be.ok();
-                        expect(res).to.be.ok();
-                        expect(res).to.have.length(stats.tsd.fileCount);
+                        assert.ok(!err);
+                        assert.ok(res);
+                        assert.lengthOf(res, stats.tsd.fileCount);
+                        assert.lengthOf(res, fileList.length);
+                        assert.sameMembers(res, fileList);
                         done();
                     });
                 });
@@ -1419,12 +1404,12 @@ describe('deftools', function () {
             describe('API', function () {
                 var api;
                 it('should be defined', function () {
-                    expect(deftools.API).to.be.ok();
+                    assert.ok(deftools.API);
                 });
                 it('should be constructor', function () {
-                    expect(deftools.API).to.be.a(Function);
+                    assert.instanceOf(deftools.API, Function);
                     api = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
-                    expect(api).to.be.ok();
+                    assert.ok(api);
                 });
             });
         });
@@ -1434,69 +1419,69 @@ describe('xm.RexExpGlue', function () {
     var exp;
     var e;
     it('should be defined', function () {
-        expect(xm.RegExpGlue).to.be.ok();
+        assert.ok(xm.RegExpGlue);
     });
     it('should be a constructor', function () {
-        expect(new (xm.RegExpGlue)()).to.be.ok();
+        assert.ok(new (xm.RegExpGlue)());
     });
     it('should be static accesible', function () {
-        expect(xm.RegExpGlue.get()).to.be.ok();
+        assert.ok(xm.RegExpGlue.get());
     });
     it('should extract RegExp bodies', function () {
         exp = xm.RegExpGlue.get();
-        expect(exp.getBody(/abc/)).to.equal('abc');
-        expect(exp.getBody(/defg/)).to.equal('defg');
-        expect(exp.getBody(/^line$/)).to.equal('^line$');
-        expect(exp.getBody(/x y[\w -]*]+/)).to.equal('x y[\\w -]*]+');
-        expect(exp.getBody(/ \d \d /)).to.equal(' \\d \\d ');
+        assert.strictEqual(exp.getBody(/abc/), 'abc');
+        assert.strictEqual(exp.getBody(/defg/), 'defg');
+        assert.strictEqual(exp.getBody(/^line$/), '^line$');
+        assert.strictEqual(exp.getBody(/x y[\w -]*]+/), 'x y[\\w -]*]+');
+        assert.strictEqual(exp.getBody(/ \d \d /), ' \\d \\d ');
     });
     it('should extract RegExp flags', function () {
         exp = xm.RegExpGlue.get();
-        expect(exp.getFlags(/defg/i)).to.equal('i');
-        expect(exp.getFlags(/abc/)).to.equal('');
-        expect(exp.getFlags(/ \d\d/gm)).to.equal('gm');
-        expect(exp.getFlags(/xyz/gim)).to.equal('gim');
+        assert.strictEqual(exp.getFlags(/defg/i), 'i');
+        assert.strictEqual(exp.getFlags(/abc/), '');
+        assert.strictEqual(exp.getFlags(/ \d\d/gm), 'gm');
+        assert.strictEqual(exp.getFlags(/xyz/gim), 'gim');
     });
     it('should clean RegExp flags', function () {
         exp = xm.RegExpGlue.get();
-        expect(exp.getCleanFlags('abci')).to.equal('i');
-        expect(exp.getCleanFlags('abcgmi')).to.equal('gmi');
-        expect(exp.getCleanFlags('gixsm')).to.equal('gim');
-        expect(exp.getCleanFlags('gixsmqrst')).to.equal('gim');
+        assert.strictEqual(exp.getCleanFlags('abci'), 'i');
+        assert.strictEqual(exp.getCleanFlags('abcgmi'), 'gmi');
+        assert.strictEqual(exp.getCleanFlags('gixsm'), 'gim');
+        assert.strictEqual(exp.getCleanFlags('gixsmqrst'), 'gim');
     });
     describe('be initialised', function () {
         it('by contructor', function () {
             exp = new (xm.RegExpGlue)();
-            expect(exp).to.be.a(xm.RegExpGlue);
-            expect(exp.parts).have.length(0);
+            assert.instanceOf(exp, xm.RegExpGlue);
+            assert.lengthOf(exp.parts, 0);
             exp = new (xm.RegExpGlue)(/alpha/);
-            expect(exp.parts).have.length(1);
+            assert.lengthOf(exp.parts, 1);
             exp = new (xm.RegExpGlue)(/alpha/, /bravo/);
-            expect(exp.parts).have.length(2);
+            assert.lengthOf(exp.parts, 2);
         });
         it('by RegExpGlue.get()', function () {
             exp = xm.RegExpGlue.get();
-            expect(exp).to.be.a(xm.RegExpGlue);
-            expect(exp.parts).have.length(0);
+            assert.instanceOf(exp, xm.RegExpGlue);
+            assert.lengthOf(exp.parts, 0);
             exp = xm.RegExpGlue.get(/alpha/);
-            expect(exp.parts).have.length(1);
+            assert.lengthOf(exp.parts, 1);
             exp = xm.RegExpGlue.get(/alpha/, /bravo/);
-            expect(exp.parts).have.length(2);
+            assert.lengthOf(exp.parts, 2);
         });
     });
     describe('should append()', function () {
         it('to same instance', function () {
             exp = xm.RegExpGlue.get();
-            expect(exp).to.be.ok();
-            expect(exp).to.equal(exp.append());
+            assert.ok(exp);
+            assert.strictEqual(exp, exp.append());
         });
         it('add parts', function () {
             exp = xm.RegExpGlue.get();
-            expect(exp.parts).have.length(0);
+            assert.lengthOf(exp.parts, 0);
             exp.append(/alpha/);
-            expect(exp.parts).have.length(1);
+            assert.lengthOf(exp.parts, 1);
             exp.append(/bravo/, /charlie/);
-            expect(exp.parts).have.length(3);
+            assert.lengthOf(exp.parts, 3);
         });
     });
     describe('should join()', function () {
@@ -1505,21 +1490,21 @@ describe('xm.RexExpGlue', function () {
         });
         it('into a RegExp', function () {
             e = exp.join();
-            expect(e).to.be.a(RegExp);
+            assert.instanceOf(e, RegExp);
         });
         it('into a basic glued RegExp', function () {
             e = exp.join();
-            expect('' + e).to.equal('/alpha123bravo/');
+            assert.strictEqual('' + e, '/alpha123bravo/');
         });
         it('with flags appended', function () {
             e = exp.join('gm');
-            expect('' + e).to.equal('/alpha123bravo/gm');
+            assert.strictEqual('' + e, '/alpha123bravo/gm');
         });
         it('use seperators to glue', function () {
             e = exp.join('', / +/);
-            expect('' + e).to.equal('/alpha +123 +bravo/');
+            assert.strictEqual('' + e, '/alpha +123 +bravo/');
             e = exp.join('gi', / +/);
-            expect('' + e).to.equal('/alpha +123 +bravo/gi');
+            assert.strictEqual('' + e, '/alpha +123 +bravo/gi');
         });
         after(function () {
             exp = null;

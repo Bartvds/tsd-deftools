@@ -48,7 +48,8 @@
     "grunt-typescript": "~0.1.5",
     "grunt-contrib-clean": "~0.4.1",
     "grunt-contrib-copy": "~0.4.1",
-    "grunt-execute": "~0.1.4"
+    "grunt-execute": "~0.1.4",
+    "chai": "~1.6.0"
   },
   "peerDependencies": {
     "grunt": "~0.4.1"

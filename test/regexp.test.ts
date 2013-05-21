@@ -1,83 +1,85 @@
 ///<reference path="_ref.ts" />
 ///<reference path="../src/xm/regexp.ts" />
 
+declare var assert:chai.Assert;
+
 describe('xm.RexExpGlue', () => {
 
 	var exp:xm.RegExpGlue;
 	var e:RegExp;
 
 	it('should be defined', () => {
-		expect(xm.RegExpGlue).to.be.ok();
+		assert.ok(xm.RegExpGlue);
 	});
 	it('should be a constructor', () => {
-		expect(new (xm.RegExpGlue)()).to.be.ok();
+		assert.ok(new (xm.RegExpGlue)());
 	});
 	it('should be static accesible', () => {
-		expect(xm.RegExpGlue.get()).to.be.ok();
+		assert.ok(xm.RegExpGlue.get())
 	});
 	it('should extract RegExp bodies', () => {
 		exp = xm.RegExpGlue.get();
-		expect(exp.getBody(/abc/)).to.equal('abc');
-		expect(exp.getBody(/defg/)).to.equal('defg');
-		expect(exp.getBody(/^line$/)).to.equal('^line$');
-		expect(exp.getBody(/x y[\w -]*]+/)).to.equal('x y[\\w -]*]+');
-		expect(exp.getBody(/ \d \d /)).to.equal(' \\d \\d ');
+		assert.strictEqual(exp.getBody(/abc/), 'abc');
+		assert.strictEqual(exp.getBody(/defg/), 'defg');
+		assert.strictEqual(exp.getBody(/^line$/), '^line$');
+		assert.strictEqual(exp.getBody(/x y[\w -]*]+/), 'x y[\\w -]*]+');
+		assert.strictEqual(exp.getBody(/ \d \d /), ' \\d \\d ');
 	});
 	it('should extract RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
-		expect(exp.getFlags(/defg/i)).to.equal('i');
-		expect(exp.getFlags(/abc/)).to.equal('');
-		expect(exp.getFlags(/ \d\d/gm )).to.equal('gm');
-		expect(exp.getFlags(/xyz/gim)).to.equal('gim');
+		assert.strictEqual(exp.getFlags(/defg/i), 'i');
+		assert.strictEqual(exp.getFlags(/abc/), '');
+		assert.strictEqual(exp.getFlags(/ \d\d/gm), 'gm');
+		assert.strictEqual(exp.getFlags(/xyz/gim), 'gim');
 	});
 	it('should clean RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
-		expect(exp.getCleanFlags('abci')).to.equal('i');
-		expect(exp.getCleanFlags('abcgmi')).to.equal('gmi');
-		expect(exp.getCleanFlags('gixsm')).to.equal('gim');
-		expect(exp.getCleanFlags('gixsmqrst')).to.equal('gim');
+		assert.strictEqual(exp.getCleanFlags('abci'), 'i');
+		assert.strictEqual(exp.getCleanFlags('abcgmi'), 'gmi');
+		assert.strictEqual(exp.getCleanFlags('gixsm'), 'gim');
+		assert.strictEqual(exp.getCleanFlags('gixsmqrst'), 'gim');
 	});
 
 	describe('be initialised', () => {
 		it('by contructor', () => {
 			exp = new (xm.RegExpGlue)();
-			expect(exp).to.be.a(xm.RegExpGlue);
-			expect(exp.parts).have.length(0);
+			assert.instanceOf(exp, xm.RegExpGlue);
+			assert.lengthOf(exp.parts, 0);
 
 			exp = new (xm.RegExpGlue)(/alpha/);
-			expect(exp.parts).have.length(1);
+			assert.lengthOf(exp.parts, 1);
 
 			exp = new (xm.RegExpGlue)(/alpha/, /bravo/);
-			expect(exp.parts).have.length(2);
+			assert.lengthOf(exp.parts, 2);
 		});
 		it('by RegExpGlue.get()', () => {
 			exp = xm.RegExpGlue.get();
-			expect(exp).to.be.a(xm.RegExpGlue);
-			expect(exp.parts).have.length(0);
+			assert.instanceOf(exp, xm.RegExpGlue);
+			assert.lengthOf(exp.parts, 0);
 
 			exp = xm.RegExpGlue.get(/alpha/);
-			expect(exp.parts).have.length(1);
+			assert.lengthOf(exp.parts, 1);
 
 			exp = xm.RegExpGlue.get(/alpha/, /bravo/);
-			expect(exp.parts).have.length(2);
+			assert.lengthOf(exp.parts, 2);
 		});
 	});
 
 	describe('should append()', () => {
 		it('to same instance', () => {
 			exp = xm.RegExpGlue.get()
-			expect(exp).to.be.ok();
-			expect(exp).to.equal(exp.append());
+			assert.ok(exp);
+			assert.strictEqual(exp, exp.append());
 		});
 		it('add parts', () => {
 			exp = xm.RegExpGlue.get();
-			expect(exp.parts).have.length(0);
+			assert.lengthOf(exp.parts, 0);
 
 			exp.append(/alpha/);
-			expect(exp.parts).have.length(1);
+			assert.lengthOf(exp.parts, 1);
 
 			exp.append(/bravo/, /charlie/);
-			expect(exp.parts).have.length(3);
+			assert.lengthOf(exp.parts, 3);
 		});
 	});
 
@@ -88,21 +90,21 @@ describe('xm.RexExpGlue', () => {
 		});
 		it('into a RegExp', () => {
 			e = exp.join();
-			expect(e).to.be.a(RegExp);
+			assert.instanceOf(e, RegExp);
 		});
 		it('into a basic glued RegExp', () => {
 			e = exp.join();
-			expect(''+e).to.equal('/alpha123bravo/');
+			assert.strictEqual('' + e, '/alpha123bravo/');
 		});
 		it('with flags appended', () => {
 			e = exp.join('gm');
-			expect(''+e).to.equal('/alpha123bravo/gm');
+			assert.strictEqual('' + e, '/alpha123bravo/gm');
 		});
 		it('use seperators to glue', () => {
 			e = exp.join('', / +/);
-			expect(''+e).to.equal('/alpha +123 +bravo/');
+			assert.strictEqual('' + e, '/alpha +123 +bravo/');
 			e = exp.join('gi', / +/);
-			expect(''+e).to.equal('/alpha +123 +bravo/gi');
+			assert.strictEqual('' + e, '/alpha +123 +bravo/gi');
 		});
 		after(() => {
 			exp = null;

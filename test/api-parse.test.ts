@@ -3,6 +3,9 @@
 ///<reference path="../src/deftools/_ref.ts" />
 ///<reference path="../src/deftools/api.ts" />
 
+declare var helper:helper;
+
+declare var assert:chai.Assert;
 
 describe('deftools', () => {
 	var fs = require('fs');
@@ -18,12 +21,12 @@ describe('deftools', () => {
 
 	before(() => {
 		testConfig = helper.readJSON(__dirname, 'tool-config.json');
-		expect(testConfig).to.be.ok();
+		assert.ok(testConfig);
 	});
 	it('loads Config.getInfo()', () => {
 		info = Config.getInfo();
-		expect(info).to.be.ok();
-		expect(info).to.be.a(deftools.ToolInfo);
+		assert.ok(testConfig);
+		assert.instanceOf(info, deftools.ToolInfo);
 	});
 
 	describe('test "' + testId + '"', () => {
@@ -34,57 +37,57 @@ describe('deftools', () => {
 		var paths:deftools.ConfPaths;
 
 		before(() => {
-			expect(info).to.be.ok();
-			expect(testConfig).to.have.property(testId);
+			assert.ok(info);
+			assert.property(testConfig, testId);
 			conf = testConfig[testId];
-			expect(conf).to.be.ok();
+			assert.ok(conf);
 		});
 
 		describe('config init', () => {
 			it('should have test config', () => {
-				expect(conf).to.be.ok();
+				assert.ok(conf);
 			});
 			it('should define path', () => {
-				expect(conf.path).to.be.ok();
-				expect(fs.existsSync(conf.path)).to.equal(true);
+				assert.ok(conf.path);
+				assert.equal(fs.existsSync(conf.path), true);
 			});
 			it('should define test', () => {
-				expect(conf.test).to.be.ok();
-				expect(fs.existsSync(conf.test)).to.equal(true);
+				assert.ok(conf.test);
+				assert.equal(fs.existsSync(conf.test),  true);
 			});
 			it('should resolve testdir', () => {
 				testDir = path.resolve(conf.test);
-				expect(fs.existsSync(testDir)).to.equal(true);
-				expect(fs.statSync(testDir).isDirectory()).to.equal(true);
+				assert.equal(fs.existsSync(testDir), true);
+				assert.equal(fs.statSync(testDir).isDirectory(), true);
 			});
 
 			it('should load test stats', () => {
 				stats = helper.readJSON(testDir, 'stats.json');
 				paths = Config.getPaths(conf.path);
-				expect(paths).to.be.ok();
+				assert.ok(paths);
 			});
 
 			it('uses valid stats', () => {
-				expect(stats).to.be.ok();
-				expect(stats).to.have.own.property('tsd');
-				expect(stats.tsd).to.have.own.property('fileCount');
-				expect(stats.tsd.fileCount).to.be.above(0);
+				assert.ok(stats);
+				assert.property(stats, 'tsd');
+				assert.property(stats.tsd,'fileCount');
+				assert.operator(stats.tsd.fileCount, '>', 0);
 			});
 
 			describe('Repos', () => {
 				it('should be accept data', () => {
-					expect(deftools.Repos).to.be.a(Function);
+					assert.instanceOf(deftools.Repos, Function);
 					var repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-					expect(repos).to.be.ok();
+					assert.ok(repos);
 				});
 			});
 		});
 
 		describe('data', () => {
 			before(() => {
-				expect(conf).to.be.ok();
-				expect(paths).to.be.ok();
-				expect(stats).to.be.ok();
+				assert.ok(conf);
+				assert.ok(paths);
+				assert.ok(stats);
 			});
 
 			describe('loader loadTsdList', () => {
@@ -93,34 +96,17 @@ describe('deftools', () => {
 				before(() => {
 					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
 					fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')
-					expect(fileList).to.have.length(stats.tsd.fileCount);
+					assert.lengthOf(fileList, stats.tsd.fileCount);
 				});
 				it('should load content', (done:() => void) => {
-					expect(repos).to.be.ok();
+					assert.ok(repos);
 
 					deftools.loader.loadTsdList(repos, (err, res:string[]) => {
-						expect(err).not.to.be.ok();
-						expect(res).to.be.ok();
-						expect(res).to.have.length(stats.tsd.fileCount);
-						expect(res).to.have.length(fileList.length);
-						expect(res).to.have.equal(fileList);
-						done();
-					});
-				});
-			});
-
-			describe('loader loadTsdList', () => {
-				var repos;
-				before(() => {
-					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-				});
-				it('should load content', (done:() => void) => {
-					expect(repos).to.be.ok();
-
-					deftools.loader.loadTsdList(repos, (err, res:string[]) => {
-						expect(err).not.to.be.ok();
-						expect(res).to.be.ok();
-						expect(res).to.have.length(stats.tsd.fileCount);
+						assert.ok(!err);
+						assert.ok(res);
+						assert.lengthOf(res, stats.tsd.fileCount);
+						assert.lengthOf(res, fileList.length);
+						assert.sameMembers(res, fileList);
 						done();
 					});
 				});
@@ -129,12 +115,12 @@ describe('deftools', () => {
 			describe('API', () => {
 				var api;
 				it('should be defined', () => {
-					expect(deftools.API).to.be.ok();
+					assert.ok(deftools.API);
 				});
 				it('should be constructor', () => {
-					expect(deftools.API).to.be.a(Function);
+					assert.instanceOf(deftools.API, Function);
 					api = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
-					expect(api).to.be.ok();
+					assert.ok(api);
 				});
 			});
 		});
