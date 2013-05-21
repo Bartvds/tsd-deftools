@@ -39,9 +39,7 @@
     "underscore": "~1.4.4",
     "async": "~0.2.8",
     "optimist": "~0.4.0",
-    "glob": "~3.2.1",
-    "grunt-mocha-spawn": "~0.1.0",
-    "mocha-unfunk-reporter": "~0.1.4"
+    "glob": "~3.2.1"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
@@ -49,6 +47,8 @@
     "grunt-contrib-clean": "~0.4.1",
     "grunt-contrib-copy": "~0.4.1",
     "grunt-execute": "~0.1.4",
+	"grunt-mocha-spawn": "~0.1.1",
+	"mocha-unfunk-reporter": "~0.1.4",
     "chai": "~1.6.0"
   },
   "peerDependencies": {

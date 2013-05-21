@@ -8,6 +8,8 @@ declare var helper:helper;
 declare var assert:chai.Assert;
 
 describe('deftools', () => {
+
+
 	var fs = require('fs');
 	var path = require('path');
 	var util = require('util');
@@ -93,6 +95,7 @@ describe('deftools', () => {
 			describe('loader loadTsdList', () => {
 				var repos;
 				var fileList;
+
 				before(() => {
 					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
 					fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')

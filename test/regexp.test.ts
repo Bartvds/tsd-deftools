@@ -35,7 +35,7 @@ describe('xm.RexExpGlue', () => {
 	it('should clean RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getCleanFlags('abci'), 'i');
-		assert.strictEqual(exp.getCleanFlags('abcgmi'), 'gmi');
+		assert.strictEqual(exp.getCleanFlags('abcgmmmi'), 'gmi');
 		assert.strictEqual(exp.getCleanFlags('gixsm'), 'gim');
 		assert.strictEqual(exp.getCleanFlags('gixsmqrst'), 'gim');
 	});

@@ -47,17 +47,24 @@ module.exports = function (grunt) {
 				src: ['src/defdev.ts'],
 				dest: 'build/defdev.js'
 			},
-			test: {
-				options: {
-					base_path: 'test/'
-				},
+			test_all: {
 				src: ['test/*.test.ts'],
-				dest: 'test/_tmp.test.js'
+				dest: 'test/_tmp.all.test.js'
+			},
+			test_api: {
+				src: ['test/api*.test.ts'],
+				dest: 'test/_tmp.api.test.js'
 			}
 		},
 		mocha_spawn: {
 			all: {
 				src:['test/*.test.js'],
+				options: {
+					reporter: 'mocha-unfunk-reporter'
+				}
+			},
+			api: {
+				src:['test/*api.test.js'],
 				options: {
 					reporter: 'mocha-unfunk-reporter'
 				}
@@ -68,9 +75,10 @@ module.exports = function (grunt) {
 	grunt.registerTask('default', ['build']);
 	grunt.registerTask('build', ['clean:build', 'typescript:cli', 'typescript:mod']);
 
-	grunt.registerTask('test', ['clean:test', 'typescript:test', 'mocha_spawn:all']);
+	grunt.registerTask('test', ['clean:test', 'typescript:test_all', 'mocha_spawn:all']);
 
-	grunt.registerTask('dev', ['build', 'execute:cli', 'execute:mod']);
+	grunt.registerTask('dev', ['clean:test', 'typescript:test_api', 'mocha_spawn:api']);
+
 	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
 
 };
