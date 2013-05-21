@@ -2,5 +2,5 @@
 /.idea
 /tmp
 /out
-/test/tmp
+/test/_tmp*
 npm-debug.log
