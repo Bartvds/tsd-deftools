@@ -8,8 +8,6 @@ module deftools {
 
 	export module Config {
 
-		var info:ToolInfo;
-
 		export function getPaths(src?:string):ConfPaths {
 			var paths:ConfPaths;
 			if (typeof src === 'undefined') {
@@ -25,10 +23,10 @@ module deftools {
 			}
 
 			if (!fs.existsSync(paths.typings)) {
-				throw('typings does not exist ' + paths.typings);
+				throw ('typings does not exist ' + paths.typings);
 			}
 			if (!fs.existsSync(paths.tsd)) {
-				throw('tsd does not exist ' + paths.tsd);
+				throw ('tsd does not exist ' + paths.tsd);
 			}
 
 			if (!fs.existsSync(paths.tmp)) {
@@ -47,7 +45,6 @@ module deftools {
 		}
 
 		export function getInfo():ToolInfo {
-			if (info) return info;
 			var pkg;
 			try {
 				pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
@@ -55,7 +52,7 @@ module deftools {
 			catch (e) {
 				throw(e);
 			}
-			return info = new ToolInfo(pkg.name, pkg.version, pkg);
+			return new ToolInfo(pkg.name, pkg.version, pkg);
 		}
 	}
 }

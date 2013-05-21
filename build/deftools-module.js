@@ -221,7 +221,6 @@ var deftools;
     var path = require('path');
     var util = require('util');
     (function (Config) {
-        var info;
         function getPaths(src) {
             var paths;
             if(typeof src === 'undefined') {
@@ -253,16 +252,13 @@ var deftools;
         }
         Config.getPaths = getPaths;
         function getInfo() {
-            if(info) {
-                return info;
-            }
             var pkg;
             try  {
                 pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
             } catch (e) {
                 throw (e);
             }
-            return info = new deftools.ToolInfo(pkg.name, pkg.version, pkg);
+            return new deftools.ToolInfo(pkg.name, pkg.version, pkg);
         }
         Config.getInfo = getInfo;
     })(deftools.Config || (deftools.Config = {}));

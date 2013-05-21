@@ -1,3 +1,27 @@
+var helper;
+(function (helper) {
+    var fs = require('fs');
+    var path = require('path');
+    var util = require('util');
+    function readJSON() {
+        var src = [];
+        for (var _i = 0; _i < (arguments.length - 0); _i++) {
+            src[_i] = arguments[_i + 0];
+        }
+        return JSON.parse(fs.readFileSync(path.join.apply(path, src)));
+    }
+    helper.readJSON = readJSON;
+    function dump(object, label, depth, showHidden) {
+        if (typeof label === "undefined") { label = ''; }
+        if (typeof depth === "undefined") { depth = 6; }
+        if (typeof showHidden === "undefined") { showHidden = false; }
+        if(console.log) {
+            console.log(label + ':');
+        }
+        console.log(util.inspect(object, showHidden, depth, true));
+    }
+    helper.dump = dump;
+})(helper || (helper = {}));
 var expect = require('expect.js');
 process.env['mocha-unfunk-color'] = true;
 var deftools;
@@ -223,7 +247,6 @@ var deftools;
     var path = require('path');
     var util = require('util');
     (function (Config) {
-        var info;
         function getPaths(src) {
             var paths;
             if(typeof src === 'undefined') {
@@ -255,16 +278,13 @@ var deftools;
         }
         Config.getPaths = getPaths;
         function getInfo() {
-            if(info) {
-                return info;
-            }
             var pkg;
             try  {
                 pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
             } catch (e) {
                 throw (e);
             }
-            return info = new deftools.ToolInfo(pkg.name, pkg.version, pkg);
+            return new deftools.ToolInfo(pkg.name, pkg.version, pkg);
         }
         Config.getInfo = getInfo;
     })(deftools.Config || (deftools.Config = {}));
@@ -1289,17 +1309,126 @@ var deftools;
     })();
     deftools.HeaderParserOri = HeaderParserOri;    
 })(deftools || (deftools = {}));
-describe('deftools.API', function () {
-    it('should be defined', function () {
-        expect(deftools.API).to.be.ok();
-    });
+describe('deftools', function () {
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
     var async = require('async');
     var _ = require('underscore');
+    var info;
+    var testConfig;
+    var testId = 'local';
     var Config = deftools.Config;
-    var Repos = deftools.Repos;
+    before(function () {
+        testConfig = helper.readJSON(__dirname, 'tool-config.json');
+        expect(testConfig).to.be.ok();
+    });
+    it('loads Config.getInfo()', function () {
+        info = Config.getInfo();
+        expect(info).to.be.ok();
+        expect(info).to.be.a(deftools.ToolInfo);
+    });
+    describe('test "' + testId + '"', function () {
+        var testDir;
+        var conf;
+        var stats;
+        var paths;
+        before(function () {
+            expect(info).to.be.ok();
+            expect(testConfig).to.have.property(testId);
+            conf = testConfig[testId];
+            expect(conf).to.be.ok();
+        });
+        describe('config init', function () {
+            it('should have test config', function () {
+                expect(conf).to.be.ok();
+            });
+            it('should define path', function () {
+                expect(conf.path).to.be.ok();
+                expect(fs.existsSync(conf.path)).to.equal(true);
+            });
+            it('should define test', function () {
+                expect(conf.test).to.be.ok();
+                expect(fs.existsSync(conf.test)).to.equal(true);
+            });
+            it('should resolve testdir', function () {
+                testDir = path.resolve(conf.test);
+                expect(fs.existsSync(testDir)).to.equal(true);
+                expect(fs.statSync(testDir).isDirectory()).to.equal(true);
+            });
+            it('should load test stats', function () {
+                stats = helper.readJSON(testDir, 'stats.json');
+                paths = Config.getPaths(conf.path);
+                expect(paths).to.be.ok();
+            });
+            it('uses valid stats', function () {
+                expect(stats).to.be.ok();
+                expect(stats).to.have.own.property('tsd');
+                expect(stats.tsd).to.have.own.property('fileCount');
+                expect(stats.tsd.fileCount).to.be.above(0);
+            });
+            describe('Repos', function () {
+                it('should be accept data', function () {
+                    expect(deftools.Repos).to.be.a(Function);
+                    var repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+                    expect(repos).to.be.ok();
+                });
+            });
+        });
+        describe('data', function () {
+            before(function () {
+                expect(conf).to.be.ok();
+                expect(paths).to.be.ok();
+                expect(stats).to.be.ok();
+            });
+            describe('loader loadTsdList', function () {
+                var repos;
+                var fileList;
+                before(function () {
+                    repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+                    fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json');
+                    expect(fileList).to.have.length(stats.tsd.fileCount);
+                });
+                it('should load content', function (done) {
+                    expect(repos).to.be.ok();
+                    deftools.loader.loadTsdList(repos, function (err, res) {
+                        expect(err).not.to.be.ok();
+                        expect(res).to.be.ok();
+                        expect(res).to.have.length(stats.tsd.fileCount);
+                        expect(res).to.have.length(fileList.length);
+                        expect(res).to.have.equal(fileList);
+                        done();
+                    });
+                });
+            });
+            describe('loader loadTsdList', function () {
+                var repos;
+                before(function () {
+                    repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+                });
+                it('should load content', function (done) {
+                    expect(repos).to.be.ok();
+                    deftools.loader.loadTsdList(repos, function (err, res) {
+                        expect(err).not.to.be.ok();
+                        expect(res).to.be.ok();
+                        expect(res).to.have.length(stats.tsd.fileCount);
+                        done();
+                    });
+                });
+            });
+            describe('API', function () {
+                var api;
+                it('should be defined', function () {
+                    expect(deftools.API).to.be.ok();
+                });
+                it('should be constructor', function () {
+                    expect(deftools.API).to.be.a(Function);
+                    api = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
+                    expect(api).to.be.ok();
+                });
+            });
+        });
+    });
 });
 describe('xm.RexExpGlue', function () {
     var exp;
@@ -1391,6 +1520,9 @@ describe('xm.RexExpGlue', function () {
             expect('' + e).to.equal('/alpha +123 +bravo/');
             e = exp.join('gi', / +/);
             expect('' + e).to.equal('/alpha +123 +bravo/gi');
+        });
+        after(function () {
+            exp = null;
         });
     });
 });

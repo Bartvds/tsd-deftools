@@ -1,0 +1,6 @@
+{
+	"tsd": "./test/local/tsd",
+	"typings": "./test/local/typings",
+	"out": "./test/local/out",
+	"tmp": "./test/local/tmp"
+}

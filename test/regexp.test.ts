@@ -86,7 +86,6 @@ describe('xm.RexExpGlue', () => {
 		beforeEach(() => {
 			exp = xm.RegExpGlue.get(/alpha/, /123/, /bravo/i);
 		});
-
 		it('into a RegExp', () => {
 			e = exp.join();
 			expect(e).to.be.a(RegExp);
@@ -104,6 +103,9 @@ describe('xm.RexExpGlue', () => {
 			expect(''+e).to.equal('/alpha +123 +bravo/');
 			e = exp.join('gi', / +/);
 			expect(''+e).to.equal('/alpha +123 +bravo/gi');
+		});
+		after(() => {
+			exp = null;
 		});
 	});
 });

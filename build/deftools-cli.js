@@ -221,7 +221,6 @@ var deftools;
     var path = require('path');
     var util = require('util');
     (function (Config) {
-        var info;
         function getPaths(src) {
             var paths;
             if(typeof src === 'undefined') {
@@ -253,16 +252,13 @@ var deftools;
         }
         Config.getPaths = getPaths;
         function getInfo() {
-            if(info) {
-                return info;
-            }
             var pkg;
             try  {
                 pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
             } catch (e) {
                 throw (e);
             }
-            return info = new deftools.ToolInfo(pkg.name, pkg.version, pkg);
+            return new deftools.ToolInfo(pkg.name, pkg.version, pkg);
         }
         Config.getInfo = getInfo;
     })(deftools.Config || (deftools.Config = {}));
@@ -1343,16 +1339,16 @@ var deftools;
     var _ = require('underscore');
     var info = deftools.Config.getInfo();
     var paths = deftools.Config.getPaths();
-    var app = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
+    var api = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
     var expose = new xm.Expose();
     expose.add('info', function () {
         console.log(info.getNameVersion());
-        _(app.repos).keys().sort().forEach(function (value) {
-            console.log('   ' + value + ': ' + app.repos[value]);
+        _(api.repos).keys().sort().forEach(function (value) {
+            console.log('   ' + value + ': ' + api.repos[value]);
         });
     });
     expose.add('compare', function () {
-        app.compare(function (err, res) {
+        api.compare(function (err, res) {
             if(err) {
                 return console.log(err);
             }
@@ -1364,7 +1360,7 @@ var deftools;
         });
     });
     expose.add('listParsed', function () {
-        app.listParsed(function (err, res) {
+        api.listParsed(function (err, res) {
             if(err) {
                 return console.log(err);
             }
@@ -1386,7 +1382,7 @@ var deftools;
         });
     });
     expose.add('recreateAll', function () {
-        app.recreateAll(function (err, res) {
+        api.recreateAll(function (err, res) {
             if(err) {
                 return console.log(err);
             }

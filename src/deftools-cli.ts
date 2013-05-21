@@ -13,19 +13,19 @@ module deftools {
 
 	var info = Config.getInfo();
 	var paths = Config.getPaths();
-	var app:API = new API(info, new Repos(paths.typings, paths.tsd, paths.tmp));
+	var api:API = new API(info, new Repos(paths.typings, paths.tsd, paths.tmp));
 
 	//expose some easy access tools to cli
 	var expose = new xm.Expose();
 	expose.add('info', () => {
 		console.log(info.getNameVersion());
-		_(app.repos).keys().sort().forEach((value) => {
-			console.log('   ' + value + ': ' + app.repos[value]);
+		_(api.repos).keys().sort().forEach((value) => {
+			console.log('   ' + value + ': ' + api.repos[value]);
 		});
 	});
 
 	expose.add('compare', () => {
-		app.compare((err?, res?:deftools.CompareResult) => {
+		api.compare((err?, res?:deftools.CompareResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res, false, 8));
@@ -34,7 +34,7 @@ module deftools {
 	});
 
 	expose.add('listParsed', () => {
-		app.listParsed((err?, res?:deftools.ImportResult) => {
+		api.listParsed((err?, res?:deftools.ImportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('listParsed returned no result');
 			//console.log(util.inspect(res, false, 8));
@@ -60,7 +60,7 @@ module deftools {
 	});
 	/*
 	expose.add('createUnlisted', () => {
-		app.createUnlisted((err?, res?:deftool.ExportResult) => {
+		api.createUnlisted((err?, res?:deftool.ExportResult) => {
 			if (err) return console.log(err);
 			console.log(util.inspect(res, false, 8));
 			console.log('created(): ' + res.created);
@@ -69,7 +69,7 @@ module deftools {
 	});*/
 
 	expose.add('recreateAll', () => {
-		app.recreateAll((err?, res?:deftools.ExportResult) => {
+		api.recreateAll((err?, res?:deftools.ExportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('recreateAll returned no result');
 
