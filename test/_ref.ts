@@ -5,5 +5,6 @@
 ///<reference path="helper.ts" />
 
 var assert = require('chai').assert;
+var _ = require('underscore');
 
 process.env['mocha-unfunk-color'] = true;

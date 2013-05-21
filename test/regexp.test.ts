@@ -8,16 +8,16 @@ describe('xm.RexExpGlue', () => {
 	var exp:xm.RegExpGlue;
 	var e:RegExp;
 
-	it('should be defined', () => {
+	it('be defined', () => {
 		assert.ok(xm.RegExpGlue);
 	});
-	it('should be a constructor', () => {
+	it('be a constructor', () => {
 		assert.ok(new (xm.RegExpGlue)());
 	});
-	it('should be static accesible', () => {
+	it('be static accesible', () => {
 		assert.ok(xm.RegExpGlue.get())
 	});
-	it('should extract RegExp bodies', () => {
+	it('extract RegExp bodies', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getBody(/abc/), 'abc');
 		assert.strictEqual(exp.getBody(/defg/), 'defg');
@@ -25,14 +25,14 @@ describe('xm.RexExpGlue', () => {
 		assert.strictEqual(exp.getBody(/x y[\w -]*]+/), 'x y[\\w -]*]+');
 		assert.strictEqual(exp.getBody(/ \d \d /), ' \\d \\d ');
 	});
-	it('should extract RegExp flags', () => {
+	it('extract RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getFlags(/defg/i), 'i');
 		assert.strictEqual(exp.getFlags(/abc/), '');
 		assert.strictEqual(exp.getFlags(/ \d\d/gm), 'gm');
 		assert.strictEqual(exp.getFlags(/xyz/gim), 'gim');
 	});
-	it('should clean RegExp flags', () => {
+	it('clean RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getCleanFlags('abci'), 'i');
 		assert.strictEqual(exp.getCleanFlags('abcgmmmi'), 'gmi');
@@ -65,7 +65,7 @@ describe('xm.RexExpGlue', () => {
 		});
 	});
 
-	describe('should append()', () => {
+	describe('append()', () => {
 		it('to same instance', () => {
 			exp = xm.RegExpGlue.get()
 			assert.ok(exp);
@@ -83,7 +83,7 @@ describe('xm.RexExpGlue', () => {
 		});
 	});
 
-	describe('should join()', () => {
+	describe('join()', () => {
 
 		beforeEach(() => {
 			exp = xm.RegExpGlue.get(/alpha/, /123/, /bravo/i);

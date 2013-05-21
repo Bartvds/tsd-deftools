@@ -8,34 +8,35 @@ class ClassTS {
 	aa:string = 'hello';
 	bb:number = 1;
 	cc:number[] = [1, 2, 3];
-	dd:any = {a: 1, b: 2};
+	dd:any = {a: 'yo', b: 1, c:[3,2,1]};
 }
 var NamedJS = function NamedJS() {
 	this.aa = 'hello';
 	this.bb = 1;
 	this.cc = [1, 2, 3];
-	this.dd = {a: 1, b: 2};
+	this.dd = {a: 'yo', b: 1, c:[3,2,1]};
 }
 var AnonJS = function AnonJS() {
 	this.aa = 'hello';
 	this.bb = 1;
 	this.cc = [1, 2, 3];
-	this.dd = {a: 1, b: 2};
+	this.dd = {a: 'yo', b: 1, c:[3,2,1]};
 };
 var getLiteral = function () {
 	return {
 		aa: 'hello',
 		bb: 1,
 		cc: [1, 2, 3],
-		dd: {a: 1, b: 2}
+		dd: {a: 'yo', b: 1, c:[3,2,1]}
 	};
 };
+//apply some change
 var modifyObj = (obj, level, value) => {
 	if (level === 1) {
 		obj.bb = value;
 	}
 	else if (level === 2) {
-		obj.dd.c = value;
+		obj.dd.id = value;
 	}
 	return obj;
 };
@@ -54,24 +55,46 @@ var typeFactoryMap = {
 	},
 	classTS: (change) => {
 		return modifyObj(new ClassTS(), change, 'classTS');
+	},
+	jsonObj: (change) => {
+		return modifyObj(helper.readJSON(__dirname, 'fixtures/chai.equalObject.json'), change, 'jsonObj');
 	}
 };
 
-describe('chai', () => {
-	describe('should assert deepEqual', () => {
+describe('chai equality', () => {
+
+	before(()=>{
+		//console.log(JSON.stringify(typeFactoryMap.literal(0), null, 4));
+	});
+	describe('assert deepEqual', () => {
 		_.each(typeFactoryMap, (left, name, map) => {
 			it(name, () => {
 				var obj = left();
+				assert.isObject(obj);
 				_.each(map, (right, name) => {
 					assert.deepEqual(obj, right(), name);
 				});
 			});
 		});
 	});
-	describe('should assert notDeepEqual', () => {
+	describe('assert notDeepEqual level 1', () => {
 		_.each(typeFactoryMap, (left, name, map) => {
 			it(name, () => {
-				var obj = left();
+				var obj = left(1);
+				assert.isObject(obj);
+				assert.propertyNotVal(obj, 'bb', 'hello');
+				_.each(map, (right, name) => {
+					assert.notDeepEqual(obj, right(), name);
+				});
+			});
+		});
+	});
+	describe('assert notDeepEqual level 2', () => {
+		_.each(typeFactoryMap, (left, name, map) => {
+			it(name, () => {
+				var obj = left(2);
+				assert.isObject(obj);
+				assert.propertyNotVal(obj.dd, 'id', 'yo');
 				_.each(map, (right, name) => {
 					assert.notDeepEqual(obj, right(), name);
 				});

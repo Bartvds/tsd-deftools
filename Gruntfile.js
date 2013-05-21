@@ -56,17 +56,16 @@ module.exports = function (grunt) {
 				option: {base_path: 'test/'},
 				src: ['test/api*.test.ts'],
 				dest: 'test/_tmp.api.test.js'
+			},
+			test_chai: {
+				option: {base_path: 'test/'},
+				src: ['test/chai*.test.ts'],
+				dest: 'test/_tmp.api.test.js'
 			}
 		},
 		mocha_spawn: {
-			all: {
+			any: {
 				src:['test/*.test.js'],
-				options: {
-					reporter: 'mocha-unfunk-reporter'
-				}
-			},
-			api: {
-				src:['test/*api.test.js'],
 				options: {
 					reporter: 'mocha-unfunk-reporter'
 				}
@@ -77,10 +76,11 @@ module.exports = function (grunt) {
 	grunt.registerTask('default', ['build']);
 	grunt.registerTask('build', ['clean:build', 'typescript:cli', 'typescript:mod']);
 
-	grunt.registerTask('test', ['clean:test', 'typescript:test_all', 'mocha_spawn:all']);
+	grunt.registerTask('test', ['clean:test', 'typescript:test_all', 'mocha_spawn:any']);
 
-	grunt.registerTask('dev', ['clean:test', 'typescript:test_api', 'mocha_spawn:api']);
+	grunt.registerTask('dev', ['clean:test', 'typescript:test_api', 'mocha_spawn:any']);
 
 	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
+	grunt.registerTask('edit_02', ['clean:test', 'typescript:test_chai', 'mocha_spawn:any']);
 
 };
