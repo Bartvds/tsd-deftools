@@ -150,6 +150,7 @@ module deftools {
 				else {
 					console.log('multi match line');
 					console.log(choice);
+					//TODO pick one!
 				}
 
 				if (possibles.length == 0) {

@@ -13,10 +13,15 @@ module deftools {
 	var extJson = /\.json$/;
 	var extDef = /\.d\.ts$/;
 
-	export module loader {
+	export class ListLoader {
 
-		export function loadRepoDefList(repos:Repos, finish:(err, res:Def[]) => void) {
-			fs.readdir(repos.defs, (err, files:string[]) => {
+		constructor(public repos:Repos) {
+
+		}
+
+		loadRepoDefs(finish:(err, res:Def[]) => void) {
+			var self:ListLoader = this;
+			fs.readdir(self.repos.defs, (err, files:string[]) => {
 				if (err) return finish(err, []);
 
 				var ret:Def[] = [];
@@ -27,7 +32,7 @@ module deftools {
 						return callback(false);
 					}
 
-					var src = path.join(repos.defs, file);
+					var src = path.join(self.repos.defs, file);
 
 					fs.stat(src, (err, stats) => {
 						if (err) return callback(false);
@@ -65,8 +70,9 @@ module deftools {
 			});
 		}
 
-		export function loadTsdList(repos:Repos, finish:(err, res:string[]) => void) {
-			fs.readdir(repos.tsd + 'repo_data', (err, files:string[]) => {
+		loadTsdNames(finish:(err, res:string[]) => void) {
+			var self:ListLoader = this;
+			fs.readdir(self.repos.tsd + 'repo_data', (err, files:string[]) => {
 				if (err) return finish(err, []);
 
 				finish(null, _(files).filter((value) => {

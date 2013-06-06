@@ -25,14 +25,14 @@ module deftools {
 	});
 
 	expose.add('loadTsdList', () => {
-		api.loadTsdList((err, res:string[]) => {
+		api.loadTsdNames((err, res:string[]) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res.sort(), false, 8));
 		});
 	});
 	expose.add('loadRepoList', () => {
-		api.loadRepoDefList((err, res:Def[]) => {
+		api.loadRepoDefs((err, res:Def[]) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(_.map(res, (def:Def) => { return def.combi()}).sort(), false, 8));
@@ -57,7 +57,7 @@ module deftools {
 	});
 
 	expose.add('listParsed', () => {
-		api.listParsed((err?, res?:deftools.ImportResult) => {
+		api.parseAll((err?, res?:deftools.ImportResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('listParsed returned no result');
 			//console.log(util.inspect(res, false, 8));

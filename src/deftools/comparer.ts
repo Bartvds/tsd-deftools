@@ -110,14 +110,15 @@ module deftools {
 		}
 
 		compare(finish:(err, res:CompareResult) => void) {
-			var self:DefinitionComparer = this;
+
+			var loader = new ListLoader(this.repos);
 
 			async.parallel({
 				defs: (callback) => {
-					loader.loadRepoDefList(self.repos, callback);
+					loader.loadRepoDefs(callback);
 				},
 				tsd: (callback) => {
-					loader.loadTsdList(self.repos, callback);
+					loader.loadTsdNames(callback);
 				}
 			},
 			(err, results:LoopRes) => {

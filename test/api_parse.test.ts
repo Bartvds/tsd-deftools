@@ -114,22 +114,28 @@ describe('deftools', () => {
 				assert.operator(stats.typings.fileCount, '>', 0);
 			});
 
-			describe('loader', () => {
-				describe('.loadTsdList()', () => {
-					var repos;
+			describe('ListLoader', () => {
+				var loader;
+				it('exists', () => {
+					assert.ok(deftools.ListLoader);
+				});
+				it('is a constructor', () => {
+					assert.instanceOf(deftools.ListLoader, Function);
+					loader = new deftools.ListLoader(new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
+					assert.ok(loader);
+					assert.ok(loader.repos);
+				});
+				describe('.loadTsdNames()', () => {
 					var fileList;
-					this.timeout(500);
 
 					before(() => {
-						repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+						loader = new deftools.ListLoader(new deftools.Repos(paths.typings, paths.tsd, paths.tmp))
 						fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')
 						assert.lengthOf(fileList, stats.tsd.fileCount);
-
 						fileList.sort(sortList);
 					});
 					it('loads content', (done:() => void) => {
-						assert.ok(repos, 'repos');
-						deftools.loader.loadTsdList(repos, (err, res:string[]) => {
+						loader.loadTsdNames((err, res:string[]) => {
 							assert.ok(!err, '' + err);
 							assert.ok(res, 'res');
 							assert.lengthOf(res, stats.tsd.fileCount);
@@ -140,30 +146,23 @@ describe('deftools', () => {
 						});
 					});
 				});
-				describe('.loadRepoDefList()', () => {
-					var repos;
+				describe('.loadRepoDefs()', () => {
 					var defList;
-					this.timeout(500);
-
 					before(() => {
-						repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+						loader = new deftools.ListLoader(new deftools.Repos(paths.typings, paths.tsd, paths.tmp))
 						defList = helper.readJSON(testDir, 'fixtures', 'typings.filelist.json')
 						assert.lengthOf(defList, stats.typings.fileCount);
 						defList.sort(sortDefList);
-
 					});
 					it('loads content', (done:() => void) => {
-						assert.ok(repos, 'repos');
-						deftools.loader.loadRepoDefList(repos, (err, res:deftools.Def[]) => {
+						loader.loadRepoDefs((err, res:deftools.Def[]) => {
 							assert.ok(!err, '' + err);
 							assert.ok(res, 'res');
 							assert.isArray(res, 'res');
 							assert.isArray(defList, 'res');
 							assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
-							assert.lengthOf(res, defList.length, 'res v defList')
-
+							assert.lengthOf(res, defList.length, 'res v defList');
 							res.sort(sortDefList);
-
 							assert.jsonOf(defList, res, 'fileList v res');
 							done();
 						});
@@ -193,7 +192,7 @@ describe('deftools', () => {
 						fileList.sort(sortList);
 					});
 					it('loads content', (done:() => void) => {
-						api.loadTsdList((err, res:string[]) => {
+						api.loadTsdNames((err, res:string[]) => {
 							assert.ok(!err, '' + err);
 							assert.ok(res, 'res');
 							assert.lengthOf(res, stats.tsd.fileCount);
@@ -215,7 +214,7 @@ describe('deftools', () => {
 						defList.sort(sortDefList);
 					});
 					it('loads content', (done:() => void) => {
-						api.loadRepoDefList((err, res:deftools.Def[]) => {
+						api.loadRepoDefs((err, res:deftools.Def[]) => {
 							assert.ok(!err, '' + err);
 							assert.ok(res, 'res');
 							assert.isArray(res, 'res');
@@ -227,6 +226,10 @@ describe('deftools', () => {
 							done();
 						});
 					});
+				});
+
+				describe('.loadRepoDefList()', () => {
+
 				});
 			});
 		});

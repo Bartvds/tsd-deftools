@@ -20,17 +20,17 @@ module deftools {
 		 * List files in tsd as name
 		 * @param callback
 		 */
-		loadTsdList(callback:(err, res:string[]) => void) {
+		loadTsdNames(callback:(err, res:string[]) => void) {
 
-			loader.loadTsdList(this.repos, callback)
+			new ListLoader(this.repos).loadTsdNames(callback)
 		}
 		/**
 		 * List files in repo as Def
 		 * @param callback
 		 */
-		loadRepoDefList(callback:(err, res:Def[]) => void) {
+		loadRepoDefs(callback:(err, res:Def[]) => void) {
 
-			loader.loadRepoDefList(this.repos, callback)
+			new ListLoader(this.repos).loadRepoDefs(callback)
 		}
 		/**
 		 * List and compare repo to tsd content
@@ -42,24 +42,18 @@ module deftools {
 			comparer.compare(callback);
 		}
 		/**
-		 * Parse repo data
+		 * Parse all repo data
 		 * @param callback
 		 */
-		listParsed(callback:(err?, res?:ImportResult) => void) {
+		parseAll(callback:(err?, res?:ImportResult) => void) {
 
-			var comparer = new DefinitionComparer(this.repos);
 			var importer = new DefinitionImporter(this.repos);
 
-			async.waterfall([(callback:(err) => void) => {
-				//why compare? (split this into recreate new/changed/all)
-				comparer.compare(callback);
-
-			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
-				if (!res) return callback('DefinitionComparer.compare returned no result');
-				console.log(res.getStats());
-				importer.parseDefinitions(res.repoAll, callback);
-
-			}], callback);
+			new ListLoader(this.repos).loadRepoDefs((err?, res?:Def[]) => {
+				if (err) return callback(err);
+				if (!res) return callback('loader.loadRepoDefList returned no result');
+				importer.parseDefinitions(res, callback);
+			});
 		}
 
 		/**

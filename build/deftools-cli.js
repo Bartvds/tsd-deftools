@@ -16,30 +16,27 @@ var deftools;
                 throw Error('no repos');
             }
         }
-        API.prototype.loadTsdList = function (callback) {
-            deftools.loader.loadTsdList(this.repos, callback);
+        API.prototype.loadTsdNames = function (callback) {
+            new deftools.ListLoader(this.repos).loadTsdNames(callback);
         };
-        API.prototype.loadRepoDefList = function (callback) {
-            deftools.loader.loadRepoDefList(this.repos, callback);
+        API.prototype.loadRepoDefs = function (callback) {
+            new deftools.ListLoader(this.repos).loadRepoDefs(callback);
         };
         API.prototype.compare = function (callback) {
             var comparer = new deftools.DefinitionComparer(this.repos);
             comparer.compare(callback);
         };
-        API.prototype.listParsed = function (callback) {
-            var comparer = new deftools.DefinitionComparer(this.repos);
+        API.prototype.parseAll = function (callback) {
             var importer = new deftools.DefinitionImporter(this.repos);
-            async.waterfall([
-                function (callback) {
-                    comparer.compare(callback);
-                }, 
-                function (res, callback) {
-                    if(!res) {
-                        return callback('DefinitionComparer.compare returned no result');
-                    }
-                    console.log(res.getStats());
-                    importer.parseDefinitions(res.repoAll, callback);
-                }            ], callback);
+            new deftools.ListLoader(this.repos).loadRepoDefs(function (err, res) {
+                if(err) {
+                    return callback(err);
+                }
+                if(!res) {
+                    return callback('loader.loadRepoDefList returned no result');
+                }
+                importer.parseDefinitions(res, callback);
+            });
         };
         API.prototype.recreateAll = function (callback) {
             var comparer = new deftools.DefinitionComparer(this.repos);
@@ -173,13 +170,13 @@ var deftools;
             this.repos = repos;
         }
         DefinitionComparer.prototype.compare = function (finish) {
-            var self = this;
+            var loader = new deftools.ListLoader(this.repos);
             async.parallel({
                 defs: function (callback) {
-                    deftools.loader.loadRepoDefList(self.repos, callback);
+                    loader.loadRepoDefs(callback);
                 },
                 tsd: function (callback) {
-                    deftools.loader.loadTsdList(self.repos, callback);
+                    loader.loadTsdNames(callback);
                 }
             }, function (err, results) {
                 var res = new CompareResult();
@@ -1223,9 +1220,13 @@ var deftools;
     var ignoreFile = /^[\._]/;
     var extJson = /\.json$/;
     var extDef = /\.d\.ts$/;
-    (function (loader) {
-        function loadRepoDefList(repos, finish) {
-            fs.readdir(repos.defs, function (err, files) {
+    var ListLoader = (function () {
+        function ListLoader(repos) {
+            this.repos = repos;
+        }
+        ListLoader.prototype.loadRepoDefs = function (finish) {
+            var self = this;
+            fs.readdir(self.repos.defs, function (err, files) {
                 if(err) {
                     return finish(err, []);
                 }
@@ -1234,7 +1235,7 @@ var deftools;
                     if(ignoreFile.test(file)) {
                         return callback(false);
                     }
-                    var src = path.join(repos.defs, file);
+                    var src = path.join(self.repos.defs, file);
                     fs.stat(src, function (err, stats) {
                         if(err) {
                             return callback(false);
@@ -1270,10 +1271,10 @@ var deftools;
                     finish(err, ret);
                 });
             });
-        }
-        loader.loadRepoDefList = loadRepoDefList;
-        function loadTsdList(repos, finish) {
-            fs.readdir(repos.tsd + 'repo_data', function (err, files) {
+        };
+        ListLoader.prototype.loadTsdNames = function (finish) {
+            var self = this;
+            fs.readdir(self.repos.tsd + 'repo_data', function (err, files) {
                 if(err) {
                     return finish(err, []);
                 }
@@ -1283,10 +1284,10 @@ var deftools;
                     return value.replace(stripExt, '');
                 }));
             });
-        }
-        loader.loadTsdList = loadTsdList;
-    })(deftools.loader || (deftools.loader = {}));
-    var loader = deftools.loader;
+        };
+        return ListLoader;
+    })();
+    deftools.ListLoader = ListLoader;    
 })(deftools || (deftools = {}));
 var xm;
 (function (xm) {
@@ -1297,7 +1298,7 @@ var xm;
             this._commands = {
             };
             this.add('help', function () {
-                console.log('availible commands:');
+                console.log('available commands:');
                 _(_this._commands).keys().sort().forEach(function (value) {
                     console.log('  - ' + value);
                 });
@@ -1318,7 +1319,7 @@ var xm;
         };
         Expose.prototype.add = function (id, def) {
             if(this._commands.hasOwnProperty(id)) {
-                throw new Error('id collission on ' + id);
+                throw new Error('id collision on ' + id);
             }
             this._commands[id] = def;
         };
@@ -1353,7 +1354,7 @@ var deftools;
         });
     });
     expose.add('loadTsdList', function () {
-        api.loadTsdList(function (err, res) {
+        api.loadTsdNames(function (err, res) {
             if(err) {
                 return console.log(err);
             }
@@ -1364,7 +1365,7 @@ var deftools;
         });
     });
     expose.add('loadRepoList', function () {
-        api.loadRepoDefList(function (err, res) {
+        api.loadRepoDefs(function (err, res) {
             if(err) {
                 return console.log(err);
             }
@@ -1404,7 +1405,7 @@ var deftools;
         });
     });
     expose.add('listParsed', function () {
-        api.listParsed(function (err, res) {
+        api.parseAll(function (err, res) {
             if(err) {
                 return console.log(err);
             }
