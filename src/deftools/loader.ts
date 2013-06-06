@@ -19,6 +19,50 @@ module deftools {
 
 		}
 
+		loadRepoProjectDefs(project:string, finish:(err, res:Def[]) => void) {
+			project = path.basename(project);
+
+			var ret:Def[] = [];
+			var self:ListLoader = this;
+			var src = path.join(self.repos.defs, project);
+
+			fs.exists(src, (exists) => {
+				if (!exists) return finish('not exists', ret);
+
+				fs.stat(src, (err, stats) => {
+					if (err) return finish(err, ret);
+					if (!stats.isDirectory()) return finish('not directory', ret);
+
+					fs.readdir(src, (err, files:string[]) => {
+						if (err) return finish(err, ret);
+
+						files = _(files).filter((name) => {
+							return extDef.test(name);
+						});
+
+						if (files.length == 0) {
+							return finish(null, ret);
+						}
+
+						async.forEach(files, (name, callback:(err) => void) => {
+							//src + '/' + file + '/' + sub;
+							var tmp = path.join(src, name);
+							fs.stat(tmp, (err, stats) => {
+								if (err) return callback(err);
+								if (stats.isDirectory()) return callback(null);
+
+								//console.log('-> ' + name);
+								ret.push(new Def(project, name.replace(extDef, '')));
+								callback(null);
+							});
+						}, (err) => {
+							finish(err, ret);
+						});
+					});
+				});
+			});
+		}
+
 		loadRepoDefs(finish:(err, res:Def[]) => void) {
 			var self:ListLoader = this;
 			fs.readdir(self.repos.defs, (err, files:string[]) => {
@@ -26,42 +70,18 @@ module deftools {
 
 				var ret:Def[] = [];
 
-				//check if these are folders containing a definition
 				async.forEach(files, (file, callback:(err) => void) => {
 					if (ignoreFile.test(file)) {
-						return callback(false);
+						return callback(null);
 					}
+					self.loadRepoProjectDefs(file, (err, res:Def[]) => {
+						if (err) return callback(err);
+						if (!res) return callback('no res for ' + file);
 
-					var src = path.join(self.repos.defs, file);
-
-					fs.stat(src, (err, stats) => {
-						if (err) return callback(false);
-						if (!stats.isDirectory()) {
-							return callback(false);
-						}
-						fs.readdir(src, (err, files:string[]) => {
-							if (err) return callback(false);
-
-							files = _(files).filter((name) => {
-								return extDef.test(name);
-							});
-
-							async.forEach(files, (name, callback:(err) => void) => {
-								//src + '/' + file + '/' + sub;
-								var tmp = path.join(src, name);
-								fs.stat(tmp, (err, stats) => {
-									if (err) return callback(false);
-									if (stats.isDirectory()) {
-										return callback(false);
-									}
-									//console.log('-> ' + sub);
-									ret.push(new Def(file, name.replace(extDef, '')));
-									callback(null);
-								});
-							}, (err) => {
-								callback(err);
-							});
+						_.each(res, (def:Def) => {
+							ret.push(def);
 						});
+						callback(null);
 					});
 
 				}, (err) => {

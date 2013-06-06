@@ -21,23 +21,22 @@ module deftools {
 		 * @param callback
 		 */
 		loadTsdNames(callback:(err, res:string[]) => void) {
-
-			new ListLoader(this.repos).loadTsdNames(callback)
+			var loader = new ListLoader(this.repos);
+			loader.loadTsdNames(callback)
 		}
 		/**
 		 * List files in repo as Def
 		 * @param callback
 		 */
 		loadRepoDefs(callback:(err, res:Def[]) => void) {
-
-			new ListLoader(this.repos).loadRepoDefs(callback)
+			var loader = new ListLoader(this.repos);
+			loader.loadRepoDefs(callback);
 		}
 		/**
 		 * List and compare repo to tsd content
 		 * @param callback
 		 */
 		compare(callback:(err?, res?:CompareResult) => void) {
-
 			var comparer = new DefinitionComparer(this.repos);
 			comparer.compare(callback);
 		}
@@ -47,11 +46,27 @@ module deftools {
 		 */
 		parseAll(callback:(err?, res?:ImportResult) => void) {
 
+			var loader = new ListLoader(this.repos);
 			var importer = new DefinitionImporter(this.repos);
 
-			new ListLoader(this.repos).loadRepoDefs((err?, res?:Def[]) => {
+			loader.loadRepoDefs((err?, res?:Def[]) => {
 				if (err) return callback(err);
 				if (!res) return callback('loader.loadRepoDefList returned no result');
+				importer.parseDefinitions(res, callback);
+			});
+		}
+		/**
+		 * Parse project repo data
+		 * @param callback
+		 */
+		parseProject(project:string, callback:(err?, res?:ImportResult) => void) {
+
+			var loader = new ListLoader(this.repos);
+			var importer = new DefinitionImporter(this.repos);
+
+			loader.loadRepoProjectDefs(project, (err?, res?:Def[]) => {
+				if (err) return callback(err);
+				if (!res) return callback('loader.loadRepoProjectDefs returned no result');
 				importer.parseDefinitions(res, callback);
 			});
 		}

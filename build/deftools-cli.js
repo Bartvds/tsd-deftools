@@ -17,23 +17,39 @@ var deftools;
             }
         }
         API.prototype.loadTsdNames = function (callback) {
-            new deftools.ListLoader(this.repos).loadTsdNames(callback);
+            var loader = new deftools.ListLoader(this.repos);
+            loader.loadTsdNames(callback);
         };
         API.prototype.loadRepoDefs = function (callback) {
-            new deftools.ListLoader(this.repos).loadRepoDefs(callback);
+            var loader = new deftools.ListLoader(this.repos);
+            loader.loadRepoDefs(callback);
         };
         API.prototype.compare = function (callback) {
             var comparer = new deftools.DefinitionComparer(this.repos);
             comparer.compare(callback);
         };
         API.prototype.parseAll = function (callback) {
+            var loader = new deftools.ListLoader(this.repos);
             var importer = new deftools.DefinitionImporter(this.repos);
-            new deftools.ListLoader(this.repos).loadRepoDefs(function (err, res) {
+            loader.loadRepoDefs(function (err, res) {
                 if(err) {
                     return callback(err);
                 }
                 if(!res) {
                     return callback('loader.loadRepoDefList returned no result');
+                }
+                importer.parseDefinitions(res, callback);
+            });
+        };
+        API.prototype.parseProject = function (project, callback) {
+            var loader = new deftools.ListLoader(this.repos);
+            var importer = new deftools.DefinitionImporter(this.repos);
+            loader.loadRepoProjectDefs(project, null, function (err, res) {
+                if(err) {
+                    return callback(err);
+                }
+                if(!res) {
+                    return callback('loader.loadRepoProjectDefs returned no result');
                 }
                 importer.parseDefinitions(res, callback);
             });
@@ -1224,6 +1240,50 @@ var deftools;
         function ListLoader(repos) {
             this.repos = repos;
         }
+        ListLoader.prototype.loadRepoProjectDefs = function (project, into, finish) {
+            console.log('loadRepoProjectDefs');
+            console.log(project);
+            into = into || [];
+            project = path.basename(project);
+            var self = this;
+            var src = path.join(self.repos.defs, project);
+            fs.exists(src, function (exists) {
+                if(!exists) {
+                    return finish('not exists', into);
+                }
+                fs.stat(src, function (err, stats) {
+                    if(err) {
+                        return finish(err, into);
+                    }
+                    if(!stats.isDirectory()) {
+                        return finish('not directory', into);
+                    }
+                    fs.readdir(src, function (err, files) {
+                        if(err) {
+                            return finish(err, into);
+                        }
+                        files = _(files).filter(function (name) {
+                            return extDef.test(name);
+                        });
+                        async.forEach(files, function (name, callback) {
+                            var tmp = path.join(src, name);
+                            fs.stat(tmp, function (err, stats) {
+                                if(err) {
+                                    return callback(false);
+                                }
+                                if(stats.isDirectory()) {
+                                    return callback(false);
+                                }
+                                into.push(new deftools.Def(project, name.replace(extDef, '')));
+                                callback(null);
+                            });
+                        }, function (err) {
+                            finish(err, into);
+                        });
+                    });
+                });
+            });
+        };
         ListLoader.prototype.loadRepoDefs = function (finish) {
             var self = this;
             fs.readdir(self.repos.defs, function (err, files) {
@@ -1235,37 +1295,17 @@ var deftools;
                     if(ignoreFile.test(file)) {
                         return callback(false);
                     }
-                    var src = path.join(self.repos.defs, file);
-                    fs.stat(src, function (err, stats) {
+                    self.loadRepoProjectDefs(file, ret, function (err, res) {
                         if(err) {
                             return callback(false);
                         }
-                        if(!stats.isDirectory()) {
+                        if(!res) {
                             return callback(false);
                         }
-                        fs.readdir(src, function (err, files) {
-                            if(err) {
-                                return callback(false);
-                            }
-                            files = _(files).filter(function (name) {
-                                return extDef.test(name);
-                            });
-                            async.forEach(files, function (name, callback) {
-                                var tmp = path.join(src, name);
-                                fs.stat(tmp, function (err, stats) {
-                                    if(err) {
-                                        return callback(false);
-                                    }
-                                    if(stats.isDirectory()) {
-                                        return callback(false);
-                                    }
-                                    ret.push(new deftools.Def(file, name.replace(extDef, '')));
-                                    callback(null);
-                                });
-                            }, function (err) {
-                                callback(err);
-                            });
+                        _.each(res, function (def) {
+                            ret.push(def);
                         });
+                        callback(null);
                     });
                 }, function (err) {
                     finish(err, ret);

@@ -2,7 +2,6 @@
 ///<reference path="deftools/api.ts" />
 ///<reference path="deftools/lib.ts" />
 ///<reference path="deftools/config.ts" />
-///<reference path="deftools/expose.ts" />
 
 module deftools {
 
@@ -16,5 +15,5 @@ module deftools {
 	var info = Config.getInfo();
 	var paths = Config.getPaths();
 	var api:API = new API(info, new Repos(paths.typings, paths.tsd, paths.tmp));
-	
+
 }

@@ -137,11 +137,35 @@ describe('deftools', () => {
 					it('loads content', (done:() => void) => {
 						loader.loadTsdNames((err, res:string[]) => {
 							assert.ok(!err, '' + err);
-							assert.ok(res, 'res');
+							assert.isArray(res, 'res');
 							assert.lengthOf(res, stats.tsd.fileCount);
 							assert.lengthOf(res, fileList.length);
 							res.sort(sortList);
 							assert.sameMembers(res, fileList);
+							done();
+						});
+					});
+				});
+				describe('.loadRepoProjectDefs()', () => {
+					var defList;
+					before(() => {
+						loader = new deftools.ListLoader(new deftools.Repos(paths.typings, paths.tsd, paths.tmp))
+						assert.operator(0, '<', stats.typings.linq.fileCount);
+						assert.operator(0, '<', stats.typings.jquery.fileCount);
+					});
+					it('loads content for "jquery"', (done:() => void) => {
+						loader.loadRepoProjectDefs('jquery', (err, res:deftools.Def[]) => {
+							assert.ok(!err, '' + err);
+							assert.isArray(res, 'res');
+							assert.lengthOf(res, stats.typings.jquery.fileCount, 'res v jquery');
+							done();
+						});
+					});
+					it('loads content for "linq"', (done:() => void) => {
+						loader.loadRepoProjectDefs('linq', (err, res:deftools.Def[]) => {
+							assert.ok(!err, '' + err);
+							assert.isArray(res, 'res');
+							assert.lengthOf(res, stats.typings.linq.fileCount, 'res v linq');
 							done();
 						});
 					});
@@ -157,7 +181,6 @@ describe('deftools', () => {
 					it('loads content', (done:() => void) => {
 						loader.loadRepoDefs((err, res:deftools.Def[]) => {
 							assert.ok(!err, '' + err);
-							assert.ok(res, 'res');
 							assert.isArray(res, 'res');
 							assert.isArray(defList, 'res');
 							assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
@@ -194,7 +217,7 @@ describe('deftools', () => {
 					it('loads content', (done:() => void) => {
 						api.loadTsdNames((err, res:string[]) => {
 							assert.ok(!err, '' + err);
-							assert.ok(res, 'res');
+							assert.isArray(res, 'res');
 							assert.lengthOf(res, stats.tsd.fileCount);
 							assert.lengthOf(res, fileList.length);
 							res.sort(sortList);
@@ -216,7 +239,6 @@ describe('deftools', () => {
 					it('loads content', (done:() => void) => {
 						api.loadRepoDefs((err, res:deftools.Def[]) => {
 							assert.ok(!err, '' + err);
-							assert.ok(res, 'res');
 							assert.isArray(res, 'res');
 							assert.isArray(defList, 'res');
 							assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
@@ -226,10 +248,6 @@ describe('deftools', () => {
 							done();
 						});
 					});
-				});
-
-				describe('.loadRepoDefList()', () => {
-
 				});
 			});
 		});

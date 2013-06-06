@@ -3,6 +3,12 @@
 		"fileCount": 7
 	},
 	"typings": {
-		"fileCount": 10
+		"fileCount": 10,
+		"jquery":{
+			"fileCount": 1
+		},
+		"linq":{
+			"fileCount": 3
+		}
 	}
 }
