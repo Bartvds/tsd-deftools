@@ -40,6 +40,28 @@ describe('deftools', () => {
 		var conf;
 		var stats;
 		var paths:deftools.ConfPaths;
+		var sortDefList = function(a, b) {
+			if (a.project < b.project) {
+				return -1;
+			} else if (a.project < b.project) {
+				return 1;
+			}
+			if (a.name < b.name) {
+				return -1;
+			}
+			else if (a.name > b.name) {
+				return 1;
+			}
+			return 0;
+		};
+		var sortList = function(a, b) {
+			if (a < b) {
+				return -1;
+			} else if (b > 0) {
+				return 1;
+			}
+			return 0;
+		};
 
 		before(() => {
 			assert.ok(info);
@@ -83,7 +105,6 @@ describe('deftools', () => {
 				assert.ok(conf);
 				assert.ok(paths);
 				assert.ok(stats);
-				helper.dump(stats, 'using stats');
 			});
 			it('should use valid stats', () => {
 				assert.ok(stats);
@@ -102,6 +123,8 @@ describe('deftools', () => {
 					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
 					fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')
 					assert.lengthOf(fileList, stats.tsd.fileCount);
+
+					fileList.sort(sortList);
 				});
 				it('should load content', (done:() => void) => {
 					assert.ok(repos);
@@ -110,50 +133,55 @@ describe('deftools', () => {
 						assert.ok(res);
 						assert.lengthOf(res, stats.tsd.fileCount);
 						assert.lengthOf(res, fileList.length);
+						res.sort(sortList);
 						assert.sameMembers(res, fileList);
 						done();
 					});
 				});
 			});
 			it('should check deeper', (done:() => void) => {
-				assert.deepEqual([[{yo:1,ab:2}]], [[{yo:1,ab:2}]]);
-				var f = function Constr(){
+				assert.deepEqual([
+					[
+						{yo: 1, ab: 2}
+					]
+				], [
+					[
+						{yo: 1, ab: 2}
+					]
+				]);
+				var f = function Constr() {
 					this.a = 1;
 					this.b = 2;
 				};
 
-				assert.deepEqual({a:1, b:2}, new f());
-				assert.deepEqual({a:1, b:2}, new MyClass());
+				assert.deepEqual({a: 1, b: 2}, new f());
+				assert.deepEqual({a: 1, b: 2}, new MyClass());
 				done();
 			});
 			describe('loader loadRepoDefList', () => {
 				var repos;
-				var fileList;
+				var defList;
 				this.timeout(500);
 
 				before(() => {
 					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-					fileList = helper.readJSON(testDir, 'fixtures', 'typings.filelist.json')
-					assert.lengthOf(fileList, stats.typings.fileCount);
+					defList = helper.readJSON(testDir, 'fixtures', 'typings.filelist.json')
+					assert.lengthOf(defList, stats.typings.fileCount);
+					defList.sort(sortDefList);
 
 				});
 				it('should load content', (done:() => void) => {
 					deftools.loader.loadRepoDefList(repos, (err, res:deftools.Def[]) => {
 						assert.ok(!err);
 						assert.ok(res);
-						assert.lengthOf(res, stats.typings.fileCount);
-						assert.lengthOf(res, fileList.length);
+						assert.isArray(res, 'res');
+						assert.isArray(defList, 'res');
+						assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
+						assert.lengthOf(res, defList.length, 'res v defList')
 
-						assert.isArray(res);
-						assert.isArray(fileList);
+						res.sort(sortDefList);
 
-						helper.dump(res, 'res', 4, true);
-						helper.dump(fileList, 'fileList', 4, true);
-						assert.deepEqual(JSON.parse(JSON.stringify(res)), fileList);
-
-						assert.deepEqual({yo:1}, {yo:1});
-						assert.deepEqual(fileList, fileList);
-						//assert.deepEqual(res, fileList);
+						assert.jsonOf(defList, res, 'fileList v res');
 
 						done();
 					});

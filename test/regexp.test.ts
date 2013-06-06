@@ -106,8 +106,5 @@ describe('xm.RexExpGlue', () => {
 			e = exp.join('gi', / +/);
 			assert.strictEqual('' + e, '/alpha +123 +bravo/gi');
 		});
-		after(() => {
-			exp = null;
-		});
 	});
 });

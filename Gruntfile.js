@@ -8,7 +8,7 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-execute');
-	grunt.loadNpmTasks('grunt-mocha-spawn');
+	grunt.loadNpmTasks('grunt-mocha-test');
 
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
@@ -63,7 +63,7 @@ module.exports = function (grunt) {
 				dest: 'test/_tmp.api.test.js'
 			}
 		},
-		mocha_spawn: {
+		mochaTest: {
 			any: {
 				src:['test/*.test.js'],
 				options: {
@@ -76,11 +76,11 @@ module.exports = function (grunt) {
 	grunt.registerTask('default', ['build']);
 	grunt.registerTask('build', ['clean:build', 'typescript:cli', 'typescript:mod']);
 
-	grunt.registerTask('test', ['clean:test', 'typescript:test_all', 'mocha_spawn:any']);
+	grunt.registerTask('test', ['clean:test', 'typescript:test_all', 'mochaTest:any']);
 
-	grunt.registerTask('dev', ['clean:test', 'typescript:test_api', 'mocha_spawn:any']);
+	grunt.registerTask('dev', ['clean:test', 'typescript:test_api', 'mochaTest:any']);
 
 	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
-	grunt.registerTask('edit_02', ['clean:test', 'typescript:test_chai', 'mocha_spawn:any']);
+	grunt.registerTask('edit_02', ['clean:test', 'typescript:test_chai', 'mochaTest:any']);
 
 };

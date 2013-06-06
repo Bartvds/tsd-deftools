@@ -15,7 +15,7 @@ module deftools {
 			}
 			src = path.resolve(src);
 			try {
-				paths = JSON.parse(fs.readFileSync(src, 'utf-8'))
+				paths = JSON.parse(fs.readFileSync(src, 'utf8'))
 			}
 			catch
 			(e) {
@@ -47,7 +47,7 @@ module deftools {
 		export function getInfo():ToolInfo {
 			var pkg;
 			try {
-				pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
+				pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
 			}
 			catch (e) {
 				throw(e);

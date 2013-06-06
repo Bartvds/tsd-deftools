@@ -179,7 +179,7 @@ module deftools {
 			}
 			res.map[key] = data;
 
-			fs.readFile(src, 'utf-8', (err, source) => {
+			fs.readFile(src, 'utf8', (err, source) => {
 				if (err) {
 					data.errors.push(new ParseError('cannot load source', err));
 					return callback(null, data);
