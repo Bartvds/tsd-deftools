@@ -24,11 +24,34 @@ module deftools {
 		});
 	});
 
-	expose.add('compare', () => {
+	expose.add('loadTsdList', () => {
+		api.loadTsdList((err, res:string[]) => {
+			if (err) return console.log(err);
+			if (!res) return console.log('compare returned no result');
+			console.log(util.inspect(res.sort(), false, 8));
+		});
+	});
+	expose.add('loadRepoList', () => {
+		api.loadRepoDefList((err, res:Def[]) => {
+			if (err) return console.log(err);
+			if (!res) return console.log('compare returned no result');
+			console.log(util.inspect(_.map(res, (def:Def) => { return def.combi()}).sort(), false, 8));
+		});
+	});
+
+	expose.add('compareFull', () => {
 		api.compare((err?, res?:deftools.CompareResult) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res, false, 8));
+			console.log(res.getStats());
+		});
+	});
+	expose.add('compareStats', () => {
+		api.compare((err?, res?:deftools.CompareResult) => {
+			if (err) return console.log(err);
+			if (!res) return console.log('compare returned no result');
+			console.log(util.inspect({repoUnlisted: res.repoUnlisted, tsdNotInRepo: res.tsdNotInRepo}, false, 8));
 			console.log(res.getStats());
 		});
 	});
@@ -85,7 +108,7 @@ module deftools {
 	if (argv._.length == 0) {
 		expose.execute('help');
 
-		expose.execute('recreateAll');
+		//expose.execute('recreateAll');
 	} else {
 		expose.execute(argv._[0]);
 		if (!expose.has(argv._[0])) {
@@ -93,5 +116,3 @@ module deftools {
 		}
 	}
 }
-//kill this when in cli mode
-//exports = (module).exports = deftool;

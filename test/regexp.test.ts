@@ -8,16 +8,16 @@ describe('xm.RexExpGlue', () => {
 	var exp:xm.RegExpGlue;
 	var e:RegExp;
 
-	it('be defined', () => {
+	it('is defined', () => {
 		assert.ok(xm.RegExpGlue);
 	});
-	it('be a constructor', () => {
+	it('is a constructor', () => {
 		assert.ok(new (xm.RegExpGlue)());
 	});
-	it('be static accesible', () => {
+	it('is static accesible', () => {
 		assert.ok(xm.RegExpGlue.get())
 	});
-	it('extract RegExp bodies', () => {
+	it('extracts RegExp bodies', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getBody(/abc/), 'abc');
 		assert.strictEqual(exp.getBody(/defg/), 'defg');
@@ -25,14 +25,14 @@ describe('xm.RexExpGlue', () => {
 		assert.strictEqual(exp.getBody(/x y[\w -]*]+/), 'x y[\\w -]*]+');
 		assert.strictEqual(exp.getBody(/ \d \d /), ' \\d \\d ');
 	});
-	it('extract RegExp flags', () => {
+	it('extracts RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getFlags(/defg/i), 'i');
 		assert.strictEqual(exp.getFlags(/abc/), '');
 		assert.strictEqual(exp.getFlags(/ \d\d/gm), 'gm');
 		assert.strictEqual(exp.getFlags(/xyz/gim), 'gim');
 	});
-	it('clean RegExp flags', () => {
+	it('cleans RegExp flags', () => {
 		exp = xm.RegExpGlue.get();
 		assert.strictEqual(exp.getCleanFlags('abci'), 'i');
 		assert.strictEqual(exp.getCleanFlags('abcgmmmi'), 'gmi');
@@ -40,7 +40,7 @@ describe('xm.RexExpGlue', () => {
 		assert.strictEqual(exp.getCleanFlags('gixsmqrst'), 'gim');
 	});
 
-	describe('be initialised', () => {
+	describe('is initialised', () => {
 		it('by contructor', () => {
 			exp = new (xm.RegExpGlue)();
 			assert.instanceOf(exp, xm.RegExpGlue);
@@ -65,13 +65,13 @@ describe('xm.RexExpGlue', () => {
 		});
 	});
 
-	describe('append()', () => {
+	describe('.append()', () => {
 		it('to same instance', () => {
 			exp = xm.RegExpGlue.get()
 			assert.ok(exp);
 			assert.strictEqual(exp, exp.append());
 		});
-		it('add parts', () => {
+		it('adds parts', () => {
 			exp = xm.RegExpGlue.get();
 			assert.lengthOf(exp.parts, 0);
 
@@ -83,7 +83,7 @@ describe('xm.RexExpGlue', () => {
 		});
 	});
 
-	describe('join()', () => {
+	describe('.join()', () => {
 
 		beforeEach(() => {
 			exp = xm.RegExpGlue.get(/alpha/, /123/, /bravo/i);
@@ -100,7 +100,7 @@ describe('xm.RexExpGlue', () => {
 			e = exp.join('gm');
 			assert.strictEqual('' + e, '/alpha123bravo/gm');
 		});
-		it('use seperators to glue', () => {
+		it('uses seperators to glue', () => {
 			e = exp.join('', / +/);
 			assert.strictEqual('' + e, '/alpha +123 +bravo/');
 			e = exp.join('gi', / +/);

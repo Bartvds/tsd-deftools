@@ -138,7 +138,6 @@ module deftools {
 
 		checkDupes():ImportResultDupes {
 			return new ImportResultDupes(this);
-			;
 		}
 	}
 	export class ImportResultDupes {
@@ -163,6 +162,52 @@ module deftools {
 
 		constructor(public repos:Repos) {
 			this.parser = new HeaderParser();
+		}
+
+		parseDefinitions(projects:Def[], finish:(err?, res?:ImportResult) => void) {
+			var self:DefinitionImporter = this;
+
+			async.reduce(projects, new ImportResult(), (res:ImportResult, def:Def, callback:(err?, data?:ImportResult) => void) => {
+				//
+				var key = def.combi();
+
+				if (res.map.hasOwnProperty(key)) {
+					return callback(null, res);
+				}
+				var data = new HeaderData(def);
+				res.map[key] = data;
+				//res.queued[key] = data;
+
+				self.loadData(data, res, (err?:any, data?:HeaderData) => {
+					if (err) {
+						console.log([<any>'err', err]);
+						return callback(null, res);
+					}
+					if (!data) {
+						console.log([<any>'null data', err]);
+						//return callback('null data');
+						return callback(null, res);
+					}
+					res.requested.push(data);
+					if (res.all.indexOf(data) < 0) {
+						res.all.push(data);
+					}
+					//TODO ditch these
+					if (!data.isValid()) {
+						if (res.error.indexOf(data) < 0) {
+							res.error.push(data);
+						}
+					} else {
+						if (res.parsed.indexOf(data) < 0) {
+							res.parsed.push(data);
+						}
+					}
+					return callback(null, res);
+				});
+			}, (err?, res?:ImportResult) => {
+
+				finish(err, res)
+			});
 		}
 
 		loadData(data:HeaderData, res:ImportResult, callback:(err, data?:HeaderData) => void) {
@@ -223,6 +268,7 @@ module deftools {
 						var sub:HeaderData = new HeaderData(dep);
 						res.map[key] = sub;
 
+						//recursive
 						self.loadData(sub, res, (err, sub?:HeaderData) => {
 							if (err) {
 								if (sub) {
@@ -267,52 +313,6 @@ module deftools {
 				else {
 					return callback(null, data);
 				}
-			});
-		}
-
-		parseDefinitions(projects:Def[], finish:(err?, res?:ImportResult) => void) {
-			var self:DefinitionImporter = this;
-
-			async.reduce(projects, new ImportResult(), (res:ImportResult, def:Def, callback:(err?, data?:ImportResult) => void) => {
-				//
-				var key = def.combi();
-
-				if (res.map.hasOwnProperty(key)) {
-					return callback(null, res);
-				}
-				var data = new HeaderData(def);
-				res.map[key] = data;
-				//res.queued[key] = data;
-
-				self.loadData(data, res, (err?:any, data?:HeaderData) => {
-					if (err) {
-						console.log([<any>'err', err]);
-						return callback(null, res);
-					}
-					if (!data) {
-						console.log([<any>'null data', err]);
-						//return callback('null data');
-						return callback(null, res);
-					}
-					res.requested.push(data);
-					if (res.all.indexOf(data) < 0) {
-						res.all.push(data);
-					}
-					//TODO ditch these
-					if (!data.isValid()) {
-						if (res.error.indexOf(data) < 0) {
-							res.error.push(data);
-						}
-					} else {
-						if (res.parsed.indexOf(data) < 0) {
-							res.parsed.push(data);
-						}
-					}
-					return callback(null, res);
-				});
-			}, (err?, res?:ImportResult) => {
-
-				finish(err, res)
 			});
 		}
 	}

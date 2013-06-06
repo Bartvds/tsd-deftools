@@ -29,7 +29,10 @@
 			"url": "https://github.com/Bartvds/tsd-deftools/blob/master/LICENSE-MIT"
 		}
 	],
-	"main": "build/tsd-deftools",
+	"main": "build/deftools-module",
+	"bin": {
+		"deftools": "./bin/deftools"
+	},
 	"engines": {
 		"node": ">= 0.10.0"
 	},
@@ -47,7 +50,7 @@
 		"grunt-contrib-clean": "~0.4.1",
 		"grunt-contrib-copy": "~0.4.1",
 		"grunt-execute": "~0.1.4",
-		"mocha-unfunk-reporter": "~0.1.4",
+		"mocha-unfunk-reporter": "*",
 		"chai-fuzzy": "git://github.com/Bartvds/chai-fuzzy.git",
 		"chai": "~1.6.0",
 		"grunt-mocha-test": "~0.3.2"

@@ -40,7 +40,7 @@ describe('deftools', () => {
 		var conf;
 		var stats;
 		var paths:deftools.ConfPaths;
-		var sortDefList = function(a, b) {
+		var sortDefList = function (a, b) {
 			if (a.project < b.project) {
 				return -1;
 			} else if (a.project < b.project) {
@@ -54,7 +54,7 @@ describe('deftools', () => {
 			}
 			return 0;
 		};
-		var sortList = function(a, b) {
+		var sortList = function (a, b) {
 			if (a < b) {
 				return -1;
 			} else if (b > 0) {
@@ -70,29 +70,29 @@ describe('deftools', () => {
 			assert.ok(conf);
 		});
 		describe('config init', () => {
-			it('should have test config', () => {
+			it('has test config', () => {
 				assert.ok(conf);
 			});
-			it('should define path', () => {
+			it('defines path', () => {
 				assert.ok(conf.path);
 				assert.equal(fs.existsSync(conf.path), true);
 			});
-			it('should define test', () => {
+			it('defines test', () => {
 				assert.ok(conf.test);
 				assert.equal(fs.existsSync(conf.test), true);
 			});
-			it('should resolve testdir', () => {
+			it('resolves testdir', () => {
 				testDir = path.resolve(conf.test);
 				assert.equal(fs.existsSync(testDir), true);
 				assert.equal(fs.statSync(testDir).isDirectory(), true);
 			});
-			it('should load test stats', () => {
+			it('loads test stats', () => {
 				stats = helper.readJSON(testDir, 'fixtures', 'stats.json');
 				paths = Config.getPaths(conf.path);
 				assert.ok(paths);
 			});
 			describe('Repos', () => {
-				it('should be accept data', () => {
+				it('accepts data', () => {
 					assert.instanceOf(deftools.Repos, Function);
 					var repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
 					assert.ok(repos);
@@ -106,7 +106,7 @@ describe('deftools', () => {
 				assert.ok(paths);
 				assert.ok(stats);
 			});
-			it('should use valid stats', () => {
+			it('uses valid stats', () => {
 				assert.ok(stats);
 				assert.property(stats, 'tsd');
 				assert.operator(stats.tsd.fileCount, '>', 0);
@@ -114,89 +114,119 @@ describe('deftools', () => {
 				assert.operator(stats.typings.fileCount, '>', 0);
 			});
 
-			describe('loader loadTsdList', () => {
-				var repos;
-				var fileList;
-				this.timeout(500);
+			describe('loader', () => {
+				describe('.loadTsdList()', () => {
+					var repos;
+					var fileList;
+					this.timeout(500);
 
-				before(() => {
-					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-					fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')
-					assert.lengthOf(fileList, stats.tsd.fileCount);
+					before(() => {
+						repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+						fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')
+						assert.lengthOf(fileList, stats.tsd.fileCount);
 
-					fileList.sort(sortList);
-				});
-				it('should load content', (done:() => void) => {
-					assert.ok(repos);
-					deftools.loader.loadTsdList(repos, (err, res:string[]) => {
-						assert.ok(!err);
-						assert.ok(res);
-						assert.lengthOf(res, stats.tsd.fileCount);
-						assert.lengthOf(res, fileList.length);
-						res.sort(sortList);
-						assert.sameMembers(res, fileList);
-						done();
+						fileList.sort(sortList);
+					});
+					it('loads content', (done:() => void) => {
+						assert.ok(repos, 'repos');
+						deftools.loader.loadTsdList(repos, (err, res:string[]) => {
+							assert.ok(!err, '' + err);
+							assert.ok(res, 'res');
+							assert.lengthOf(res, stats.tsd.fileCount);
+							assert.lengthOf(res, fileList.length);
+							res.sort(sortList);
+							assert.sameMembers(res, fileList);
+							done();
+						});
 					});
 				});
-			});
-			it('should check deeper', (done:() => void) => {
-				assert.deepEqual([
-					[
-						{yo: 1, ab: 2}
-					]
-				], [
-					[
-						{yo: 1, ab: 2}
-					]
-				]);
-				var f = function Constr() {
-					this.a = 1;
-					this.b = 2;
-				};
+				describe('.loadRepoDefList()', () => {
+					var repos;
+					var defList;
+					this.timeout(500);
 
-				assert.deepEqual({a: 1, b: 2}, new f());
-				assert.deepEqual({a: 1, b: 2}, new MyClass());
-				done();
-			});
-			describe('loader loadRepoDefList', () => {
-				var repos;
-				var defList;
-				this.timeout(500);
+					before(() => {
+						repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
+						defList = helper.readJSON(testDir, 'fixtures', 'typings.filelist.json')
+						assert.lengthOf(defList, stats.typings.fileCount);
+						defList.sort(sortDefList);
 
-				before(() => {
-					repos = new deftools.Repos(paths.typings, paths.tsd, paths.tmp);
-					defList = helper.readJSON(testDir, 'fixtures', 'typings.filelist.json')
-					assert.lengthOf(defList, stats.typings.fileCount);
-					defList.sort(sortDefList);
+					});
+					it('loads content', (done:() => void) => {
+						assert.ok(repos, 'repos');
+						deftools.loader.loadRepoDefList(repos, (err, res:deftools.Def[]) => {
+							assert.ok(!err, '' + err);
+							assert.ok(res, 'res');
+							assert.isArray(res, 'res');
+							assert.isArray(defList, 'res');
+							assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
+							assert.lengthOf(res, defList.length, 'res v defList')
 
-				});
-				it('should load content', (done:() => void) => {
-					deftools.loader.loadRepoDefList(repos, (err, res:deftools.Def[]) => {
-						assert.ok(!err);
-						assert.ok(res);
-						assert.isArray(res, 'res');
-						assert.isArray(defList, 'res');
-						assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
-						assert.lengthOf(res, defList.length, 'res v defList')
+							res.sort(sortDefList);
 
-						res.sort(sortDefList);
-
-						assert.jsonOf(defList, res, 'fileList v res');
-
-						done();
+							assert.jsonOf(defList, res, 'fileList v res');
+							done();
+						});
 					});
 				});
 			});
 
 			describe('API', () => {
 				var api;
-				it('should be defined', () => {
+				it('is defined', () => {
 					assert.ok(deftools.API);
 				});
-				it('should be constructor', () => {
+				it('is a constructor', () => {
 					assert.instanceOf(deftools.API, Function);
 					api = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
 					assert.ok(api);
+				});
+				describe('.loadTsdList()', () => {
+					var repos;
+					var fileList;
+					this.timeout(500);
+
+					before(() => {
+						fileList = helper.readJSON(testDir, 'fixtures', 'tsd.filelist.json')
+						assert.lengthOf(fileList, stats.tsd.fileCount);
+
+						fileList.sort(sortList);
+					});
+					it('loads content', (done:() => void) => {
+						api.loadTsdList((err, res:string[]) => {
+							assert.ok(!err, '' + err);
+							assert.ok(res, 'res');
+							assert.lengthOf(res, stats.tsd.fileCount);
+							assert.lengthOf(res, fileList.length);
+							res.sort(sortList);
+							assert.sameMembers(res, fileList);
+							done();
+						});
+					});
+				});
+				describe('.loadRepoDefList()', () => {
+					var repos;
+					var defList;
+					this.timeout(500);
+
+					before(() => {
+						defList = helper.readJSON(testDir, 'fixtures', 'typings.filelist.json')
+						assert.lengthOf(defList, stats.typings.fileCount);
+						defList.sort(sortDefList);
+					});
+					it('loads content', (done:() => void) => {
+						api.loadRepoDefList((err, res:deftools.Def[]) => {
+							assert.ok(!err, '' + err);
+							assert.ok(res, 'res');
+							assert.isArray(res, 'res');
+							assert.isArray(defList, 'res');
+							assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
+							assert.lengthOf(res, defList.length, 'res v defList');
+							res.sort(sortDefList);
+							assert.jsonOf(defList, res, 'fileList v res');
+							done();
+						});
+					});
 				});
 			});
 		});

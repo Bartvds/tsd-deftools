@@ -16,19 +16,42 @@ module deftools {
 			if (!this.info) throw Error('no info');
 			if (!this.repos) throw Error('no repos');
 		}
+		/**
+		 * List files in tsd as name
+		 * @param callback
+		 */
+		loadTsdList(callback:(err, res:string[]) => void) {
 
+			loader.loadTsdList(this.repos, callback)
+		}
+		/**
+		 * List files in repo as Def
+		 * @param callback
+		 */
+		loadRepoDefList(callback:(err, res:Def[]) => void) {
+
+			loader.loadRepoDefList(this.repos, callback)
+		}
+		/**
+		 * List and compare repo to tsd content
+		 * @param callback
+		 */
 		compare(callback:(err?, res?:CompareResult) => void) {
 
 			var comparer = new DefinitionComparer(this.repos);
 			comparer.compare(callback);
 		}
-
+		/**
+		 * Parse repo data
+		 * @param callback
+		 */
 		listParsed(callback:(err?, res?:ImportResult) => void) {
 
 			var comparer = new DefinitionComparer(this.repos);
 			var importer = new DefinitionImporter(this.repos);
 
 			async.waterfall([(callback:(err) => void) => {
+				//why compare? (split this into recreate new/changed/all)
 				comparer.compare(callback);
 
 			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
@@ -39,6 +62,10 @@ module deftools {
 			}], callback);
 		}
 
+		/**
+		 * Recreate all tsd json files from repo data
+		 * @param callback
+		 */
 		recreateAll(callback:(err?, res?:ExportResult) => void) {
 
 			var comparer = new DefinitionComparer(this.repos);
@@ -46,6 +73,7 @@ module deftools {
 			var exporter = new DefinitionExporter(this.repos, this.info);
 
 			async.waterfall([(callback:(err) => void) => {
+				//why compare? (split this into recreate new/changed/all)
 				comparer.compare(callback);
 
 			}, (res:CompareResult, callback:(err?, res?:ImportResult) => void) => {
