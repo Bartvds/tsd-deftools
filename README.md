@@ -28,11 +28,11 @@ Get dependencies
 npm install
 ````
 
-Basic use
+Basic cli use
 ````
-node . //default (for now latest under-development probably (so lazy :)
-node . help //view commands
-node . <command> //command
+node build/deftools-cli //default (for now latest under-development probably (so lazy :)
+node build/deftools-cli help //view commands
+node build/deftools-cli <command> //command
 ````
 
 To recompile edited code

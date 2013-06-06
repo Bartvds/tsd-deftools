@@ -11,7 +11,7 @@ module xm {
 
 		constructor() {
 			this.add('help', () => {
-				console.log('availible commands:');
+				console.log('available commands:');
 				_(this._commands).keys().sort().forEach((value) => {
 					console.log('  - ' + value);
 				});
@@ -33,7 +33,7 @@ module xm {
 
 		add(id:string, def:Function) {
 			if (this._commands.hasOwnProperty(id)) {
-				throw new Error('id collission on ' + id);
+				throw new Error('id collision on ' + id);
 			}
 			this._commands[id] = def;
 		}
