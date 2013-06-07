@@ -10,7 +10,7 @@ describe('chai equality', () => {
 
 	});
 	describe('assert deepEqual', () => {
-		it('bleh', () => {
+		it('yo?', () => {
 			assert.deepEqual([1,2,3], [1,2,3], 'yo');
 		});
 	});

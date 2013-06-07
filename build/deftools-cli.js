@@ -44,7 +44,7 @@ var deftools;
         API.prototype.parseProject = function (project, callback) {
             var loader = new deftools.ListLoader(this.repos);
             var importer = new deftools.DefinitionImporter(this.repos);
-            loader.loadRepoProjectDefs(project, null, function (err, res) {
+            loader.loadRepoProjectDefs(project, function (err, res) {
                 if(err) {
                     return callback(err);
                 }
@@ -1240,45 +1240,46 @@ var deftools;
         function ListLoader(repos) {
             this.repos = repos;
         }
-        ListLoader.prototype.loadRepoProjectDefs = function (project, into, finish) {
-            console.log('loadRepoProjectDefs');
-            console.log(project);
-            into = into || [];
+        ListLoader.prototype.loadRepoProjectDefs = function (project, finish) {
             project = path.basename(project);
+            var ret = [];
             var self = this;
             var src = path.join(self.repos.defs, project);
             fs.exists(src, function (exists) {
                 if(!exists) {
-                    return finish('not exists', into);
+                    return finish('not exists', ret);
                 }
                 fs.stat(src, function (err, stats) {
                     if(err) {
-                        return finish(err, into);
+                        return finish(err, ret);
                     }
                     if(!stats.isDirectory()) {
-                        return finish('not directory', into);
+                        return finish('not directory', ret);
                     }
                     fs.readdir(src, function (err, files) {
                         if(err) {
-                            return finish(err, into);
+                            return finish(err, ret);
                         }
                         files = _(files).filter(function (name) {
                             return extDef.test(name);
                         });
+                        if(files.length == 0) {
+                            return finish(null, ret);
+                        }
                         async.forEach(files, function (name, callback) {
                             var tmp = path.join(src, name);
                             fs.stat(tmp, function (err, stats) {
                                 if(err) {
-                                    return callback(false);
+                                    return callback(err);
                                 }
                                 if(stats.isDirectory()) {
-                                    return callback(false);
+                                    return callback(null);
                                 }
-                                into.push(new deftools.Def(project, name.replace(extDef, '')));
+                                ret.push(new deftools.Def(project, name.replace(extDef, '')));
                                 callback(null);
                             });
                         }, function (err) {
-                            finish(err, into);
+                            finish(err, ret);
                         });
                     });
                 });
@@ -1293,14 +1294,14 @@ var deftools;
                 var ret = [];
                 async.forEach(files, function (file, callback) {
                     if(ignoreFile.test(file)) {
-                        return callback(false);
+                        return callback(null);
                     }
-                    self.loadRepoProjectDefs(file, ret, function (err, res) {
+                    self.loadRepoProjectDefs(file, function (err, res) {
                         if(err) {
-                            return callback(false);
+                            return callback(err);
                         }
                         if(!res) {
-                            return callback(false);
+                            return callback('no res for ' + file);
                         }
                         _.each(res, function (def) {
                             ret.push(def);
@@ -1393,7 +1394,7 @@ var deftools;
             console.log('   ' + value + ': ' + api.repos[value]);
         });
     });
-    expose.add('loadTsdList', function () {
+    expose.add('tsdList', function () {
         api.loadTsdNames(function (err, res) {
             if(err) {
                 return console.log(err);
@@ -1404,7 +1405,7 @@ var deftools;
             console.log(util.inspect(res.sort(), false, 8));
         });
     });
-    expose.add('loadRepoList', function () {
+    expose.add('repoList', function () {
         api.loadRepoDefs(function (err, res) {
             if(err) {
                 return console.log(err);

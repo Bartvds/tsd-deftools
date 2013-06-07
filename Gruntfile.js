@@ -13,8 +13,8 @@ module.exports = function (grunt) {
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
 		clean: {
-			build : ['tmp/*.*', 'build'],
-			test : ['test/_tmp.*']
+			build: ['tmp/*.*', 'build'],
+			test: ['test/_tmp.*']
 		},
 		execute: {
 			cli: {
@@ -65,7 +65,7 @@ module.exports = function (grunt) {
 		},
 		mochaTest: {
 			any: {
-				src:['test/*.test.js'],
+				src: ['test/*.test.js'],
 				options: {
 					reporter: 'mocha-unfunk-reporter'
 				}
@@ -74,11 +74,11 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask('default', ['build']);
-	grunt.registerTask('build', ['clean:build', 'typescript:cli', 'typescript:mod']);
+	grunt.registerTask('build', ['clean', 'typescript:cli']); //, 'typescript:mod'
 
-	grunt.registerTask('test', ['clean:test', 'typescript:test_all', 'mochaTest:any']);
+	grunt.registerTask('test', ['clean', 'typescript:test_all', 'mochaTest:any']);
 
-	grunt.registerTask('dev', ['clean:test', 'typescript:test_api', 'mochaTest:any']);
+	grunt.registerTask('dev', ['clean', 'typescript:test_api', 'mochaTest:any']);
 
 	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
 	grunt.registerTask('edit_02', ['clean:test', 'typescript:test_chai', 'mochaTest:any']);
