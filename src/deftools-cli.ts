@@ -24,14 +24,14 @@ module deftools {
 		});
 	});
 
-	expose.add('loadTsdList', () => {
+	expose.add('tsdList', () => {
 		api.loadTsdNames((err, res:string[]) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');
 			console.log(util.inspect(res.sort(), false, 8));
 		});
 	});
-	expose.add('loadRepoList', () => {
+	expose.add('repoList', () => {
 		api.loadRepoDefs((err, res:Def[]) => {
 			if (err) return console.log(err);
 			if (!res) return console.log('compare returned no result');

@@ -1,4 +1,6 @@
 ///<reference path="../typings/DefinitelyTyped/node/node.d.ts" />
+///<reference path="../typings/DefinitelyTyped/async/async.d.ts" />
+///<reference path="../typings/DefinitelyTyped/underscore/underscore.d.ts" />
 ///<reference path="../typings/DefinitelyTyped/mocha/mocha.d.ts" />
 ///<reference path="../typings/DefinitelyTyped/chai/chai-assert.d.ts" />
 ///<reference path="../typings/DefinitelyTyped/chai/chai-fuzzy-assert.d.ts" />

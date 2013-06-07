@@ -193,6 +193,59 @@ describe('deftools', () => {
 				});
 			});
 
+
+			describe.skip('Parser', () => {
+				var data:helper.HeaderAssert[];
+				var filter = ['async'];
+
+				before((done:(err?) => void) => {
+					console.log('before');
+					helper.loadHeaderFixtures(path.join(conf.test, 'headers'), (err, res:helper.HeaderAssert[]) => {
+						if (err) return done(err);
+						helper.dump(res, 'loadHeaderFixtures');
+						try {
+							assert.operator(res.length, '>', 0);
+						}
+						catch (e) {
+							done(e);
+						}
+						data = res;
+
+						/*if (filter) {
+							data = _.filter(data, (value:helper.HeaderAssert) => {
+								return filter.indexOf(value.name) > -1;
+							});
+						}*/
+
+						done();
+					});
+				});
+
+				describe('loop', () => {
+					console.log('described ');
+					before(() => {
+
+						_.each(data, (value:helper.HeaderAssert) => {
+							console.log('-> looped ' + value.combi());
+
+							// :(
+							it('check ' + value.combi(), (done:() => void) => {
+
+								console.log('hoot! ' + value.combi());
+								assert.ok(true);
+
+								done();
+							});
+						});
+					});
+
+					it('data ok', () => {
+						assert.operator(data.length, '>', 0, 'data.length');
+					});
+				});
+
+			});
+
 			describe('API', () => {
 				var api;
 				it('is defined', () => {
@@ -251,6 +304,5 @@ describe('deftools', () => {
 				});
 			});
 		});
-
 	});
 });
