@@ -165,6 +165,8 @@ module xm {
 						if (verbose) console.log('match!');
 						//console.log(res);
 						memo.push(res);
+
+						//we could break after first?
 					}
 					return memo;
 				}, []);
@@ -263,7 +265,14 @@ module xm {
 
 		extract():void {
 			//hoop hoop!
-			this.parser.callback(new KeyValueMap(this.parser.matcher.extractor(this.match)), this);
+			var fields = this.parser.matcher.extractor(this.match);
+			if (!fields) {
+				console.log('bad extract in ' + this.parser.getName());
+				console.log(this.parser);
+				console.log(this.match);
+				throw('bad extract in ' + this.parser.getName());
+			}
+			this.parser.callback(new KeyValueMap(fields), this);
 		}
 
 		getName():string {

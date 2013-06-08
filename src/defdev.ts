@@ -17,9 +17,10 @@ module deftools {
 	var api:API = new API(info, repos);
 
 	console.log('devdev');
+	console.log(paths);
 
 	var loader = new ListLoader(repos);
-	loader.loadRepoProjectDefs('async', (err, defs:Def[]) => {
+	loader.loadRepoProjectDefs('mocha', (err, defs:Def[]) => {
 		if (err || !defs) return;
 		console.log(defs);
 
