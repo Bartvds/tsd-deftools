@@ -156,6 +156,7 @@ module deftools {
 		//more
 	}
 
+	//parse headers for a list of Def's from Repos
 	export class DefinitionImporter {
 
 		parser:HeaderParser;
@@ -229,7 +230,7 @@ module deftools {
 					data.errors.push(new ParseError('cannot load source', err));
 					return callback(null, data);
 				}
-				data.source = src;
+				data.sourcePath = src;
 
 				//actual parse
 				self.parser.parse(data, source);

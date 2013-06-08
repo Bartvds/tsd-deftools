@@ -4,8 +4,18 @@
 
 module deftools {
 
-	export class Def {
+	export interface DefMap {
+		[name: string]: Def;
+	}
+	export interface HeaderDataMap {
+		[name: string]: HeaderData;
+	}
+	export interface HeaderDataListMap {
+		[name: string]:HeaderData[];
+	}
 
+	//single definition file in repo (non-parsed)
+	export class Def {
 		constructor(public project:string, public name:string) {
 		}
 
@@ -18,17 +28,7 @@ module deftools {
 		}
 	}
 
-	export interface DefMap {
-		[name: string]: Def;
-	}
-
-	export interface HeaderDataMap {
-		[name: string]: HeaderData;
-	}
-	export interface HeaderDataListMap {
-		[name: string]:HeaderData[];
-	}
-
+	//single definition file in repo (parsed)
 	export class HeaderData {
 		name:string;
 		version:string;
@@ -41,10 +41,11 @@ module deftools {
 		//reposName:string;
 		reposUrl:string;
 
+		sourcePath:string = '';
+
 		errors:ParseError[];
 		references:string[] = [];
 		dependencies:HeaderData[] = [];
-		source:string = '';
 
 		constructor(public def:Def) {
 			if (!this.def) {
@@ -72,7 +73,7 @@ module deftools {
 			this.errors = [];
 			this.references = [];
 			this.dependencies = [];
-			this.source = '';
+			this.sourcePath = '';
 		}
 
 		combi():string {

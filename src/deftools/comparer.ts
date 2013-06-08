@@ -8,6 +8,7 @@ module deftools {
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 
+	//get all multi-occurrences from list
 	export function getDupes(arr:string[]):string[] {
 		var uni = _.unique(arr);
 		arr = _.filter(arr, (value) => {
@@ -20,7 +21,7 @@ module deftools {
 		});
 		return arr;
 	}
-
+	//get all Def's from list where different projects that have a colliding Def.name
 	export function getDefCollide(arr:Def[]):DefMap {
 		var map:Object = _.reduce(arr, (memo:Object, def:Def) => {
 			if (!memo.hasOwnProperty(def.name)) {
@@ -40,7 +41,6 @@ module deftools {
 		});
 		return ret;
 	}
-
 
 	export class CompareResult {
 		repoAll:Def[] = [];
@@ -64,12 +64,13 @@ module deftools {
 				return value.name;
 			});
 		}
-
+		//for easy display
 		getStats():CompareStats {
 			return new CompareStats(this);
 		}
 	}
 
+	//crunch result to numberic stats
 	export class CompareStats {
 
 		repoAll:number = 0;
@@ -94,15 +95,16 @@ module deftools {
 			this.tsdNotInRepo = this.res.tsdNotInRepo.length;
 			this.repoAllDupes = _(this.res.repoAllDupes).size();
 			this.repoUnlistedDupes = _(this.res.repoUnlistedDupes).size();
-
 		}
 	}
 
+	//lazy util
 	interface LoopRes {
 		tsd:string[];
 		defs:Def[];
 	}
 
+	//compare repo and tsd content in Repos
 	export class DefinitionComparer {
 
 		constructor(public repos:Repos) {

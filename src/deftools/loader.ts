@@ -13,12 +13,13 @@ module deftools {
 	var extJson = /\.json$/;
 	var extDef = /\.d\.ts$/;
 
+	//load various file listings from Repos paths
 	export class ListLoader {
 
 		constructor(public repos:Repos) {
 
 		}
-
+		 
 		loadRepoProjectDefs(project:string, finish:(err, res:Def[]) => void) {
 			project = path.basename(project);
 

@@ -17,6 +17,7 @@ module deftools {
 		[name: string]: number;
 	}
 
+	//for debug and reporting
 	export class ToolInfo {
 		constructor(public name:string, public version:string, public pkg:any) {
 			if (!this.name) throw Error('no name');
@@ -29,6 +30,7 @@ module deftools {
 		}
 	}
 
+	//core process paths
 	export class Repos {
 		constructor(public defs:string, public tsd:string, public out:string) {
 

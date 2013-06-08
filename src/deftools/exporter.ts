@@ -9,17 +9,20 @@ module deftools {
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 
+	//list what we exported
 	export class ExportResult {
 		created:HeaderExport[] = [];
 		constructor() {
 
 		}
 	}
+	//single export
 	export class HeaderExport {
 		constructor(public header:HeaderData, public path:string) {
 		}
 	}
 
+	//export HeaderData to tsd JSON in Repos
 	export class DefinitionExporter {
 
 		constructor(public repos:Repos, public info:ToolInfo) {
@@ -29,7 +32,7 @@ module deftools {
 		getEncoder():DataEncoder {
 			return new Encode(this.repos, this.info);
 		}
-
+		//write single HeaderData to Repos
 		writeDef(data:HeaderData, encoder:DataEncoder, finish:(err?, exp?:HeaderExport) => void) {
 			//console.log(util.inspect(encoder.encode(data), false, 10));
 
@@ -50,6 +53,7 @@ module deftools {
 			});
 		}
 
+		//bulk write single HeaderData's to Repos
 		exportDefinitions(list:HeaderData[], finish:(err?, res?:ExportResult) => void) {
 			var self:DefinitionExporter = this;
 			var encoder = this.getEncoder();
@@ -70,9 +74,12 @@ module deftools {
 		}
 	}
 
+	//encode single HeaderData
 	export interface DataEncoder {
 		encode(str:HeaderData):any;
 	}
+
+	//encode single HeaderData to tsd json format
 	export class Encode implements DataEncoder {
 		constructor(public repos:Repos, public info:ToolInfo) {
 
