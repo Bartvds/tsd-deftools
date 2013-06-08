@@ -16,9 +16,8 @@ module deftools {
 		matchers:LineParserMatcherMap = {};
 		parsers:LineParserMap = {};
 
-		//lineBreak = /^\r\n|\n|\r/g;
+		//works nicely but will keep matching empty strings at final line so guard and compare index + length
 		trimmedLine = /([ \t]*)(.*?)([ \t]*)(\r\n|\n|\r|$)/g;
-
 
 		constructor() {
 
@@ -32,7 +31,7 @@ module deftools {
 			this.parsers[parser.id] = parser;
 		}
 
-		info() {
+		getInfo() {
 			var ret:any = {};
 			ret.types = _.keys(this.matchers).sort();
 			ret.parsers = _.keys(this.parsers).sort();
@@ -146,25 +145,23 @@ module deftools {
 					if (verbose) console.log('skip empty line');
 					continue;
 				}
+				procLineCount++;
 
 				var text = line[2];
-				procLineCount++;
 				if (verbose) console.log('[[' + text + ']]');
 
-				var choice:LineParserMatch[] = [];
-
-				_.reduce(possibles, (memo:LineParserMatch[], parser:LineParser) => {
+				var choice:LineParserMatch[] = _.reduce(possibles, (memo:LineParserMatch[], parser:LineParser) => {
 					if (verbose) console.log('---');
 					if (verbose) console.log(parser.getName());
 
 					var res = parser.match(text, offset, cursor);
 					if (res) {
-						console.log(parser.id + ' match line: ' + lineCount);
+						if (verbose) console.log('match!');
 						//console.log(res);
 						memo.push(res);
 					}
 					return memo;
-				}, choice);
+				}, []);
 
 				if (verbose) console.log('---');
 
@@ -176,7 +173,8 @@ module deftools {
 				}
 				else if (choice.length == 1) {
 					console.log('single match line');
-					console.log(choice[0]);
+					console.log(choice[0].parser.id);
+					//console.log(choice[0].match);
 
 					res.push(choice[0]);
 					possibles = choice[0].parser.next;
@@ -184,8 +182,14 @@ module deftools {
 				}
 				else {
 					console.log('multi match line');
-					console.log(choice);
+					console.log(choice[0].parser.id);
+					//console.log(choice[0].match);
 					//TODO pick one!
+
+					//why not first?
+					res.push(choice[0]);
+					possibles = choice[0].parser.next;
+					console.log('switching possibles [' + this.listIds(possibles) + ']');
 				}
 
 				if (possibles.length == 0) {

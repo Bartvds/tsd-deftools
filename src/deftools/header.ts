@@ -122,55 +122,75 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 			console.log('parse');
 			console.log(data.combi());
 
-			var parser = new LineParserCore();
-
+			//define some reusble RegExp parts
 			var expStart = /^/;
 			var expEnd = /$/;
 			var spaceReq = /[ \t]+/;
 			var spaceOpt = /[ \t]*/;
 			var commentStart = /\/\/+/;
+			var any = /.*/;
 			var anyGreedy = /(.*)/;
 			var anyLazy = /(.*?)/;
 			var headStart = /Type definitions?[ \t]*(?:for)?:?/;
-			var identify = /([\w\._-]*(?:[ \t]*[\w\._-]+))/;
+			var identifier = /([\w\._-]*(?:[ \t]*[\w\._-]+)*?)/;
+			var version = /v?(\d+\.\d+\.?\d*\.?\d*)?/;
 
+			//grab the glue
 			var glue = xm.RegExpGlue.get;
 
-			var typeHead = glue(expStart, spaceOpt, commentStart, spaceOpt);
-			typeHead.append(headStart, spaceOpt, identify);
-			//typeHead.append(lineEnd);
+			//glue long RegExp from parts
+			var typeHead = glue();
+			typeHead.append(expStart, spaceOpt, commentStart, spaceOpt);
+			typeHead.append(headStart, spaceOpt, identifier);
+			typeHead.append(spaceReq, version, spaceOpt);
+			typeHead.append(any);
+			typeHead.append(expEnd);
 
-			var comment = glue(expStart, spaceOpt);
+			var comment = glue();
+			comment.append(expStart, spaceOpt);
 			comment.append(commentStart, spaceOpt, anyLazy);
 			comment.append(spaceOpt, expEnd);
-			console.log(comment.join());
 
+			//setup parser
+			var parser = new LineParserCore();
+
+			//define reusable matching + extractors
+			//params: id, regexp and value extractor callback
+			//return: a plain object with the values
 			parser.addMatcher(new LineParserMatcher('comment', comment.join(), (match:RegExpExecArray) => {
-				if (match.length < 2) {
-					return;
-				}
-				console.log('comment: ' + match[1]);
+				if (match.length < 2) return null;
+				return {text:match[1]};
 			}));
-			//parser.addMatcher(new LineParserMatcher('line', /^(.*)$/));
 			parser.addMatcher(new LineParserMatcher('headNameVersion', typeHead.join(), (match:RegExpExecArray) => {
-				if (match.length < 5) {
-					return;
-				}
-				data.name = match[4];
-				data.version = match[5];
+				if (match.length < 3) return null;
+				var ret:any = {};
+				ret.name = match[1],
+				ret.version = match[2];
+				return ret;
 			}));
 
+			//define reusable line parsers
+			//params: id, name of a matcher, callback to apply mater's data, optional list of following parsers
 			parser.addParser(new LineParser('head', 'headNameVersion', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
-				console.log('apply');
-				console.log(parser.getName());
-				console.log(match);
-				console.log(parser.matcher.extractor(match));
+				console.log('extract ' + parser.getName());
+				var fields = parser.matcher.extractor(match);
+				console.log(fields);
+				if (!fields) return;
+				data.name = fields.name;
+				if (fields.version){
+					data.version = fields.version;
+				}
+				if (fields.submodule){
+					data.submodule = fields.submodule;
+				}
+				return;
 			}, ['comment']));
+
 			parser.addParser(new LineParser('comment', 'comment', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
-				console.log('apply');
-				console.log(parser.getName());
-				console.log(match);
-				console.log(parser.matcher.extractor(match));
+				console.log('extract ' + parser.getName());
+				var fields = parser.matcher.extractor(match);
+				console.log(fields);
+				if (!fields) return;
 			}, ['comment']));
 
 			/*parser.addParser(new LineParser('any', 'line', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
@@ -181,7 +201,6 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 			console.log(parser.info());
 
 			parser.parse(source, ['head']);
-
 
 			return data;
 		}
