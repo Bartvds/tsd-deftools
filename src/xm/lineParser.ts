@@ -6,16 +6,12 @@ module xm {
 	var _:UnderscoreStatic = require('underscore');
 	var util = require('util');
 
-	export interface LineParserMatcherMap {
-		[name: string]:LineParserMatcher;
-	}
 	export interface LineParserMap {
 		[name: string]:LineParser;
 	}
 
 	export class LineParserCore {
 
-		matchers:LineParserMatcherMap = {};
 		parsers:LineParserMap = {};
 
 		//works nicely but will keep matching empty strings at final line, so guard and compare index + length
@@ -25,31 +21,14 @@ module xm {
 
 		}
 
-		addMatcher(type:LineParserMatcher) {
-			this.matchers[type.type] = type;
-		}
-
 		addParser(parser:LineParser) {
 			this.parsers[parser.id] = parser;
 		}
 
-		clearParsers() {
-			this.parsers = {}
-		}
-
 		getInfo() {
 			var ret:any = {};
-			ret.types = _.keys(this.matchers).sort();
 			ret.parsers = _.keys(this.parsers).sort();
 			return ret;
-		}
-
-		getMatcher(type:string):LineParserMatcher {
-			if (!this.matchers.hasOwnProperty(type)) {
-				console.log('missing matcher id ' + type);
-				return null;
-			}
-			return this.matchers[type];
 		}
 
 		getParser(id:string):LineParser {
@@ -63,12 +42,13 @@ module xm {
 		link() {
 			var self:LineParserCore = this;
 			_.each(this.parsers, (parser:LineParser) => {
-				parser.matcher = self.getMatcher(parser.type);
-
-				_.each(parser.nextIds, (type:string) => {
-					var p = self.getParser(type);
+				_.each(parser.nextIds, (id:string) => {
+					var p = self.getParser(id);
 					if (p) {
 						parser.next.push(p);
+					}
+					else {
+						console.log('cannot find parser: ' + id);
 					}
 				});
 			});
@@ -162,7 +142,7 @@ module xm {
 
 					var res = parser.match(text, offset, cursor);
 					if (res) {
-						if (verbose) console.log('match!');
+						if (verbose) console.log('-> match!');
 						//console.log(res);
 						memo.push(res);
 
@@ -218,43 +198,29 @@ module xm {
 		}
 	}
 
-	export class LineParserMatcher {
-
-		//params: type, regexp, value extractor callback
-		constructor(public type:string, public exp:RegExp, public extractor:(match:RegExpExecArray) => IKeyValueMap) {
-		}
-
-		execute(str:string, offset:number, limit:number):RegExpExecArray {
-			this.exp.lastIndex = offset;
-			return this.exp.exec(str);
-		}
-
-		getName():string {
-			return this.type + ' ' + this.exp;
-		}
-	}
 	export class LineParser {
 
-		matcher:LineParserMatcher;
 		next:LineParser[] = [];
 
 		//params: id, name of a matcher, callback to apply mater's data, optional list of following parsers
-		constructor(public id:string, public type:string, public callback:(fields:IKeyValueMap, match:LineParserMatch) => void, public nextIds:string[] = []) {
+		constructor(public id:string, public exp:RegExp, public groupsMin:number, public callback:(match:LineParserMatch) => void, public nextIds:string[] = []) {
 		}
 
 		match(str:string, offset:number, limit:number):LineParserMatch {
-			if (!this.matcher) {
+			this.exp.lastIndex = offset;
+			var match:RegExpExecArray = this.exp.exec(str);
+			if (!match || match.length < 1) {
 				return null;
 			}
-			var match = this.matcher.execute(str, offset, limit);
-			if (!match) {
-				return null;
+			//move this to constructor?
+			if (this.groupsMin >= 0 && match.length < this.groupsMin) {
+				throw(new Error(this.getName() + 'bad extract expected ' + this.groupsMin + ' groups, got ' + (this.match.length - 1)));
 			}
 			return new LineParserMatch(this, match);
 		}
 
 		getName():string {
-			return this.id + '/' + (this.matcher ? this.matcher.getName() : this.type + '/unlinked');
+			return this.id;
 		}
 	}
 	//single match
@@ -265,14 +231,33 @@ module xm {
 
 		extract():void {
 			//hoop hoop!
-			var fields = this.parser.matcher.extractor(this.match);
-			if (!fields) {
-				console.log('bad extract in ' + this.parser.getName());
-				console.log(this.parser);
-				console.log(this.match);
-				throw('bad extract in ' + this.parser.getName());
+			if (this.parser.callback) {
+				this.parser.callback(this);
 			}
-			this.parser.callback(new KeyValueMap(fields), this);
+		}
+
+		getGroup(num:number, alt?:string = ''):string {
+			//validate for sanity
+			if (num >= this.match.length - 1) {
+				throw(new Error(this.parser.getName() + ' group index ' + num + ' > ' + (this.match.length - 2)));
+			}
+			if (this.parser.groupsMin >= 0 && num >= this.parser.groupsMin) {
+				throw(new Error(this.getName() + ' group index ' + num + ' >= parser.groupsMin ' + (this.parser.groupsMin)));
+			}
+			num += 1;
+			if (num < 1 || num > this.match.length) {
+				return '';
+			}
+
+			return this.match[num];
+		}
+
+		getGroupFloat(num:number, alt?:number = 0):number {
+			var value = parseFloat(this.getGroup(num));
+			if (isNaN(value)) {
+				return alt;
+			}
+			return value;
 		}
 
 		getName():string {

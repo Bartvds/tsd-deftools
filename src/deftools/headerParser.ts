@@ -1,0 +1,156 @@
+///<reference path="_ref.ts" />
+///<reference path="../xm/regexp.ts" />
+///<reference path="../xm/lineParser.ts" />
+
+module deftools {
+
+	export class ParseError {
+		constructor(public message:string = '', public text?:string = '', public ref?:any = null) {
+
+		}
+	}
+
+	var endSlashTrim = /\/?$/;
+
+	var glue = xm.RegExpGlue.get;
+
+	//define some reusble RegExps
+	var expStart = /^/;
+	var expEnd = /$/;
+	var spaceReq = /[ \t]+/;
+	var spaceOpt = /[ \t]*/;
+
+	var anyGreedy = /.*/;
+	var anyLazy = /.*?/;
+
+	var anyGreedyCap = /(.*)/;
+	var anyLazyCap = /(.*?)/;
+
+	var identifierCap = /([\w\._-]*(?:[ \t]*[\w\._-]+)*?)/;
+	var versionCap = /v?(\d+\.\d+\.?\d*\.?\d*)?/;
+
+	var delimStart = /[<\[\{\(]/;
+	var delimStartOpt = /[<\[\{\(]?/;
+	var delimEnd = /[\)\}\]>]/;
+	var delimEndOpt = /[\)\}\]>]?/;
+
+	var wordsCap = /([\w \t_-]+[\w]+)/;
+	var labelCap = /([\w_-]+[\w]+)/;
+
+	//http://blog.mattheworiordan.com/post/13174566389/url-regular-expression-for-links-with-or-without-the
+	var urlGroupsCap = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
+	var urlFullCap = /((?:(?:[A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)(?:(?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
+
+	//var referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
+
+
+	//glue long RegExp's from parts
+	var commentStart = glue(expStart, spaceOpt, /\/\/+/, spaceOpt).join();
+
+	var commentLine = glue(commentStart)
+	.append(anyLazyCap)
+	.append(spaceOpt, expEnd)
+	.join();
+
+	var typeHead = glue(commentStart)
+	.append(/Type definitions?[ \t]*(?:for)?:?/, spaceOpt, identifierCap)
+	.append(spaceReq, versionCap, spaceOpt)
+	.append(anyGreedy, expEnd)
+	.join('i');
+
+	var projectUrl = glue(commentStart)
+	.append(/Project/, spaceOpt, /:?/, spaceOpt)
+	.append(delimStartOpt, urlFullCap, delimEndOpt)
+	.append(spaceOpt, expEnd)
+	.join('i');
+
+	var defAuthorUrl = glue(commentStart)
+	.append(/Definitions[ \t]+by[ \t]*:?/, spaceOpt)
+	.append(wordsCap, spaceOpt)
+	.append(delimStartOpt, urlFullCap, delimEndOpt)
+	.append(spaceOpt, expEnd)
+	.join('i');
+
+	var reposUrl = glue(commentStart)
+	.append(/Definitions/, spaceOpt, /:?/, spaceOpt)
+	.append(delimStartOpt, urlFullCap, delimEndOpt)
+	.append(spaceOpt, expEnd)
+	.join('i');
+
+	var reposUrlAlt = glue(commentStart)
+	.append(/DefinitelyTyped/, spaceOpt, /:?/, spaceOpt)
+	.append(delimStartOpt, urlFullCap, delimEndOpt)
+	.append(spaceOpt, expEnd)
+	.join('i');
+
+	var labelUrl = glue(commentStart)
+	.append(labelCap, spaceOpt, /:?/, spaceOpt)
+	.append(delimStartOpt, urlFullCap, delimEndOpt)
+	.append(spaceOpt, expEnd)
+	.join('i');
+
+	var labelWordsUrl = glue(commentStart)
+	.append(labelCap, spaceOpt, /:?/, spaceOpt)
+	.append(wordsCap, spaceOpt)
+	.append(delimStartOpt, urlFullCap, delimEndOpt)
+	.append(spaceOpt, expEnd)
+
+
+	export class HeaderParser {
+
+		parser:xm.LineParserCore;
+
+		constructor() {
+			this.init();
+		}
+
+		init() {
+			//shortcut the glue
+
+		}
+
+		parse(data:HeaderData, source:string):HeaderData {
+			console.log('parse ', data.combi());
+
+			data.resetFields();
+
+			//setup parser
+			this.parser = new xm.LineParserCore();
+
+			var header = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt', 'comment'];
+
+			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(header, ['any'])));
+
+			this.parser.addParser(new xm.LineParser('head', typeHead, 2, (match:xm.LineParserMatch) => {
+				data.name = match.getGroup(0, data.name);
+				data.version = match.getGroup(1, data.version);
+				//data.submodule = match.getGroup(2, data.submodule);
+			}, header));
+
+			this.parser.addParser(new xm.LineParser('projectUrl', projectUrl, 1, (match:xm.LineParserMatch) => {
+				data.projectUrl = match.getGroup(0, data.projectUrl).replace(endSlashTrim, '');
+			}, header));
+
+			this.parser.addParser(new xm.LineParser('defAuthorUrl', defAuthorUrl, 2, (match:xm.LineParserMatch) => {
+				data.authorName = match.getGroup(0, data.authorName);
+				data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
+			}, header));
+
+			this.parser.addParser(new xm.LineParser('reposUrl', reposUrl, 2, (match:xm.LineParserMatch) => {
+				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
+			}, header));
+
+			this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 2, (match:xm.LineParserMatch) => {
+				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
+			}, header));
+
+			this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
+
+			console.log(this.parser.getInfo());
+
+			this.parser.parse(source, ['head', 'any']);
+
+			return data;
+		}
+	}
+}

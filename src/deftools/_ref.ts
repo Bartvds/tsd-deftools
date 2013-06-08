@@ -3,6 +3,7 @@
 ///<reference path="comparer.ts" />
 ///<reference path="config.ts" />
 ///<reference path="exporter.ts" />
+///<reference path="headerParser.ts" />
 ///<reference path="header.ts" />
 ///<reference path="importer.ts" />
 ///<reference path="lib.ts" />
