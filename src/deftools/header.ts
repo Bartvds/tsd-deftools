@@ -5,8 +5,10 @@
 module deftools {
 
 	export class Def {
-		constructor(public project:string, public name:string) {
+		key:string;
 
+		constructor(public project:string, public name:string) {
+			this.key = this.combi();
 		}
 
 		combi():string {
@@ -89,7 +91,7 @@ module deftools {
 		}
 	}
 
-	var typeHead  = /^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+(?:\.\d+)*)?[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$/;
+	//var typeHead  = /^([ \t]*)?(\/\/\/?[ \t]*Type definitions?[ \t]*(?:for)?:?[ \t]+)([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]([\w\._-]*(?:[ \t]*[\w\._-]+))[ \t]v?[ \t]*(\d+(?:\.\d+)*)?[ \t]*[<\[\{\(]?([\w\._-]*(?:[ \t]*[\w\._-]+))*[ \t]*[\)\}\]>]?[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$/;
 
 	export class HeaderParser {
 
@@ -122,25 +124,40 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 
 			var parser = new LineParserCore();
 
-			var space = /[ \t]+/;
+			var expStart = /^/;
+			var expEnd = /$/;
+			var spaceReq = /[ \t]+/;
 			var spaceOpt = /[ \t]*/;
-			var commentStart = /^[ \t]*?\/\/+[ \t]*/;
-			var headStart = /Type definitions?[ \t]*(?:for)?:?[ \t]*/;
+			var commentStart = /\/\/+/;
+			var anyGreedy = /(.*)/;
+			var anyLazy = /(.*?)/;
+			var headStart = /Type definitions?[ \t]*(?:for)?:?/;
+			var identify = /([\w\._-]*(?:[ \t]*[\w\._-]+))/;
 
-			var exp:RegExp;
-			var glue:xm.RegExpGlue;
+			var glue = xm.RegExpGlue.get;
 
-			glue = xm.RegExpGlue.get();
-			glue.append()
+			var typeHead = glue(expStart, spaceOpt, commentStart, spaceOpt);
+			typeHead.append(headStart, spaceOpt, identify);
+			//typeHead.append(lineEnd);
 
-			exp = xm.RegExpGlue.get().join();
+			var comment = glue(expStart, spaceOpt);
+			comment.append(commentStart, spaceOpt, anyLazy);
+			comment.append(spaceOpt, expEnd);
+			console.log(comment.join());
 
-			parser.addMatcher(new LineParserMatcher('comment', /^[ \t]*(\/\/+[ \t]*(.*))[ \t]*$/, (match:RegExpExecArray) => {
-
+			parser.addMatcher(new LineParserMatcher('comment', comment.join(), (match:RegExpExecArray) => {
+				if (match.length < 2) {
+					return;
+				}
+				console.log('comment: ' + match[1]);
 			}));
 			//parser.addMatcher(new LineParserMatcher('line', /^(.*)$/));
-			parser.addMatcher(new LineParserMatcher('headNameVersion', typeHead, (match:RegExpExecArray) => {
-
+			parser.addMatcher(new LineParserMatcher('headNameVersion', typeHead.join(), (match:RegExpExecArray) => {
+				if (match.length < 5) {
+					return;
+				}
+				data.name = match[4];
+				data.version = match[5];
 			}));
 
 			parser.addParser(new LineParser('head', 'headNameVersion', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {

@@ -193,7 +193,7 @@ describe('deftools', () => {
 				});
 			});
 
-
+			//skip for now
 			describe.skip('Parser', () => {
 				var data:helper.HeaderAssert[];
 				var filter = ['async'];

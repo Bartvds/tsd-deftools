@@ -68,24 +68,22 @@ module deftools {
 			fs.readdir(self.repos.defs, (err, files:string[]) => {
 				if (err) return finish(err, []);
 
-				var ret:Def[] = [];
-
-				async.forEach(files, (file, callback:(err) => void) => {
+				async.reduce(files, [], (memo:Def[], file, callback:(err,  memo?:Def[]) => void) => {
 					if (ignoreFile.test(file)) {
-						return callback(null);
+						return callback(null, memo);
 					}
 					self.loadRepoProjectDefs(file, (err, res:Def[]) => {
 						if (err) return callback(err);
 						if (!res) return callback('no res for ' + file);
 
 						_.each(res, (def:Def) => {
-							ret.push(def);
+							memo.push(def);
 						});
-						callback(null);
+						callback(null, memo);
 					});
 
-				}, (err) => {
-					finish(err, ret);
+				}, (err, memo) => {
+					finish(err, memo);
 				});
 			});
 		}

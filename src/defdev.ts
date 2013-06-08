@@ -1,4 +1,6 @@
 ///<reference path="_ref.ts" />
+///<reference path="deftools/_ref.ts" />
+///<reference path="xm/expose.ts" />
 
 module deftools {
 
@@ -8,17 +10,25 @@ module deftools {
 	var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 	//var agent:SuperAgent = require('superagent');
-	//var mod = require('../build/deftools-module');
-	var mod = require('../build/deftools-module');
 
+	var info = Config.getInfo();
+	var paths = Config.getPaths();
+	var repos = new Repos(paths.typings, paths.tsd, paths.tmp);
+	var api:API = new API(info, repos);
 
-	//var tools:deftools = mod.deftools;
-	/*var info = deftools.Config.getInfo();
-	var paths = deftools.Config.getPaths();
-	var api:deftools.API = new tools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
-*/
-	console.log(util.inspect(mod.xm, false, 4));
-	console.log(util.inspect(mod.xm.RegExpGlue, false, 4));
-	var glue = new mod.xm.RegExpGlue();
-	console.log(util.inspect(glue, false, 4));
+	console.log('devdev');
+
+	var loader = new ListLoader(repos);
+	loader.loadRepoProjectDefs('async', (err, defs:Def[]) => {
+		if (err || !defs) return;
+		console.log(defs);
+
+		var importer = new DefinitionImporter(repos);
+		importer.parseDefinitions(defs, (err?, res?:ImportResult) => {
+			if (err || !res) return;
+			console.log(util.inspect(res, false, 10));
+
+		})
+	});
+
 }

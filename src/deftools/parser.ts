@@ -3,6 +3,7 @@
 module deftools {
 
 	var _:UnderscoreStatic = require('underscore');
+	var util = require('util');
 
 	export interface LineParserMatcherMap {
 		[name: string]:LineParserMatcher;
@@ -15,7 +16,8 @@ module deftools {
 		matchers:LineParserMatcherMap = {};
 		parsers:LineParserMap = {};
 
-		trimmedine = /^([\ t]*)?(\S+(?:[ \t]+\S+)*)*[ \t]*$/gm;
+		//lineBreak = /^\r\n|\n|\r/g;
+		trimmedLine = /([ \t]*)(.*?)([ \t]*)(\r\n|\n|\r|$)/g;
 
 
 		constructor() {
@@ -36,6 +38,7 @@ module deftools {
 			ret.parsers = _.keys(this.parsers).sort();
 			return ret;
 		}
+
 		getMatcher(type:string):LineParserMatcher {
 			if (!this.matchers.hasOwnProperty(type)) {
 				console.log('missing matcher id ' + type);
@@ -43,6 +46,7 @@ module deftools {
 			}
 			return this.matchers[type];
 		}
+
 		getParser(id:string):LineParser {
 			if (!this.parsers.hasOwnProperty(id)) {
 				console.log('missing parser id ' + id);
@@ -63,8 +67,6 @@ module deftools {
 					}
 				});
 			});
-
-
 		}
 
 		get(ids:string[]):LineParser[] {
@@ -91,50 +93,82 @@ module deftools {
 		}
 
 		parse(source:string, asType?:string[]) {
-			console.log('source');
-			console.log(source.length);
+			console.log('source.length ' + source.length);
 			//link all
 			this.link();
 
 			var res:LineParserMatch[] = [];
 			var possibles:LineParser[] = asType ? this.get(asType) : this.all();
 
+			var length = source.length;
 			var line;
+			var end;
 			var offset = 0;
-			var end = 0;
-			var count = 0;
+			var cursor = 0;
+			var lineCount = 0;
+			var procLineCount = 0;
 
-			this.trimmedine.lastIndex = 0;
-			while (line = this.trimmedine.exec(source)) {
+			var verbose = true;
+			var safetyBreak = 100;
 
-				end = line.index + line.length;
-				this.trimmedine.lastIndex = end;
+			this.trimmedLine.lastIndex = 0;
+			while (line = this.trimmedLine.exec(source)) {
+				if (verbose) console.log('-----------------------------------------------------------------------------------------');
+				cursor = line.index + line[0].length;
 
-				count++;
-				if (line.length < 2) {
+				if (cursor >= length) {
+					//done
+					break;
+				}
+				lineCount++;
+				if (verbose) console.log('line: ' + lineCount);
+				/*
+				console.log('line:');
+				console.log(line);
+				console.log('cursor: ' + cursor);
+				*/
+
+				this.trimmedLine.lastIndex = cursor;
+
+				//break some development loops :)
+				if (lineCount > safetyBreak) {
+					//report this better?
+					console.log('\n\n\n\nsafetyBreak bail at ' + lineCount + '> ' + safetyBreak + '!\n\n\n\n\n');
+					throw('parser safetyBreak bail!');
+					break;
+				}
+
+				if (line.length < 5) {
+					if (verbose) console.log('skip bad line match');
 					continue;
 				}
-				if (typeof line[2] === 'undefined') {
+				if (typeof line[2] === 'undefined' || line[2] == '') {
+					if (verbose) console.log('skip empty line');
 					continue;
 				}
+
 				var text = line[2];
-
-				console.log('line ' + count);
+				procLineCount++;
+				if (verbose) console.log('[[' + text + ']]');
 
 				var choice:LineParserMatch[] = [];
 
 				_.reduce(possibles, (memo:LineParserMatch[], parser:LineParser) => {
-					var res = parser.match(text, offset, end);
+					if (verbose) console.log('---');
+					if (verbose) console.log(parser.getName());
+
+					var res = parser.match(text, offset, cursor);
 					if (res) {
-						console.log('match at line ' + count + ' ' + offset + '-' + end + ' ' + parser.getName());
+						console.log(parser.id + ' match line: ' + lineCount);
 						//console.log(res);
 						memo.push(res);
 					}
 					return memo;
 				}, choice);
 
-				console.log('choices ' + choice.length);
+				if (verbose) console.log('---');
 
+				console.log('choices ' + choice.length);
 
 				if (choice.length == 0) {
 					//console.log('cannot match line');
@@ -144,8 +178,9 @@ module deftools {
 					console.log('single match line');
 					console.log(choice[0]);
 
+					res.push(choice[0]);
 					possibles = choice[0].parser.next;
-					console.log('switching possibles ' + this.listIds(possibles));
+					console.log('switching possibles [' + this.listIds(possibles) + ']');
 				}
 				else {
 					console.log('multi match line');
@@ -154,13 +189,20 @@ module deftools {
 				}
 
 				if (possibles.length == 0) {
-					console.log('no more possibles');
+					console.log('no more possibles, break');
 					break;
 				}
 			}
 
-			console.log('lines' + count);
-			return res;
+			console.log('total lineCount ' + lineCount);
+			console.log('procLineCount ' + procLineCount);
+			//console.log(util.inspect(res, false, 10));
+			console.log('res ' + res.length);
+			if (res.length > 0) {
+				_.each(res, (match:LineParserMatch) => {
+					match.extract(null);
+				});
+			}
 		}
 	}
 
@@ -169,13 +211,13 @@ module deftools {
 
 		}
 
-		match(str:string, offset:number, limit:number):RegExpExecArray {
+		execute(str:string, offset:number, limit:number):RegExpExecArray {
 			this.exp.lastIndex = offset;
 			return this.exp.exec(str);
 		}
 
 		getName() {
-			return this.type + ':' + this.exp;
+			return this.type + ' ' + this.exp;
 		}
 	}
 	export class LineParser {
@@ -191,7 +233,7 @@ module deftools {
 			if (!this.matcher) {
 				return null;
 			}
-			var match = this.matcher.match(str, offset, limit);
+			var match = this.matcher.execute(str, offset, limit);
 			if (!match) {
 				return null;
 			}
@@ -199,7 +241,7 @@ module deftools {
 		}
 
 		getName() {
-			return this.id + ':' + this.type + '/' + (this.matcher ? this.matcher.getName() : 'unlinked');
+			return this.id + '/' + (this.matcher ? this.matcher.getName() : this.type + '/unlinked');
 		}
 	}
 
@@ -208,7 +250,7 @@ module deftools {
 
 		}
 
-		execute(parent:LineParserMatch[]) {
+		extract(parent:LineParserMatch[]) {
 			return this.parser.callback(this.match, parent, this.parser);
 		}
 

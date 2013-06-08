@@ -164,10 +164,10 @@ module deftools {
 			this.parser = new HeaderParser();
 		}
 
-		parseDefinitions(projects:Def[], finish:(err?, res?:ImportResult) => void) {
+		parseDefinitions(defs:Def[], finish:(err?, res?:ImportResult) => void) {
 			var self:DefinitionImporter = this;
 
-			async.reduce(projects, new ImportResult(), (res:ImportResult, def:Def, callback:(err?, data?:ImportResult) => void) => {
+			async.reduce(defs, new ImportResult(), (res:ImportResult, def:Def, callback:(err?, data?:ImportResult) => void) => {
 				//
 				var key = def.combi();
 
@@ -230,6 +230,8 @@ module deftools {
 					return callback(null, data);
 				}
 				data.source = src;
+
+				//actual parse
 				self.parser.parse(data, source);
 
 				if (!data.isValid()) {
