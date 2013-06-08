@@ -8,13 +8,14 @@ module xm {
 		set (key:string, value:any);
 		remove (key:string);
 		keys ():string[];
-		import (data:any):void;
-		clear (keep?);
+		import (data:any, keys?:string[]):void;
+		export (keys?:string[]):any;
+		clear (keep?:string[]);
 	}
 
 	export class KeyValueMap {
 
-		_prefix:string = '$_';
+		_prefix:string = '';
 		//need proper type
 		_store;
 
@@ -52,17 +53,6 @@ module xm {
 			this._store[key] = value;
 		}
 
-		import(data:any) {
-			if (typeof data !== 'object') {
-				return;
-			}
-			for (var key in data) {
-				if (hasOwnProp.call(data, key)) {
-					this.set(key, data[key]);
-				}
-			}
-		}
-
 		remove(key:string) {
 			if (typeof key === 'undefined') {
 				return;
@@ -85,15 +75,37 @@ module xm {
 			return ret;
 		}
 
-		clear(keep?) {
-			var len = this._prefix.length;
+		clear(keep?:string[]) {
 			var keys = this.keys();
 			for (var i = 0, ii = keys.length; i < ii; i++) {
-				var key = keys[i].substr(len);
+				var key = keys[i];
 				if (!keep || keep.indexOf(key) > -1) {
 					this.remove(key);
 				}
 			}
+		}
+
+		import(data:any, allow?) {
+			if (typeof data !== 'object') {
+				return;
+			}
+			for (var key in data) {
+				if (hasOwnProp.call(data, key) && (!allow || allow.indexOf(key) > -1)) {
+					this.set(key, data[key]);
+				}
+			}
+		}
+
+		export(allow?:string[]):any {
+			var ret:any = {};
+			var keys = this.keys();
+			for (var i = 0, ii = keys.length; i < ii; i++) {
+				var key = keys[i];
+				if (!allow || allow.indexOf(key) > -1) {
+					ret[key] = this.get(key);
+				}
+			}
+			return ret;
 		}
 	}
 }

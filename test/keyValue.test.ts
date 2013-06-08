@@ -41,11 +41,13 @@ describe('xm.KeyValueMap', () => {
 			it('stores by name', () => {
 				map.set('aa', 'valueA');
 				map.set('bb__bb', 100);
+				map.set('cc', [1,2,3]);
 				assert.strictEqual(map.get('aa'), 'valueA');
 				assert.strictEqual(map.get('bb__bb'), 100);
+				assert.deepEqual(map.get('cc'), [1,2,3]);
 			});
 			it('lists correct keys', () => {
-				assert.sameMembers(map.keys(), ['aa', 'bb__bb']);
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb', 'cc']);
 			});
 			it('overrides data by name', () => {
 				map.set('aa', 200);
@@ -55,6 +57,7 @@ describe('xm.KeyValueMap', () => {
 			});
 			it('removes data by name', () => {
 				map.remove('bb__bb');
+				map.remove('cc');
 				assert.ok(!map.get('bb__bb'));
 				assert.strictEqual(map.get('bb__bb', 123), 123);
 				assert.sameMembers(map.keys(), ['aa']);
@@ -65,16 +68,28 @@ describe('xm.KeyValueMap', () => {
 				assert.notInclude(map.keys(), 'bb__bb');
 			});
 			it('returns alt value for removed data', () => {
-				assert.strictEqual(map.get('bb__bb', 123), 123);
+				assert.strictEqual(map.get('bb__bb', 6), 6);
+			});
+			it('clears filtered', () => {
+				map.set('aa', 'valueA');
+				map.set('bb__bb', 100);
+				map.set('cc', [1,2,3]);
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb', 'cc']);
+				map.clear(['bb__bb']);
+				assert.sameMembers(map.keys(), ['aa', 'cc']);
+			});
+			it('clears all', () => {
+				map.clear();
+				assert.lengthOf(map.keys(), 0);
 			});
 		});
 
-		describe('import', () => {
+		describe('import/export', () => {
 
 			var data;
 
 			before(() => {
-				data = {aa: 'valueAAA', 'bb__bb': 321};
+				data = {aa: 'valueAAA', 'bb__bb': 321, cc:[1,2,3]};
 			});
 			after(() => {
 				data = null;
@@ -84,9 +99,40 @@ describe('xm.KeyValueMap', () => {
 				map = new xm.KeyValueMap();
 				map.import(data);
 
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb', 'cc']);
 				assert.strictEqual(map.get('aa'), 'valueAAA');
 				assert.strictEqual(map.get('bb__bb'), 321);
-				assert.sameMembers(map.keys(), ['aa', 'bb__bb']);
+				assert.deepEqual(map.get('cc'), [1,2,3]);
+			});
+
+			it('from object filtered', () => {
+				map = new xm.KeyValueMap();
+				map.import(data, ['aa', 'cc']);
+
+				assert.sameMembers(map.keys(), ['aa', 'cc']);
+				assert.strictEqual(map.get('aa'), 'valueAAA');
+				assert.deepEqual(map.get('cc'), [1,2,3]);
+			});
+			it('to object', () => {
+				map = new xm.KeyValueMap();
+				map.import(data);
+
+				var exp = map.export();
+				assert.ok(exp);
+				assert.sameMembers(Object.keys(exp), ['aa', 'bb__bb', 'cc']);
+				assert.strictEqual(map.get('aa'), exp.aa);
+				assert.strictEqual(map.get('bb__bb'), exp['bb__bb']);
+				assert.deepEqual(map.get('cc'), exp.cc);
+			});
+			it('to object filtered', () => {
+				map = new xm.KeyValueMap();
+				map.import(data);
+
+				var exp = map.export(['aa', 'cc']);
+				assert.ok(exp);
+				assert.sameMembers(Object.keys(exp), ['aa', 'cc']);
+				assert.strictEqual(map.get('aa'), exp.aa);
+				assert.deepEqual(map.get('cc'), exp.cc);
 			});
 			it('ignore non-object object', () => {
 				map = new xm.KeyValueMap();
@@ -96,9 +142,11 @@ describe('xm.KeyValueMap', () => {
 			it('constructor param', () => {
 				map = new xm.KeyValueMap(data);
 
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb', 'cc']);
+
 				assert.strictEqual(map.get('aa'), 'valueAAA');
 				assert.strictEqual(map.get('bb__bb'), 321);
-				assert.sameMembers(map.keys(), ['aa', 'bb__bb']);
+				assert.deepEqual(map.get('cc'), [1,2,3]);
 			});
 		});
 	});
