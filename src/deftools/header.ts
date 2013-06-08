@@ -1,6 +1,6 @@
 ///<reference path="_ref.ts" />
-///<reference path="parser.ts" />
 ///<reference path="../xm/regexp.ts" />
+///<reference path="../xm/lineParser.ts" />
 
 module deftools {
 
@@ -152,16 +152,16 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 			comment.append(spaceOpt, expEnd);
 
 			//setup parser
-			var parser = new LineParserCore();
+			var parser = new xm.LineParserCore();
 
 			//define reusable matching + extractors
 			//params: id, regexp and value extractor callback
 			//return: a plain object with the values
-			parser.addMatcher(new LineParserMatcher('comment', comment.join(), (match:RegExpExecArray) => {
+			parser.addMatcher(new xm.LineParserMatcher('comment', comment.join(), (match:RegExpExecArray) => {
 				if (match.length < 2) return null;
 				return {text:match[1]};
 			}));
-			parser.addMatcher(new LineParserMatcher('headNameVersion', typeHead.join(), (match:RegExpExecArray) => {
+			parser.addMatcher(new xm.LineParserMatcher('headNameVersion', typeHead.join(), (match:RegExpExecArray) => {
 				if (match.length < 3) return null;
 				var ret:any = {};
 				ret.name = match[1],
@@ -171,7 +171,7 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 
 			//define reusable line parsers
 			//params: id, name of a matcher, callback to apply mater's data, optional list of following parsers
-			parser.addParser(new LineParser('head', 'headNameVersion', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
+			parser.addParser(new xm.LineParser('head', 'headNameVersion', (match:RegExpExecArray, parent:xm.LineParserMatch[], parser:xm.LineParser) => {
 				console.log('extract ' + parser.getName());
 				var fields = parser.matcher.extractor(match);
 				console.log(fields);
@@ -186,19 +186,19 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 				return;
 			}, ['comment']));
 
-			parser.addParser(new LineParser('comment', 'comment', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
+			parser.addParser(new xm.LineParser('comment', 'comment', (match:RegExpExecArray, parent:xm.LineParserMatch[], parser:xm.LineParser) => {
 				console.log('extract ' + parser.getName());
 				var fields = parser.matcher.extractor(match);
 				console.log(fields);
 				if (!fields) return;
 			}, ['comment']));
 
-			/*parser.addParser(new LineParser('any', 'line', (match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => {
+			/*parser.addParser(new xm.LineParser('any', 'line', (match:RegExpExecArray, parent:xm.LineParserMatch[], parser:xm.LineParser) => {
 				console.log('apply');
 				console.log(parser.getName());
 				console.log(match);
 			}));*/
-			console.log(parser.info());
+			console.log(parser.getInfo());
 
 			parser.parse(source, ['head']);
 

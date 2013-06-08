@@ -1,6 +1,6 @@
-///<reference path="_ref.ts" />
+///<reference path="../_ref.ts" />
 
-module deftools {
+module xm {
 
 	var _:UnderscoreStatic = require('underscore');
 	var util = require('util');
