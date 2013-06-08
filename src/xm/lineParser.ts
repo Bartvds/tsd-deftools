@@ -6,13 +6,9 @@ module xm {
 	var _:UnderscoreStatic = require('underscore');
 	var util = require('util');
 
-	export interface LineParserMap {
-		[name: string]:LineParser;
-	}
-
 	export class LineParserCore {
 
-		parsers:LineParserMap = {};
+		parsers = new xm.KeyValueMap();
 
 		//works nicely but will keep matching empty strings at final line, so guard and compare index + length
 		trimmedLine = /([ \t]*)(.*?)([ \t]*)(\r\n|\n|\r|$)/g;
@@ -22,28 +18,24 @@ module xm {
 		}
 
 		addParser(parser:LineParser) {
-			this.parsers[parser.id] = parser;
+			this.parsers.set(parser.id, parser);
 		}
 
 		getInfo() {
 			var ret:any = {};
-			ret.parsers = _.keys(this.parsers).sort();
+			ret.parsers = this.parsers.keys().sort();
 			return ret;
 		}
 
 		getParser(id:string):LineParser {
-			if (!this.parsers.hasOwnProperty(id)) {
-				console.log('missing parser id ' + id);
-				return null;
-			}
-			return this.parsers[id];
+			return this.parsers.get(id, null);
 		}
 
 		link() {
 			var self:LineParserCore = this;
-			_.each(this.parsers, (parser:LineParser) => {
+			_.each(this.parsers.values(), (parser:LineParser) => {
 				_.each(parser.nextIds, (id:string) => {
-					var p = self.getParser(id);
+					var p = self.parsers.get(id);
 					if (p) {
 						parser.next.push(p);
 					}
@@ -57,17 +49,17 @@ module xm {
 		get(ids:string[]):LineParser[] {
 			var self:LineParserCore = this;
 			return _.reduce(ids, (memo:LineParser[], id:string) => {
-				if (!self.parsers.hasOwnProperty(id)) {
+				if (!self.parsers.has(id)) {
 					console.log('missing parser ' + id);
 					return memo;
 				}
-				memo.push(self.parsers[id]);
+				memo.push( self.parsers.get(id));
 				return memo;
 			}, []);
 		}
 
 		all():LineParser[] {
-			return _.toArray(this.parsers);
+			return this.parsers.values();
 		}
 
 		listIds(parsers:LineParser[]):string[] {

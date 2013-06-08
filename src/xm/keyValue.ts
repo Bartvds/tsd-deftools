@@ -8,6 +8,7 @@ module xm {
 		set (key:string, value:any);
 		remove (key:string);
 		keys ():string[];
+		values ():any[];
 		import (data:any, keys?:string[]):void;
 		export (keys?:string[]):any;
 		clear (keep?:string[]);
@@ -70,6 +71,18 @@ module xm {
 			for (var key in this._store) {
 				if (hasOwnProp.call(this._store, key)) {
 					ret.push(key.substr(len));
+				}
+			}
+			return ret;
+		}
+
+		values(allow?:string[]):any {
+			var keys = this.keys();
+			var ret = [];
+			for (var i = 0, ii = keys.length; i < ii; i++) {
+				var key = keys[i];
+				if (!allow || allow.indexOf(key) > -1) {
+					ret.push(this.get(key));
 				}
 			}
 			return ret;
