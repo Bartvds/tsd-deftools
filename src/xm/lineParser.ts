@@ -33,6 +33,10 @@ module xm {
 			this.parsers[parser.id] = parser;
 		}
 
+		clearParsers() {
+			this.parsers = {}
+		}
+
 		getInfo() {
 			var ret:any = {};
 			ret.types = _.keys(this.matchers).sort();

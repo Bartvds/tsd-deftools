@@ -112,32 +112,32 @@ module deftools {
 
 	export class HeaderParser {
 
-		constructor(){
+		parser:xm.LineParserCore;
 
+		constructor() {
+			this.init();
 		}
-/*
-^([ \t]*)?\/\/\/?
-[ \t]*
-Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
-[ \t]+
-([\w\._-]*(?:[ \t]*[\w\._-]+))
-[ \t]+
-([\w\._-]*(?:[ \t]*[\w\._-]+))
-[ \t]+
-?[ \t]*(\d+\.\d+\.?\d*\.?\d*)
-[ \t]+
-[<\[\{\(]?
-[ \t]*
-([\w\._-]+(?:[ \t]*[\w\._-]+))*
-[ \t]*
-[\)\}\]>]?
-[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$
-*/
 
+		/*
+		^([ \t]*)?\/\/\/?
+		[ \t]*
+		Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
+		[ \t]+
+		([\w\._-]*(?:[ \t]*[\w\._-]+))
+		[ \t]+
+		([\w\._-]*(?:[ \t]*[\w\._-]+))
+		[ \t]+
+		?[ \t]*(\d+\.\d+\.?\d*\.?\d*)
+		[ \t]+
+		[<\[\{\(]?
+		[ \t]*
+		([\w\._-]+(?:[ \t]*[\w\._-]+))*
+		[ \t]*
+		[\)\}\]>]?
+		[ \t]*(\S*(?:[ \t]*\S+)*)[ \t]*$
+		*/
 
-		parse(data:HeaderData, source:string):HeaderData {
-			console.log('parse ', data.combi());
-
+		init() {
 			//shortcut the glue
 			var glue = xm.RegExpGlue.get;
 
@@ -161,7 +161,10 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 			var projectStart = /Project[ \t]*:?/;
 
 			var delimStart = /[<\[\{\(]/;
+			var delimStartOpt = /[<\[\{\(]?/;
 			var delimEnd = /[\)\}\]>]/;
+			var delimEndOpt = /[\)\}\]>]?/;
+
 			//http://blog.mattheworiordan.com/post/13174566389/url-regular-expression-for-links-with-or-without-the
 			var urlGroupsCap = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
 			var urlFullCap = /((?:(?:[A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)(?:(?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
@@ -181,40 +184,52 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 			.join();
 
 			var projectUrl = glue(commentStart)
-			.append(headStart, spaceOpt, identifierCap)
-			.append(spaceReq, versionCap, spaceOpt)
-			.append(anyGreedy, expEnd)
+			.append(projectStart, spaceOpt)
+			.append(delimStartOpt, urlFullCap, delimEndOpt)
+			.append(spaceOpt, expEnd)
 			.join();
 
 			//setup parser
-			var parser = new xm.LineParserCore();
+			this.parser = new xm.LineParserCore();
 
 			//define reusable matching + extractors
 			//return: a plain object with the values
-			parser.addMatcher(new xm.LineParserMatcher('comment', commentLine, (match:RegExpExecArray) => {
+			this.parser.addMatcher(new xm.LineParserMatcher('comment', commentLine, (match:RegExpExecArray) => {
 				if (match.length < 2) return null;
-				return {text:match[1]};
+				return {text: match[1]};
 			}));
-			parser.addMatcher(new xm.LineParserMatcher('headNameVersion', typeHead, (match:RegExpExecArray) => {
+			this.parser.addMatcher(new xm.LineParserMatcher('headNameVersion', typeHead, (match:RegExpExecArray) => {
 				if (match.length < 3) return null;
 				var ret:any = {};
-				ret.name = match[1],
+				ret.name = match[1];
 				ret.version = match[2];
 				return ret;
 			}));
+			this.parser.addMatcher(new xm.LineParserMatcher('projectUrl', projectUrl, (match:RegExpExecArray) => {
+				if (match.length < 2) return null;
+				return {url: match[1]};
+			}));
+		}
+
+		parse(data:HeaderData, source:string):HeaderData {
+			console.log('parse ', data.combi());
 
 			//define reusable line parsers
+			this.parser.clearParsers();
 
-			parser.addParser(new xm.LineParser('head', 'headNameVersion', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
-				console.log('extract ' + match.parser.getName());
+			this.parser.addParser(new xm.LineParser('head', 'headNameVersion', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
 				console.log(fields);
 				data.name = fields.get('name', data.name);
 				data.version = fields.get('version', data.version);
 				data.submodule = fields.get('submodule', data.submodule);
-				return;
+			}, ['project', 'comment']));
+
+			this.parser.addParser(new xm.LineParser('project', 'projectUrl', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
+				console.log(fields);
+				data.projectUrl = fields.get('url', data.projectUrl);
 			}, ['comment']));
 
-			parser.addParser(new xm.LineParser('comment', 'comment', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
+			this.parser.addParser(new xm.LineParser('comment', 'comment', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
 				console.log(fields);
 			}, ['comment']));
 
@@ -223,119 +238,9 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 				console.log(parser.getName());
 				console.log(match);
 			}));*/
-			console.log(parser.getInfo());
+			console.log(this.parser.getInfo());
 
-			parser.parse(source, ['head']);
-
-			return data;
-		}
-	}
-
-	export class HeaderParserOri {
-		//[<\[\{\(]? [\)\}\]>]?
-
-		nameVersion = /^[ \t]*\/\/\/?[ \t]*Type definitions[ \t]*for?:?[ \t]+([\w\._ -]+)[ \t]+(\d+\.\d+\.?\d*\.?\d*)[ \t]*[<\[\{\(]?([\w \t_-]+)*[\)\}\]>]?[ \t]*$/gm;
-		labelUrl = /^[ \t]*\/\/\/?[ \t]*([\w _-]+):?[ \t]+[<\[\{\(]?(http[\S]*)[ \t]*$/gm;
-		authorNameUrl = /^[ \t]*\/\/\/?[ \t]*Definitions[ \t\w]+:[ \t]+([\w \t]+[\w]+)[ \t]*[<\[\{\(]?(http[\w:\/\\\._-]+)[\)\}\]>]?[ \t]*$/gm;
-		description = /^[ \t]*\/\/\/?[ \t]*Description[ \t]*:[ \t]+([\S *]*\S)[ \t]*$/gm;
-		referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
-		endSlash = /\/?$/;
-
-		cursor = 0;
-
-		constructor() {
-
-		}
-
-		reset() {
-			this.cursor = 0;
-		}
-
-		moveCursor(index) {
-			this.cursor += index;
-			this.applyCursor();
-		}
-
-		setCursor(index) {
-			this.cursor = index;
-			this.applyCursor();
-		}
-
-		applyCursor() {
-			this.nameVersion.lastIndex = this.cursor;
-			this.labelUrl.lastIndex = this.cursor;
-			this.authorNameUrl.lastIndex = this.cursor;
-			this.description.lastIndex = this.cursor;
-			this.referencePath.lastIndex = this.cursor;
-		}
-
-		parse(data:HeaderData, str:string):HeaderData {
-			//buffers.. do we need it or just voodoo zombie cargo cult mode code?
-			if (typeof str !== 'string') {
-				str = '' + str;
-			}
-
-			var cursor = str.indexOf('//');
-			var len = str.length;
-			if (cursor < 0) {
-				data.errors.push(new ParseError('zero comment lines'));
-				return data;
-			}
-			this.setCursor(cursor);
-
-			var match;
-
-			match = this.nameVersion.exec(str);
-			if (!match || match.length < 3) {
-				data.errors.push(new ParseError('unparsable name/version line'));
-				return data;
-			}
-			else {
-				data.name = match[1];
-				data.version = match[2];
-				data.submodule = match.length >= 3 && match[3] ? match[3] : '';
-
-				this.setCursor(match.index + match[0].length);
-			}
-
-			match = this.labelUrl.exec(str);
-			if (!match || match.length < 2) {
-				data.errors.push(new ParseError('unparsable project line'));
-				return data;
-			}
-			else {
-				data.projectUrl = match[2];
-				this.setCursor(match.index + match[0].length);
-			}
-
-			match = this.authorNameUrl.exec(str);
-			if (!match || match.length < 3) {
-				data.errors.push(new ParseError('unparsable author line'));
-				return data;
-			}
-			else {
-				data.authorName = match[1];
-				data.authorUrl = match[2];
-				this.setCursor(match.index + match[0].length);
-			}
-
-			match = this.labelUrl.exec(str);
-			if (!match || match.length < 3) {
-				data.errors.push(new ParseError('unparsable repos line'));
-				return data;
-			}
-			else {
-				//data.reposName = match[1];
-				data.reposUrl = match[2].replace(this.endSlash, '/');
-				this.setCursor(match.index + match[0].length);
-			}
-
-			this.referencePath.lastIndex = 0;
-			while (match = this.referencePath.exec(str)) {
-				if (match.length > 1) {
-					data.references.push(match[1]);
-				}
-			}
+			this.parser.parse(source, ['head']);
 
 			return data;
 		}
