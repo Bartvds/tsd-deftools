@@ -207,7 +207,8 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 
 			parser.addParser(new xm.LineParser('head', 'headNameVersion', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
 				console.log('extract ' + match.parser.getName());
-				data.name = fields.get('name');
+				console.log(fields);
+				data.name = fields.get('name', data.name);
 				data.version = fields.get('version', data.version);
 				data.submodule = fields.get('submodule', data.submodule);
 				return;

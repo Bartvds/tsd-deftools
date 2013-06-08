@@ -18,11 +18,13 @@ describe('xm.KeyValueMap', () => {
 		before(() => {
 			map = new xm.KeyValueMap();
 		});
+		after(() => {
+			map = null;
+		});
 
 		it('is instanced', () => {
 			assert.ok(map);
 		});
-
 		it('returns undefined for unset data', () => {
 			assert.ok(!map.get(null));
 			assert.ok(!map.get(''));
@@ -35,40 +37,69 @@ describe('xm.KeyValueMap', () => {
 			assert.strictEqual(map.get('xyz', true), true);
 		});
 
-		it('stores data by name', () => {
-			map.set('aa', 'valueA');
-			map.set('bb__bb', 100);
-			assert.strictEqual(map.get('aa'),'valueA');
-			assert.strictEqual(map.get('bb__bb'), 100);
+		describe('with data', () => {
+			it('stores by name', () => {
+				map.set('aa', 'valueA');
+				map.set('bb__bb', 100);
+				assert.strictEqual(map.get('aa'), 'valueA');
+				assert.strictEqual(map.get('bb__bb'), 100);
+			});
+			it('lists correct keys', () => {
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb']);
+			});
+			it('overrides data by name', () => {
+				map.set('aa', 200);
+				assert.strictEqual(map.get('aa'), 200);
+				map.set('aa', 'valueA');
+				assert.strictEqual(map.get('aa'), 'valueA');
+			});
+			it('removes data by name', () => {
+				map.remove('bb__bb');
+				assert.ok(!map.get('bb__bb'));
+				assert.strictEqual(map.get('bb__bb', 123), 123);
+				assert.sameMembers(map.keys(), ['aa']);
+			});
+
+			it('has updated keys after remove', () => {
+				assert.include(map.keys(), 'aa');
+				assert.notInclude(map.keys(), 'bb__bb');
+			});
+			it('returns alt value for removed data', () => {
+				assert.strictEqual(map.get('bb__bb', 123), 123);
+			});
 		});
 
-		it('lists correct keys', () => {
-			var keys = map.keys();
-		  assert.lengthOf(keys, 2);
-			assert.include(keys, 'aa');
-			assert.include(keys, 'bb__bb');
-		});
+		describe('import', () => {
 
-		it('overrides data by name', () => {
-			map.set('aa', 200);
-			assert.strictEqual(map.get('aa'), 200);
-			map.set('aa', 'valueA');
-			assert.strictEqual(map.get('aa'), 'valueA');
-		});
+			var data;
 
-		it('removes data by name', () => {
-			map.remove('bb__bb');
-			assert.ok(!map.get('bb__bb'));
-			assert.strictEqual(map.get('bb__bb', 123), 123);
-		});
+			before(() => {
+				data = {aa: 'valueAAA', 'bb__bb': 321};
+			});
+			after(() => {
+				data = null;
+			});
 
-		it('has updated keys after remove', () => {
-			assert.include(map.keys(), 'aa');
-			assert.notInclude(map.keys(), 'bb__bb');
-		});
+			it('from object', () => {
+				map = new xm.KeyValueMap();
+				map.import(data);
 
-		it('returns alt value for removed data', () => {
-			assert.strictEqual(map.get('bb__bb', 123), 123);
+				assert.strictEqual(map.get('aa'), 'valueAAA');
+				assert.strictEqual(map.get('bb__bb'), 321);
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb']);
+			});
+			it('ignore non-object object', () => {
+				map = new xm.KeyValueMap();
+				map.import(null);
+				assert.lengthOf(map.keys(), 0);
+			});
+			it('constructor param', () => {
+				map = new xm.KeyValueMap(data);
+
+				assert.strictEqual(map.get('aa'), 'valueAAA');
+				assert.strictEqual(map.get('bb__bb'), 321);
+				assert.sameMembers(map.keys(), ['aa', 'bb__bb']);
+			});
 		});
 	});
 });
