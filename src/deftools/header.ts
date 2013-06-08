@@ -5,10 +5,8 @@
 module deftools {
 
 	export class Def {
-		key:string;
 
 		constructor(public project:string, public name:string) {
-			this.key = this.combi();
 		}
 
 		combi():string {
@@ -32,18 +30,18 @@ module deftools {
 	}
 
 	export class HeaderData {
-		name:string = '';
-		version:string = '*';
-		submodule:string = '';
-		description:string = '';
-		projectUrl:string = '';
+		name:string;
+		version:string;
+		submodule:string;
+		description:string;
+		projectUrl:string;
 
-		authorName:string = '';
-		authorUrl:string = '';
-		//reposName:string = '';
-		reposUrl:string = '';
+		authorName:string;
+		authorUrl:string;
+		//reposName:string;
+		reposUrl:string;
 
-		errors:ParseError[] = [];
+		errors:ParseError[];
 		references:string[] = [];
 		dependencies:HeaderData[] = [];
 		source:string = '';
@@ -52,6 +50,25 @@ module deftools {
 			if (!this.def) {
 				//throw Error('null def');
 			}
+			this.reset();
+		}
+
+		reset() {
+			this.name = '';
+			this.version = '*';
+			this.submodule = '';
+			this.description = '';
+			this.projectUrl = '';
+
+			this.authorName = '';
+			this.authorUrl = '';
+			//this.reposName = '';
+			this.reposUrl = '';
+
+			this.errors = [];
+			this.references = [];
+			this.dependencies = [];
+			this.source = '';
 		}
 
 		combi():string {
@@ -119,49 +136,66 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 
 
 		parse(data:HeaderData, source:string):HeaderData {
-			console.log('parse');
-			console.log(data.combi());
+			console.log('parse ', data.combi());
 
-			//define some reusble RegExp parts
+			//shortcut the glue
+			var glue = xm.RegExpGlue.get;
+
+			//define some reusble RegExps
 			var expStart = /^/;
 			var expEnd = /$/;
 			var spaceReq = /[ \t]+/;
 			var spaceOpt = /[ \t]*/;
 			var commentStart = /\/\/+/;
-			var any = /.*/;
-			var anyGreedy = /(.*)/;
-			var anyLazy = /(.*?)/;
+
+			var anyGreedy = /.*/;
+			var anyLazy = /.*?/;
+
+			var anyGreedyCap = /(.*)/;
+			var anyLazyCap = /(.*?)/;
+
+			var identifierCap = /([\w\._-]*(?:[ \t]*[\w\._-]+)*?)/;
+			var versionCap = /v?(\d+\.\d+\.?\d*\.?\d*)?/;
+
 			var headStart = /Type definitions?[ \t]*(?:for)?:?/;
-			var identifier = /([\w\._-]*(?:[ \t]*[\w\._-]+)*?)/;
-			var version = /v?(\d+\.\d+\.?\d*\.?\d*)?/;
+			var projectStart = /Project[ \t]*:?/;
 
-			//grab the glue
-			var glue = xm.RegExpGlue.get;
+			var delimStart = /[<\[\{\(]/;
+			var delimEnd = /[\)\}\]>]/;
+			//http://blog.mattheworiordan.com/post/13174566389/url-regular-expression-for-links-with-or-without-the
+			var urlGroupsCap = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
+			var urlFullCap = /((?:(?:[A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)(?:(?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
 
-			//glue long RegExp from parts
-			var typeHead = glue();
-			typeHead.append(expStart, spaceOpt, commentStart, spaceOpt);
-			typeHead.append(headStart, spaceOpt, identifier);
-			typeHead.append(spaceReq, version, spaceOpt);
-			typeHead.append(any);
-			typeHead.append(expEnd);
+			//glue long RegExp's from parts
+			var commentStart = glue(expStart, spaceOpt, commentStart, spaceOpt).join();
 
-			var comment = glue();
-			comment.append(expStart, spaceOpt);
-			comment.append(commentStart, spaceOpt, anyLazy);
-			comment.append(spaceOpt, expEnd);
+			var commentLine = glue(commentStart)
+			.append(anyLazyCap)
+			.append(spaceOpt, expEnd)
+			.join();
+
+			var typeHead = glue(commentStart)
+			.append(headStart, spaceOpt, identifierCap)
+			.append(spaceReq, versionCap, spaceOpt)
+			.append(anyGreedy, expEnd)
+			.join();
+
+			var projectUrl = glue(commentStart)
+			.append(headStart, spaceOpt, identifierCap)
+			.append(spaceReq, versionCap, spaceOpt)
+			.append(anyGreedy, expEnd)
+			.join();
 
 			//setup parser
 			var parser = new xm.LineParserCore();
 
 			//define reusable matching + extractors
-			//params: id, regexp and value extractor callback
 			//return: a plain object with the values
-			parser.addMatcher(new xm.LineParserMatcher('comment', comment.join(), (match:RegExpExecArray) => {
+			parser.addMatcher(new xm.LineParserMatcher('comment', commentLine, (match:RegExpExecArray) => {
 				if (match.length < 2) return null;
 				return {text:match[1]};
 			}));
-			parser.addMatcher(new xm.LineParserMatcher('headNameVersion', typeHead.join(), (match:RegExpExecArray) => {
+			parser.addMatcher(new xm.LineParserMatcher('headNameVersion', typeHead, (match:RegExpExecArray) => {
 				if (match.length < 3) return null;
 				var ret:any = {};
 				ret.name = match[1],
@@ -170,27 +204,17 @@ Type definitions?[ \t]*(?:for[ \t]*)?:?[ \t]*
 			}));
 
 			//define reusable line parsers
-			//params: id, name of a matcher, callback to apply mater's data, optional list of following parsers
-			parser.addParser(new xm.LineParser('head', 'headNameVersion', (match:RegExpExecArray, parent:xm.LineParserMatch[], parser:xm.LineParser) => {
-				console.log('extract ' + parser.getName());
-				var fields = parser.matcher.extractor(match);
-				console.log(fields);
-				if (!fields) return;
-				data.name = fields.name;
-				if (fields.version){
-					data.version = fields.version;
-				}
-				if (fields.submodule){
-					data.submodule = fields.submodule;
-				}
+
+			parser.addParser(new xm.LineParser('head', 'headNameVersion', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
+				console.log('extract ' + match.parser.getName());
+				data.name = fields.get('name');
+				data.version = fields.get('version', data.version);
+				data.submodule = fields.get('submodule', data.submodule);
 				return;
 			}, ['comment']));
 
-			parser.addParser(new xm.LineParser('comment', 'comment', (match:RegExpExecArray, parent:xm.LineParserMatch[], parser:xm.LineParser) => {
-				console.log('extract ' + parser.getName());
-				var fields = parser.matcher.extractor(match);
+			parser.addParser(new xm.LineParser('comment', 'comment', (fields:xm.IKeyValueMap, match:xm.LineParserMatch) => {
 				console.log(fields);
-				if (!fields) return;
 			}, ['comment']));
 
 			/*parser.addParser(new xm.LineParser('any', 'line', (match:RegExpExecArray, parent:xm.LineParserMatch[], parser:xm.LineParser) => {

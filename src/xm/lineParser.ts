@@ -1,4 +1,5 @@
 ///<reference path="../_ref.ts" />
+///<reference path="keyValue.ts" />
 
 module xm {
 
@@ -11,12 +12,13 @@ module xm {
 	export interface LineParserMap {
 		[name: string]:LineParser;
 	}
+
 	export class LineParserCore {
 
 		matchers:LineParserMatcherMap = {};
 		parsers:LineParserMap = {};
 
-		//works nicely but will keep matching empty strings at final line so guard and compare index + length
+		//works nicely but will keep matching empty strings at final line, so guard and compare index + length
 		trimmedLine = /([ \t]*)(.*?)([ \t]*)(\r\n|\n|\r|$)/g;
 
 		constructor() {
@@ -204,15 +206,16 @@ module xm {
 			console.log('res ' + res.length);
 			if (res.length > 0) {
 				_.each(res, (match:LineParserMatch) => {
-					match.extract(null);
+					match.extract();
 				});
 			}
 		}
 	}
 
 	export class LineParserMatcher {
-		constructor(public type:string, public exp:RegExp, public extractor:(match:RegExpExecArray) => any) {
 
+		//params: type, regexp, value extractor callback
+		constructor(public type:string, public exp:RegExp, public extractor:(match:RegExpExecArray) => IKeyValueMap) {
 		}
 
 		execute(str:string, offset:number, limit:number):RegExpExecArray {
@@ -220,7 +223,7 @@ module xm {
 			return this.exp.exec(str);
 		}
 
-		getName() {
+		getName():string {
 			return this.type + ' ' + this.exp;
 		}
 	}
@@ -229,8 +232,8 @@ module xm {
 		matcher:LineParserMatcher;
 		next:LineParser[] = [];
 
-		constructor(public id:string, public type:string, public callback:(match:RegExpExecArray, parent:LineParserMatch[], parser:LineParser) => void, public nextIds:string[] = []) {
-
+		//params: id, name of a matcher, callback to apply mater's data, optional list of following parsers
+		constructor(public id:string, public type:string, public callback:(fields:IKeyValueMap, match:LineParserMatch) => void, public nextIds:string[] = []) {
 		}
 
 		match(str:string, offset:number, limit:number):LineParserMatch {
@@ -244,21 +247,22 @@ module xm {
 			return new LineParserMatch(this, match);
 		}
 
-		getName() {
+		getName():string {
 			return this.id + '/' + (this.matcher ? this.matcher.getName() : this.type + '/unlinked');
 		}
 	}
-
+	//single match
 	export class LineParserMatch {
+
 		constructor(public parser:LineParser, public match:RegExpExecArray) {
-
 		}
 
-		extract(parent:LineParserMatch[]) {
-			return this.parser.callback(this.match, parent, this.parser);
+		extract():void {
+			//hoop hoop!
+			this.parser.callback(new KeyValueMap(this.parser.matcher.extractor(this.match)), this);
 		}
 
-		getName() {
+		getName():string {
 			return this.parser.getName();
 		}
 	}
