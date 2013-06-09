@@ -4,14 +4,14 @@
 declare var assert:chai.Assert;
 declare var _:UnderscoreStatic;
 
-describe('chai equality', () => {
+describe('quick tests', () => {
 
 	before(()=>{
 
 	});
 	describe('assert deepEqual', () => {
 		it('yo?', () => {
-			assert.deepEqual([1,2,3], [1,2,3], 'yo');
+			assert.deepEqual([1,2,3], [1,2,3], 'yo!');
 		});
 	});
 });

@@ -28,14 +28,14 @@ module deftools {
 
 	var identifierCap = /([\w\._-]*(?:[ \t]*[\w\._-]+)*?)/;
 	var versionCap = /v?(\d+\.\d+\.?\d*\.?\d*)?/;
+	var wordsCap = /([\w \t_-]+[\w]+)/;
+	var labelCap = /([\w_-]+[\w]+)/;
 
 	var delimStart = /[<\[\{\(]/;
 	var delimStartOpt = /[<\[\{\(]?/;
 	var delimEnd = /[\)\}\]>]/;
 	var delimEndOpt = /[\)\}\]>]?/;
 
-	var wordsCap = /([\w \t_-]+[\w]+)/;
-	var labelCap = /([\w_-]+[\w]+)/;
 
 	//http://blog.mattheworiordan.com/post/13174566389/url-regular-expression-for-links-with-or-without-the
 	var urlGroupsCap = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
@@ -53,7 +53,7 @@ module deftools {
 	.join();
 
 	var typeHead = glue(commentStart)
-	.append(/Type definitions?[ \t]*(?:for)?:?/, spaceOpt, identifierCap)
+	.append(/Type definitions?[ \t]*(?:for)?:?/, spaceOpt, wordsCap)
 	.append(spaceReq, versionCap, spaceOpt)
 	.append(anyGreedy, expEnd)
 	.join('i');
@@ -110,14 +110,14 @@ module deftools {
 		}
 
 		parse(data:HeaderData, source:string):HeaderData {
-			console.log('parse ', data.combi());
+			console.log('parse: ', data.combi());
 
 			data.resetFields();
 
 			//setup parser
 			this.parser = new xm.LineParserCore();
 
-			var header = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt', 'comment'];
+			var header = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt'];
 
 			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(header, ['any'])));
 
@@ -144,11 +144,11 @@ module deftools {
 				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
 			}, header));
 
-			this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
+			//this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
 
 			console.log(this.parser.getInfo());
 
-			this.parser.parse(source, ['head', 'any']);
+			this.parser.parse(source, ['head']);
 
 			return data;
 		}

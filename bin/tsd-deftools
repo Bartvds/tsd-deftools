@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require(__dirname + "/../build/deftools-cli.js");
+require(__dirname + "/../build/deftools.js");

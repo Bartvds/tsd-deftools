@@ -17,19 +17,20 @@ module deftools {
 	var api:API = new API(info, repos);
 
 	console.log('devdev');
-	console.log(paths);
+	console.log(util.inspect(paths));
 
 	var loader = new ListLoader(repos);
-	loader.loadRepoProjectDefs('mocha', (err, defs:Def[]) => {
-		if (err || !defs) return;
+	loader.loadRepoProjectDefs('angularjs', (err, defs:Def[]) => {
+		if (err) return console.log(err);
+		if (!defs) return console.log('parseDefinitions no res');
 		console.log(defs);
 
 		var importer = new DefinitionImporter(repos);
 		importer.parseDefinitions(defs, (err?, res?:ImportResult) => {
-			if (err || !res) return;
+			if (err) return console.log(err);
+			if (!res) return console.log('parseDefinitions no res');
 			console.log(util.inspect(res, false, 10));
 
-		})
+		});
 	});
-
 }

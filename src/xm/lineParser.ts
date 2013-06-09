@@ -70,7 +70,8 @@ module xm {
 		}
 
 		parse(source:string, asType?:string[]) {
-			console.log('source.length ' + source.length);
+			console.log('source.length: ' + source.length);
+			console.log('asType: ' + asType);
 			//link all
 			this.link();
 
@@ -86,7 +87,7 @@ module xm {
 			var procLineCount = 0;
 
 			var verbose = true;
-			var safetyBreak = 100;
+			var safetyBreak = 10000;
 
 			this.trimmedLine.lastIndex = 0;
 			while (line = this.trimmedLine.exec(source)) {
@@ -177,6 +178,7 @@ module xm {
 					break;
 				}
 			}
+			if (verbose) console.log('--------------');
 
 			console.log('total lineCount ' + lineCount);
 			console.log('procLineCount ' + procLineCount);

@@ -2,47 +2,56 @@
 
 > developer tools to process TypeScript definitions and bulk edit [tsd](https://github.com/Diullei/tsd) and [DefinitelyTyped](https://github.com/borisyankov/DefinitelyTyped)
 
-crude, not for general consumption unless you know what you're doing
 
 ## Functionality
 
-- compare the definitions and tsd repo_data
-- list DefinitelyTyped definitions and parse standard header format
-- list tsd repo_data
-- generate tsd repo data from definition lists
 
-Basic commands are beings exposed to cli (work in progress), others maybe be functional but involve editing of a script.
+- list tsd repo_data content
+- list DefinitelyTyped definition projects and files
+- compare the DefinitelyTyped and tsd repo_data contents
+- parse and validate DefinitelyTyped header format
+- generate tsd repo data from definition lists
+- .. other data processing tasks
+
+Basic commands are exposed as cli, rest will be exported as .js module or referable .ts
+
+Not for general consumption unless you know what you're doing
 
 ## How
 
-Checkout repos
-
-Edit `./tsd-deftools-path.json` to have `tsd` and `DefinitelyTyped` pointing to root folder of their work checkouts.
-
-Note: the contents of the folders configured as `out` and `tmp` can/will be automatically overwritten or removed.
-
-Open commandline in the checkout.
-
-Get dependencies
+- Checkout this repos
+- Open commandline in the checkout
+- Edit `./tsd-deftools-path.json` to have `tsd` and `typings` pointing to the root folder of their processing checkouts. 
+- __Note__: the contents of the folders configured as `out` and `tmp` can/will be automatically overwritten or removed.
+- Get dependencies
 ````
 npm install
 ````
 
-Basic cli use
+- Use cli to run preset commands
 ````
-node build/deftools-cli //default (for now latest under-development probably (so lazy :)
-node build/deftools-cli help //view commands
-node build/deftools-cli <command> //command
+node . //default (for now latest under-development probably (so lazy :)
+node . help //view commands
+node . <command> //execute command
 ````
 
-To recompile edited code
+- Or reference TypeScript code `./src/..` (experimental)
+- Or require() the module `./build/deftools.js`  (experimental) 
+
+- For tests and rebuild you need grunt-cli
 ````
-//have grunt-cli global
 npm install grunt-cli -g
 ````
 
-Rebuild
+- Rebuild
 ````
-grunt build //build only
-grunt dev //build and run default command
+grunt
 ````
+
+- Run tests
+````
+grunt test
+````
+
+## Licence
+MIT

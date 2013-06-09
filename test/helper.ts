@@ -8,8 +8,8 @@ module helper {
 	var util = require('util');
 	var async:Async = require('async');
 
-	export function readJSON(...src:string[]):any {
-		return JSON.parse(fs.readFileSync(path.join.apply(path, src), 'utf8'));
+	export function readJSON(src:string):any {
+		return JSON.parse(fs.readFileSync(src, 'utf8'));
 	}
 
 	export function loadJSON(src:string, callback:(err, res:any) => void) {

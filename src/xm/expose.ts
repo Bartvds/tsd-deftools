@@ -2,24 +2,40 @@
 
 module xm {
 
-	//var async:Async = require('async');
 	var _:UnderscoreStatic = require('underscore');
 
 	export class Expose {
 
-		_commands:any = {};
+		private _commands:any = {};
 
 		constructor() {
 			this.add('help', () => {
 				console.log('available commands:');
-				_(this._commands).keys().sort().forEach((value) => {
-					console.log('  - ' + value);
+				_.keys(this._commands).sort().forEach((value) => {
+					console.log('  ' + value);
 				});
 			});
 			this.map('h', 'help');
 		}
 
-		execute(id:string, head:bool = true) {
+		executeArgv(argv:any, alt?:string) {
+			if (!argv || argv._.length == 0) {
+				if (alt && this.has(alt)) {
+					this.execute(alt);
+				}
+				this.execute('help');
+			}
+			else {
+				if (this.has(argv._[0])) {
+					this.execute(argv._[0], argv);
+				}
+				else {
+					console.log('command not found: '+argv._[0]);
+					this.execute('help');
+				}
+			}
+		}
+		execute(id:string, args:any=null, head:bool = true) {
 			if (!this._commands.hasOwnProperty(id)) {
 				console.log('-> unknown command ' + id);
 				return;
@@ -28,10 +44,10 @@ module xm {
 				console.log('-> ' + id);
 			}
 			var f = this._commands[id];
-			f.call(null);
+			f.call(null, args);
 		}
 
-		add(id:string, def:Function) {
+		add(id:string, def:(args:any) => void) {
 			if (this._commands.hasOwnProperty(id)) {
 				throw new Error('id collision on ' + id);
 			}

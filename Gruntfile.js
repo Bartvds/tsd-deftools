@@ -17,11 +17,8 @@ module.exports = function (grunt) {
 			test: ['test/_tmp.*']
 		},
 		execute: {
-			cli: {
-				src: ['build/deftools-cli.js']
-			},
 			mod: {
-				src: ['build/deftools-module.js']
+				src: ['build/deftools.js']
 			},
 			defdev: {
 				src: ['build/defdev.js']
@@ -35,13 +32,9 @@ module.exports = function (grunt) {
 				declaration: false,
 				sourcemap: false
 			},
-			cli: {
-				src: ['src/deftools-cli.ts'],
-				dest: 'build/deftools-cli.js'
-			},
 			mod: {
-				src: ['src/deftools-module.ts'],
-				dest: 'build/deftools-module.js'
+				src: ['src/deftools.ts'],
+				dest: 'build/deftools.js'
 			},
 			defdev: {
 				src: ['src/defdev.ts'],
@@ -74,13 +67,13 @@ module.exports = function (grunt) {
 	});
 
 	grunt.registerTask('default', ['build']);
-	grunt.registerTask('build', ['clean', 'typescript:cli']); //, 'typescript:mod'
+	grunt.registerTask('build', ['clean', 'typescript:mod']); //, 'typescript:mod'
 
-	grunt.registerTask('test', ['clean', 'typescript:test_all', 'mochaTest:any']);
+	grunt.registerTask('test', ['build', 'typescript:test_all', 'mochaTest:any']);
 
-	grunt.registerTask('dev', ['clean', 'typescript:test_api', 'mochaTest:any']);
+	grunt.registerTask('dev', ['typescript:defdev', 'execute:defdev']);
 
-	grunt.registerTask('edit_01', ['typescript:defdev', 'execute:defdev']);
+	grunt.registerTask('edit_01', ['clean', 'typescript:test_api', 'mochaTest:any']);
 	grunt.registerTask('edit_02', ['clean:test', 'typescript:test_chai', 'mochaTest:any']);
 
 };

@@ -29,7 +29,7 @@
 			"url": "https://github.com/Bartvds/tsd-deftools/blob/master/LICENSE-MIT"
 		}
 	],
-	"main": "build/deftools-module",
+	"main": "build/deftools",
 	"bin": {
 		"deftools": "./bin/deftools"
 	},

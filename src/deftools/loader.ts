@@ -30,11 +30,11 @@ module deftools {
 			//console.log('-> project: ' + project);
 
 			fs.exists(src, (exists) => {
-				if (!exists) return finish('not exists', ret);
+				if (!exists) return finish(new Error('loadRepoProjectDefs not exists ' + src), ret);
 
 				fs.stat(src, (err, stats) => {
 					if (err) return finish(err, ret);
-					if (!stats.isDirectory()) return finish('not directory', ret);
+					if (!stats.isDirectory()) return finish(new Error('loadRepoProjectDefs not directory ' + src), ret);
 
 					fs.readdir(src, (err, files:string[]) => {
 						if (err) return finish(err, ret);
@@ -75,14 +75,20 @@ module deftools {
 					if (ignoreFile.test(file)) {
 						return callback(null, memo);
 					}
-					self.loadRepoProjectDefs(file, (err, res:Def[]) => {
-						if (err) return callback(err);
-						if (!res) return callback('no res for ' + file);
+					var src = path.join(self.repos.defs, file);
+					fs.stat(src, (err, stats) => {
+						if (err) return callback(err, memo);
+						if (!stats.isDirectory()) return callback(null, memo);
 
-						_.each(res, (def:Def) => {
-							memo.push(def);
+						self.loadRepoProjectDefs(src, (err, res:Def[]) => {
+							if (err) return callback(err);
+							if (!res) return callback(new Error('loadRepoProjectDefs returns no res for ' + src));
+
+							_.each(res, (def:Def) => {
+								memo.push(def);
+							});
+							callback(null, memo);
 						});
-						callback(null, memo);
 					});
 
 				}, (err, memo) => {
@@ -93,7 +99,7 @@ module deftools {
 
 		loadTsdNames(finish:(err, res:string[]) => void) {
 			var self:ListLoader = this;
-			fs.readdir(self.repos.tsd + 'repo_data', (err, files:string[]) => {
+			fs.readdir(path.join(self.repos.tsd, 'repo_data'), (err, files:string[]) => {
 				if (err) return finish(err, []);
 
 				finish(null, _(files).filter((value) => {
