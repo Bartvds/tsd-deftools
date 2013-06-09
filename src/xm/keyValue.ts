@@ -8,7 +8,7 @@ module xm {
 		set (key:string, value:any);
 		remove (key:string);
 		keys ():string[];
-		values ():any[];
+		values (allow?:string[]):any[];
 		import (data:any, keys?:string[]):void;
 		export (keys?:string[]):any;
 		clear (keep?:string[]);

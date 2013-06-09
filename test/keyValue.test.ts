@@ -52,6 +52,9 @@ describe('xm.KeyValueMap', () => {
 			it('lists correct values', () => {
 				assert.deepEqual(map.values(), [<any>'valueA', 100, [1,2,3]]);
 			});
+			it('lists correct filtered values', () => {
+				assert.deepEqual(map.values(['bb__bb', 'cc']), [<any>100, [1,2,3]]);
+			});
 			it('overrides data by name', () => {
 				map.set('aa', 200);
 				assert.strictEqual(map.get('aa'), 200);
