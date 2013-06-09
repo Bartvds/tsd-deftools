@@ -19,7 +19,7 @@ module deftools {
 		constructor(public repos:Repos) {
 
 		}
-		 
+
 		loadRepoProjectDefs(project:string, finish:(err, res:Def[]) => void) {
 			project = path.basename(project);
 
@@ -27,7 +27,7 @@ module deftools {
 			var self:ListLoader = this;
 			var src = path.join(self.repos.defs, project);
 
-			console.log('-> project: ' + project);
+			//console.log('-> project: ' + project);
 
 			fs.exists(src, (exists) => {
 				if (!exists) return finish('not exists', ret);
@@ -54,7 +54,7 @@ module deftools {
 								if (err) return callback(err);
 								if (stats.isDirectory()) return callback(null);
 
-								console.log('-> ' + name);
+								//console.log('-> def ' + name);
 								ret.push(new Def(project, name.replace(extDef, '')));
 								callback(null);
 							});
