@@ -5,7 +5,6 @@
 
 ## Functionality
 
-
 - list tsd repo_data content
 - list DefinitelyTyped definition projects and files
 - compare the DefinitelyTyped and tsd repo_data contents

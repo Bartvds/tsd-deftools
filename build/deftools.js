@@ -556,7 +556,9 @@ var xm;
     var _ = require('underscore');
     var util = require('util');
     var LineParserCore = (function () {
-        function LineParserCore() {
+        function LineParserCore(verbose) {
+            if (typeof verbose === "undefined") { verbose = false; }
+            this.verbose = verbose;
             this.parsers = new xm.KeyValueMap();
             this.trimmedLine = /([ \t]*)(.*?)([ \t]*)(\r\n|\n|\r|$)/g;
         }
@@ -606,8 +608,20 @@ var xm;
             }, []);
         };
         LineParserCore.prototype.parse = function (source, asType) {
-            console.log('source.length: ' + source.length);
-            console.log('asType: ' + asType);
+            var log = this.verbose ? function () {
+                var rest = [];
+                for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                    rest[_i] = arguments[_i + 0];
+                }
+                console.log.apply(console, rest);
+            } : function () {
+                var rest = [];
+                for (var _i = 0; _i < (arguments.length - 0); _i++) {
+                    rest[_i] = arguments[_i + 0];
+                }
+            };
+            log('source.length: ' + source.length);
+            log('asType: ' + asType);
             this.link();
             var res = [];
             var possibles = asType ? this.get(asType) : this.all();
@@ -618,21 +632,16 @@ var xm;
             var cursor = 0;
             var lineCount = 0;
             var procLineCount = 0;
-            var verbose = true;
             var safetyBreak = 10000;
             this.trimmedLine.lastIndex = 0;
             while(line = this.trimmedLine.exec(source)) {
-                if(verbose) {
-                    console.log('-----------------------------------------------------------------------------------------');
-                }
+                log('-----------------------------------------------------------------------------------------');
                 cursor = line.index + line[0].length;
                 if(cursor >= length) {
                     break;
                 }
                 lineCount++;
-                if(verbose) {
-                    console.log('line: ' + lineCount);
-                }
+                log('line: ' + lineCount);
                 this.trimmedLine.lastIndex = cursor;
                 if(lineCount > safetyBreak) {
                     console.log('\n\n\n\nsafetyBreak bail at ' + lineCount + '> ' + safetyBreak + '!\n\n\n\n\n');
@@ -640,68 +649,52 @@ var xm;
                     break;
                 }
                 if(line.length < 5) {
-                    if(verbose) {
-                        console.log('skip bad line match');
-                    }
+                    log('skip bad line match');
                     continue;
                 }
                 if(typeof line[2] === 'undefined' || line[2] == '') {
-                    if(verbose) {
-                        console.log('skip empty line');
-                    }
+                    log('skip empty line');
                     continue;
                 }
                 procLineCount++;
                 var text = line[2];
-                if(verbose) {
-                    console.log('[[' + text + ']]');
-                }
+                log('[[' + text + ']]');
                 var choice = _.reduce(possibles, function (memo, parser) {
-                    if(verbose) {
-                        console.log('---');
-                    }
-                    if(verbose) {
-                        console.log(parser.getName());
-                    }
+                    log('---');
+                    log(parser.getName());
                     var res = parser.match(text, offset, cursor);
                     if(res) {
-                        if(verbose) {
-                            console.log('-> match!');
-                        }
+                        log('-> match!');
                         memo.push(res);
                     }
                     return memo;
                 }, []);
-                if(verbose) {
-                    console.log('---');
-                }
-                console.log('choices ' + choice.length);
+                log('---');
+                log('choices ' + choice.length);
                 if(choice.length == 0) {
                     possibles = [];
                 } else if(choice.length == 1) {
-                    console.log('single match line');
-                    console.log(choice[0].parser.id);
+                    log('single match line');
+                    log(choice[0].parser.id);
                     res.push(choice[0]);
                     possibles = choice[0].parser.next;
-                    console.log('switching possibles [' + this.listIds(possibles) + ']');
+                    log('switching possibles: [' + this.listIds(possibles) + ']');
                 } else {
-                    console.log('multi match line');
-                    console.log(choice[0].parser.id);
+                    log('multi match line');
+                    log(choice[0].parser.id);
                     res.push(choice[0]);
                     possibles = choice[0].parser.next;
-                    console.log('switching possibles [' + this.listIds(possibles) + ']');
+                    log('switching possibles: [' + this.listIds(possibles) + ']');
                 }
                 if(possibles.length == 0) {
-                    console.log('no more possibles, break');
+                    log('no more possibles, break');
                     break;
                 }
             }
-            if(verbose) {
-                console.log('--------------');
-            }
-            console.log('total lineCount ' + lineCount);
-            console.log('procLineCount ' + procLineCount);
-            console.log('res ' + res.length);
+            log('--------------');
+            log('total lineCount: ' + lineCount);
+            log('procLineCount: ' + procLineCount);
+            log('res.lengt: ' + res.length);
             if(res.length > 0) {
                 _.each(res, function (match) {
                     match.extract();
@@ -827,10 +820,9 @@ var deftools;
         HeaderParser.prototype.init = function () {
         };
         HeaderParser.prototype.parse = function (data, source) {
-            console.log('parse: ', data.combi());
             data.resetFields();
             this.parser = new xm.LineParserCore();
-            var header = [
+            var fields = [
                 'projectUrl', 
                 'defAuthorUrl', 
                 'reposUrl', 
@@ -838,27 +830,29 @@ var deftools;
             ];
             this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, [
                 'head'
-            ].concat(header, [
+            ].concat(fields, [
                 'any'
             ])));
             this.parser.addParser(new xm.LineParser('head', typeHead, 2, function (match) {
                 data.name = match.getGroup(0, data.name);
                 data.version = match.getGroup(1, data.version);
-            }, header));
+            }, fields));
             this.parser.addParser(new xm.LineParser('projectUrl', projectUrl, 1, function (match) {
                 data.projectUrl = match.getGroup(0, data.projectUrl).replace(endSlashTrim, '');
-            }, header));
+            }, fields));
             this.parser.addParser(new xm.LineParser('defAuthorUrl', defAuthorUrl, 2, function (match) {
                 data.authorName = match.getGroup(0, data.authorName);
                 data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
-            }, header));
+            }, fields));
             this.parser.addParser(new xm.LineParser('reposUrl', reposUrl, 2, function (match) {
                 data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
-            }, header));
+            }, fields));
             this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 2, function (match) {
                 data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
-            }, header));
-            console.log(this.parser.getInfo());
+            }, fields));
+            this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, [
+                'comment'
+            ]));
             this.parser.parse(source, [
                 'head'
             ]);
@@ -1450,7 +1444,7 @@ var xm;
             this._commands = {
             };
             this.add('help', function () {
-                console.log('available commands:');
+                console.log('-> available commands:');
                 _.keys(_this._commands).sort().forEach(function (value) {
                     console.log('  ' + value);
                 });
@@ -1476,11 +1470,11 @@ var xm;
             if (typeof args === "undefined") { args = null; }
             if (typeof head === "undefined") { head = true; }
             if(!this._commands.hasOwnProperty(id)) {
-                console.log('-> unknown command ' + id);
+                console.log('\n-> unknown command ' + id + '\n');
                 return;
             }
             if(head) {
-                console.log('-> ' + id);
+                console.log('\n-> ' + id + '\n');
             }
             var f = this._commands[id];
             f.call(null, args);
@@ -1611,6 +1605,7 @@ var deftools;
         });
         exp.expose = expose;
         if(isMain) {
+            expose.execute('info');
             var argv = require('optimist').argv;
             expose.executeArgv(argv, 'info');
         }

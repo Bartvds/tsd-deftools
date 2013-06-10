@@ -13,7 +13,7 @@ module xm {
 		//works nicely but will keep matching empty strings at final line, so guard and compare index + length
 		trimmedLine = /([ \t]*)(.*?)([ \t]*)(\r\n|\n|\r|$)/g;
 
-		constructor() {
+		constructor(public verbose?:bool = false) {
 
 		}
 
@@ -53,7 +53,7 @@ module xm {
 					console.log('missing parser ' + id);
 					return memo;
 				}
-				memo.push( self.parsers.get(id));
+				memo.push(self.parsers.get(id));
 				return memo;
 			}, []);
 		}
@@ -70,8 +70,15 @@ module xm {
 		}
 
 		parse(source:string, asType?:string[]) {
-			console.log('source.length: ' + source.length);
-			console.log('asType: ' + asType);
+
+			var log = this.verbose ? (...rest:any[]) => {
+				console.log.apply(console, rest);
+			} : (...rest:any[]) => {
+				//ignore
+			};
+
+			log('source.length: ' + source.length);
+			log('asType: ' + asType);
 			//link all
 			this.link();
 
@@ -86,12 +93,11 @@ module xm {
 			var lineCount = 0;
 			var procLineCount = 0;
 
-			var verbose = true;
 			var safetyBreak = 10000;
 
 			this.trimmedLine.lastIndex = 0;
 			while (line = this.trimmedLine.exec(source)) {
-				if (verbose) console.log('-----------------------------------------------------------------------------------------');
+				log('-----------------------------------------------------------------------------------------');
 				cursor = line.index + line[0].length;
 
 				if (cursor >= length) {
@@ -99,7 +105,7 @@ module xm {
 					break;
 				}
 				lineCount++;
-				if (verbose) console.log('line: ' + lineCount);
+				log('line: ' + lineCount);
 				/*
 				console.log('line:');
 				console.log(line);
@@ -117,25 +123,25 @@ module xm {
 				}
 
 				if (line.length < 5) {
-					if (verbose) console.log('skip bad line match');
+					log('skip bad line match');
 					continue;
 				}
 				if (typeof line[2] === 'undefined' || line[2] == '') {
-					if (verbose) console.log('skip empty line');
+					log('skip empty line');
 					continue;
 				}
 				procLineCount++;
 
 				var text = line[2];
-				if (verbose) console.log('[[' + text + ']]');
+				log('[[' + text + ']]');
 
 				var choice:LineParserMatch[] = _.reduce(possibles, (memo:LineParserMatch[], parser:LineParser) => {
-					if (verbose) console.log('---');
-					if (verbose) console.log(parser.getName());
+					log('---');
+					log(parser.getName());
 
 					var res = parser.match(text, offset, cursor);
 					if (res) {
-						if (verbose) console.log('-> match!');
+						log('-> match!');
 						//console.log(res);
 						memo.push(res);
 
@@ -144,46 +150,47 @@ module xm {
 					return memo;
 				}, []);
 
-				if (verbose) console.log('---');
+				log('---');
 
-				console.log('choices ' + choice.length);
+				log('choices ' + choice.length);
 
 				if (choice.length == 0) {
 					//console.log('cannot match line');
 					possibles = [];
 				}
 				else if (choice.length == 1) {
-					console.log('single match line');
-					console.log(choice[0].parser.id);
+					log('single match line');
+					log(choice[0].parser.id);
 					//console.log(choice[0].match);
 
 					res.push(choice[0]);
 					possibles = choice[0].parser.next;
-					console.log('switching possibles [' + this.listIds(possibles) + ']');
+					log('switching possibles: [' + this.listIds(possibles) + ']');
 				}
 				else {
-					console.log('multi match line');
-					console.log(choice[0].parser.id);
+					log('multi match line');
+					log(choice[0].parser.id);
 					//console.log(choice[0].match);
 					//TODO pick one!
 
 					//why not first?
 					res.push(choice[0]);
 					possibles = choice[0].parser.next;
-					console.log('switching possibles [' + this.listIds(possibles) + ']');
+					log('switching possibles: [' + this.listIds(possibles) + ']');
 				}
 
 				if (possibles.length == 0) {
-					console.log('no more possibles, break');
+					log('no more possibles, break');
 					break;
 				}
 			}
-			if (verbose) console.log('--------------');
+			log('--------------');
 
-			console.log('total lineCount ' + lineCount);
-			console.log('procLineCount ' + procLineCount);
+			log('total lineCount: ' + lineCount);
+			log('procLineCount: ' + procLineCount);
 			//console.log(util.inspect(res, false, 10));
-			console.log('res ' + res.length);
+			log('res.lengt: ' + res.length);
+
 			if (res.length > 0) {
 				_.each(res, (match:LineParserMatch) => {
 					match.extract();

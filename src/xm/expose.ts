@@ -10,7 +10,7 @@ module xm {
 
 		constructor() {
 			this.add('help', () => {
-				console.log('available commands:');
+				console.log('-> available commands:');
 				_.keys(this._commands).sort().forEach((value) => {
 					console.log('  ' + value);
 				});
@@ -37,11 +37,11 @@ module xm {
 		}
 		execute(id:string, args:any=null, head:bool = true) {
 			if (!this._commands.hasOwnProperty(id)) {
-				console.log('-> unknown command ' + id);
+				console.log('\n-> unknown command ' + id + '\n');
 				return;
 			}
 			if (head) {
-				console.log('-> ' + id);
+				console.log('\n-> ' + id+ '\n');
 			}
 			var f = this._commands[id];
 			f.call(null, args);

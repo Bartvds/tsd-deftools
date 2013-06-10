@@ -80,6 +80,7 @@ module deftools {
 				//console.log('error: ' + util.inspect(res.error, false, 8));
 				//console.log('hasDependency():\n' + util.inspect(res.hasDependency(), false, 8));
 				//console.log('isDependency():\n' + util.inspect(res.isDependency(), false, 8));
+
 				console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 5));
 				console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 5));
 				//console.log('dupeCheck():\n' + util.inspect(res.dupeCheck(), false, 8));
@@ -120,6 +121,7 @@ module deftools {
 
 		//run command
 		if (isMain) {
+			expose.execute('info');
 			var argv = require('optimist').argv;
 			//run it
 			expose.executeArgv(argv, 'info');

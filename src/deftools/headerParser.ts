@@ -110,43 +110,43 @@ module deftools {
 		}
 
 		parse(data:HeaderData, source:string):HeaderData {
-			console.log('parse: ', data.combi());
+			//console.log('parse: ', data.combi());
 
 			data.resetFields();
 
 			//setup parser
 			this.parser = new xm.LineParserCore();
 
-			var header = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt'];
+			var fields = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt'];
 
-			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(header, ['any'])));
+			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(fields, ['any'])));
 
 			this.parser.addParser(new xm.LineParser('head', typeHead, 2, (match:xm.LineParserMatch) => {
 				data.name = match.getGroup(0, data.name);
 				data.version = match.getGroup(1, data.version);
 				//data.submodule = match.getGroup(2, data.submodule);
-			}, header));
+			}, fields));
 
 			this.parser.addParser(new xm.LineParser('projectUrl', projectUrl, 1, (match:xm.LineParserMatch) => {
 				data.projectUrl = match.getGroup(0, data.projectUrl).replace(endSlashTrim, '');
-			}, header));
+			}, fields));
 
 			this.parser.addParser(new xm.LineParser('defAuthorUrl', defAuthorUrl, 2, (match:xm.LineParserMatch) => {
 				data.authorName = match.getGroup(0, data.authorName);
 				data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
-			}, header));
+			}, fields));
 
 			this.parser.addParser(new xm.LineParser('reposUrl', reposUrl, 2, (match:xm.LineParserMatch) => {
 				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
-			}, header));
+			}, fields));
 
 			this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 2, (match:xm.LineParserMatch) => {
 				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
-			}, header));
+			}, fields));
 
-			//this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
+			this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
 
-			console.log(this.parser.getInfo());
+			//console.log(this.parser.getInfo());
 
 			this.parser.parse(source, ['head']);
 
