@@ -12,13 +12,8 @@
 		"url": "grit://github.com/Bartvds/tsd-deftools.git"
 	},
 	"keywords": [
-		"gruntplugin",
-		"execute",
-		"code",
-		"node",
-		"scripts",
-		"spawn",
-		"exec"
+		"typescript",
+		"tsd"
 	],
 	"bugs": {
 		"url": "https://github.com/Bartvds/tsd-deftools/issues"
