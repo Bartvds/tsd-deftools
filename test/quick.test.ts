@@ -6,12 +6,20 @@ declare var _:UnderscoreStatic;
 
 describe('quick tests', () => {
 
-	before(()=>{
+	before(()=> {
 
 	});
+
+	it('wait a bit', (done:() => void) => {
+		setTimeout(()=> {
+			assert.ok(1);
+			done();
+		}, 100);
+	});
+
 	describe('assert deepEqual', () => {
 		it('yo?', () => {
-			assert.deepEqual([1,2,3], [1,2,3], 'yo!');
+			assert.deepEqual([1, 2, 3], [1, 2, 3], 'yo!');
 		});
 	});
 });

@@ -218,9 +218,7 @@ describe('deftools', () => {
 					});
 
 					describe('loop', () => {
-						console.log('described ');
 						before(() => {
-
 							_.each(data, (value:helper.HeaderAssert) => {
 								console.log('-> looped ' + value.combi());
 
