@@ -88,8 +88,6 @@ module deftools {
 			var ret = {
 				"name": header.def.name,
 				"description": header.name + (header.submodule ? ' (' + header.submodule + ')' : '') + (header.submodule ? ' ' + header.submodule : ''),
-				"generated": <any> this.info.getNameVersion() + ' @ ' + new Date().toUTCString(),
-				"valid": header.isValid(),
 				"versions": [
 					{
 						"version": header.version,
@@ -105,7 +103,12 @@ module deftools {
 						"author": header.authorName,
 						"author_url": header.authorUrl
 					}
-				]
+				],
+				"generator" : {
+					"name": this.info.getNameVersion(),
+					"date": new Date().toUTCString(),
+					"valid": header.isValid()
+				}
 			};
 			return ret;
 		}
