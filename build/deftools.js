@@ -1488,7 +1488,7 @@ var xm;
             if(this.hint) {
                 var arr = [];
                 _.forEach(this.hint, function (label, id) {
-                    arr.push('     --' + id + ' (' + label + ')');
+                    arr.push('     --' + id + ' ' + label + '');
                 });
                 if(arr.length > 0) {
                     ret += '\n' + arr.join('\n');
@@ -1577,12 +1577,12 @@ var deftools;
             if(ref) {
                 ref = path.resolve(process.cwd(), ref);
                 fs.writeFileSync(ref, JSON.stringify(obj, null, 2));
-                console.log('output written to: ' + ref);
+                console.log('result written as json to: ' + ref);
             }
         };
         var params = {
-            write: 'write to file as json: "--write <path>"',
-            dump: 'dump to console: "--dump"'
+            write: '<path> : write to file as json',
+            dump: ': dump to console'
         };
         var expose = new xm.Expose();
         expose.add('info', function (args) {
@@ -1670,7 +1670,7 @@ var deftools;
                 api.parseAll(reportParseStat);
             }
         }, 'parse repo typing headers', _.defaults({
-            project: 'project name: "--project angular"'
+            project: '<project> : project selector'
         }, params));
         expose.add('updateTsd', function (args) {
             var options = {
@@ -1697,8 +1697,8 @@ var deftools;
                 console.log('   created: ' + res.exportResult.created.length);
             });
         }, 'recreate TDS data from parsed repo content', _.defaults({
-            parse: 'parse selector: "--parse [all | new]"',
-            export: 'export selector: "--export [parsed | all | error | all]"'
+            parse: '[all | new] : parse selector',
+            export: '[parsed | all | error] : export selector'
         }, params));
         exp.expose = expose;
         if(isMain) {

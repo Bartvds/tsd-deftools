@@ -18,7 +18,7 @@ module xm {
 			if (this.hint) {
 				var arr = [];
 				_.forEach(this.hint, (label, id) => {
-					arr.push('     --' + id + ' (' + label + ')');
+					arr.push('     --' + id + ' ' + label + '');
 				});
 				if (arr.length > 0) {
 					ret += '\n' + arr.join('\n');
