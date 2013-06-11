@@ -257,6 +257,12 @@ var deftools;
     var fs = require('fs');
     var path = require('path');
     var util = require('util');
+    var trailSlash = /(\w)(\/?)$/;
+    var ConfPaths = (function () {
+        function ConfPaths() { }
+        return ConfPaths;
+    })();
+    deftools.ConfPaths = ConfPaths;    
     (function (Config) {
         function getPaths(src) {
             var paths;
@@ -295,11 +301,62 @@ var deftools;
             } catch (e) {
                 throw (e);
             }
-            return new deftools.ToolInfo(pkg.name, pkg.version, pkg);
+            return new ToolInfo(pkg.name, pkg.version, pkg);
         }
         Config.getInfo = getInfo;
     })(deftools.Config || (deftools.Config = {}));
     var Config = deftools.Config;
+    var ToolInfo = (function () {
+        function ToolInfo(name, version, pkg) {
+            this.name = name;
+            this.version = version;
+            this.pkg = pkg;
+            if(!this.name) {
+                throw Error('no name');
+            }
+            if(!this.version) {
+                throw Error('no version');
+            }
+            if(!this.pkg) {
+                throw Error('no pkg');
+            }
+        }
+        ToolInfo.prototype.getNameVersion = function () {
+            return this.name + ' ' + this.version;
+        };
+        return ToolInfo;
+    })();
+    deftools.ToolInfo = ToolInfo;    
+    var Repos = (function () {
+        function Repos(defs, tsd, out) {
+            this.defs = defs;
+            this.tsd = tsd;
+            this.out = out;
+            if(!this.defs) {
+                throw ('missing local');
+            }
+            if(!this.tsd) {
+                throw ('missing tsd');
+            }
+            if(!this.out) {
+                throw ('missing out');
+            }
+            this.defs = path.resolve(this.defs).replace(trailSlash, '$1/');
+            this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
+            this.out = path.resolve(this.out).replace(trailSlash, '$1/');
+            if(!fs.existsSync(this.defs) || !fs.statSync(this.defs).isDirectory()) {
+                throw new Error('path not exist or not directoy: ' + this.defs);
+            }
+            if(!fs.existsSync(this.tsd) || !fs.statSync(this.tsd).isDirectory()) {
+                throw new Error('path not exist or not directoy: ' + this.tsd);
+            }
+            if(!fs.existsSync(this.out) || !fs.statSync(this.out).isDirectory()) {
+                throw new Error('path not exist or not directoy: ' + this.out);
+            }
+        }
+        return Repos;
+    })();
+    deftools.Repos = Repos;    
 })(deftools || (deftools = {}));
 var deftools;
 (function (deftools) {
@@ -1246,65 +1303,6 @@ var deftools;
 })(deftools || (deftools = {}));
 var deftools;
 (function (deftools) {
-    var path = require('path');
-    var fs = require('fs');
-    var trailSlash = /(\w)(\/?)$/;
-    var ConfPaths = (function () {
-        function ConfPaths() { }
-        return ConfPaths;
-    })();
-    deftools.ConfPaths = ConfPaths;    
-    var ToolInfo = (function () {
-        function ToolInfo(name, version, pkg) {
-            this.name = name;
-            this.version = version;
-            this.pkg = pkg;
-            if(!this.name) {
-                throw Error('no name');
-            }
-            if(!this.version) {
-                throw Error('no version');
-            }
-            if(!this.pkg) {
-                throw Error('no pkg');
-            }
-        }
-        ToolInfo.prototype.getNameVersion = function () {
-            return this.name + ' ' + this.version;
-        };
-        return ToolInfo;
-    })();
-    deftools.ToolInfo = ToolInfo;    
-    var Repos = (function () {
-        function Repos(defs, tsd, out) {
-            this.defs = defs;
-            this.tsd = tsd;
-            this.out = out;
-            if(!this.defs) {
-                throw ('missing local');
-            }
-            if(!this.tsd) {
-                throw ('missing tsd');
-            }
-            if(!this.out) {
-                throw ('missing out');
-            }
-            this.defs = path.resolve(this.defs).replace(trailSlash, '$1/');
-            this.tsd = path.resolve(this.tsd).replace(trailSlash, '$1/');
-            this.out = path.resolve(this.out).replace(trailSlash, '$1/');
-            if(!fs.existsSync(this.defs) || !fs.statSync(this.defs).isDirectory()) {
-                throw new Error('path not exist or not directoy: ' + this.defs);
-            }
-            if(!fs.existsSync(this.tsd) || !fs.statSync(this.tsd).isDirectory()) {
-                throw new Error('path not exist or not directoy: ' + this.tsd);
-            }
-            if(!fs.existsSync(this.out) || !fs.statSync(this.out).isDirectory()) {
-                throw new Error('path not exist or not directoy: ' + this.out);
-            }
-        }
-        return Repos;
-    })();
-    deftools.Repos = Repos;    
     function getGUID() {
         var S4 = function () {
             return Math.floor(Math.random() * 0x10000).toString(16);

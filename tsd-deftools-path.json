@@ -1,6 +1,6 @@
 {
-	"tsd": "../tsd-master",
-	"typings": "../../DefinitelyTyped/fork",
+	"tsd": "../tsd-origin",
+	"typings": "../DefinitelyTyped",
 	"out": "./out",
 	"tmp": "./tmp"
 }
