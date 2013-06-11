@@ -1573,6 +1573,17 @@ var deftools;
         var info = deftools.Config.getInfo();
         var paths = deftools.Config.getPaths();
         var api = new deftools.API(info, new deftools.Repos(paths.typings, paths.tsd, paths.tmp));
+        var write = function (ref, obj) {
+            if(ref) {
+                ref = path.resolve(process.cwd(), ref);
+                fs.writeFileSync(ref, JSON.stringify(obj, null, 2));
+                console.log('output written to: ' + ref);
+            }
+        };
+        var params = {
+            write: 'write result file: "--write <path>"',
+            dump: 'dump result object: "--dump"'
+        };
         var expose = new xm.Expose();
         expose.add('info', function (args) {
             console.log(info.getNameVersion());
@@ -1588,11 +1599,15 @@ var deftools;
                 if(!res) {
                     return console.log('compare returned no result');
                 }
-                console.log(util.inspect(_.map(res, function (def) {
-                    return def.combi();
-                }).sort(), false, 8));
+                write(args.write, res);
+                if(args.dump) {
+                    console.log(util.inspect(_.map(res, function (def) {
+                        return def.combi();
+                    }).sort(), false, 8));
+                }
+                console.log('repo items: ' + res.length);
             });
-        }, 'list repo content');
+        }, 'list repo content', params);
         expose.add('tsdList', function (args) {
             api.loadTsdNames(function (err, res) {
                 if(err) {
@@ -1601,9 +1616,13 @@ var deftools;
                 if(!res) {
                     return console.log('compare returned no result');
                 }
-                console.log(util.inspect(res.sort(), false, 10));
+                write(args.write, res);
+                if(args.dump) {
+                    console.log(util.inspect(res.sort(), false, 10));
+                }
+                console.log('tsd items: ' + res.length);
             });
-        }, 'list TSD content');
+        }, 'list TSD content', params);
         expose.add('compare', function (args) {
             api.compare(function (err, res) {
                 if(err) {
@@ -1612,14 +1631,13 @@ var deftools;
                 if(!res) {
                     return console.log('compare returned no result');
                 }
+                write(args.write, res);
                 if(args.dump) {
                     console.log(util.inspect(res, false, 10));
                 }
                 console.log(res.getStats());
             });
-        }, 'compare repo and TSD content, print info', {
-            'dump': 'flag, dump result object: "--dump"'
-        });
+        }, 'compare repo and TSD content, print info', params);
         expose.add('repoParse', function (args) {
             var reportParseStat = function (err, res) {
                 if(err) {
@@ -1628,8 +1646,8 @@ var deftools;
                 if(!res) {
                     return console.log('parseProject returned no result');
                 }
+                write(args.write, res);
                 if(args.dump) {
-                    console.log('dump:\n');
                     console.log('error:\n' + util.inspect(res.error, false, 5));
                     console.log('parsed:\n' + util.inspect(res.parsed, false, 5));
                 }
@@ -1651,10 +1669,9 @@ var deftools;
             } else {
                 api.parseAll(reportParseStat);
             }
-        }, 'parse repo typing headers', {
-            'project': 'project name: "--project angular"',
-            'dump': 'flag, dump result to console: "--dump"'
-        });
+        }, 'parse repo typing headers', _.defaults({
+            project: 'project name: "--project angular"'
+        }, params));
         expose.add('updateTsd', function (args) {
             var options = {
                 parse: args.parse,
@@ -1667,10 +1684,7 @@ var deftools;
                 if(!res) {
                     return console.log('updateTSD returned no result');
                 }
-                if(args.write) {
-                    fs.writeFileSync(args.write, JSON.stringify(res, null, 2));
-                    console.log('output written to: ' + args.write);
-                }
+                write(args.write, res);
                 if(args.dump) {
                     console.log(util.inspect(res, false, 10));
                 }
@@ -1682,12 +1696,10 @@ var deftools;
                 console.log('   select: ' + res.exportSelection.length);
                 console.log('   created: ' + res.exportResult.created.length);
             });
-        }, 'recreate TDS data from parsed repo content', {
-            'parse': 'parse selector: "--parse [all | new]"',
-            'export': 'export selector: "--export [parsed | all | error | all]"',
-            'write': 'write result file: "--write <path>"',
-            'dump': 'flag, dump result to console: "--dump"'
-        });
+        }, 'recreate TDS data from parsed repo content', _.defaults({
+            parse: 'parse selector: "--parse [all | new]"',
+            export: 'export selector: "--export [parsed | all | error | all]"'
+        }, params));
         exp.expose = expose;
         if(isMain) {
             expose.execute('info');
