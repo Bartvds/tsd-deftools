@@ -5,6 +5,14 @@ var deftools;
     var util = require('util');
     var async = require('async');
     var _ = require('underscore');
+    var RecreateResult = (function () {
+        function RecreateResult(repos, options) {
+            this.repos = repos;
+            this.options = options;
+        }
+        return RecreateResult;
+    })();
+    deftools.RecreateResult = RecreateResult;    
     var API = (function () {
         function API(info, repos) {
             this.info = info;
@@ -54,34 +62,58 @@ var deftools;
                 importer.parseDefinitions(res, callback);
             });
         };
-        API.prototype.recreateAll = function (callback) {
-            var comparer = new deftools.DefinitionComparer(this.repos);
-            var importer = new deftools.DefinitionImporter(this.repos);
-            var exporter = new deftools.DefinitionExporter(this.repos, this.info);
+        API.prototype.updateTsd = function (options, callback) {
+            var _this = this;
+            options = _.defaults(options || {
+            }, {
+                parse: 'all',
+                export: 'parsed'
+            });
+            var ret = new RecreateResult(this.repos, options);
             async.waterfall([
                 function (callback) {
+                    var comparer = new deftools.DefinitionComparer(_this.repos);
                     comparer.compare(callback);
                 }, 
-                function (res, callback) {
-                    if(!res) {
+                function (compareResult, callback) {
+                    if(!compareResult) {
                         return callback('DefinitionComparer.compare returned no result');
                     }
-                    console.log(res.getStats());
-                    importer.parseDefinitions(res.repoAll, callback);
+                    ret.compareResult = compareResult;
+                    var importer = new deftools.DefinitionImporter(_this.repos);
+                    var defs = compareResult.repoAll;
+                    if(options.parse === 'new') {
+                        defs = compareResult.repoUnlisted;
+                    }
+                    ret.importSelection = defs;
+                    importer.parseDefinitions(defs, callback);
                 }, 
-                function (res, callback) {
-                    if(!res) {
+                function (importResult, callback) {
+                    if(!importResult) {
                         return callback('DefinitionImporter.parseDefinitions returned no result');
                     }
-                    console.log('error: ' + res.error.length);
-                    console.log('parsed: ' + res.parsed.length);
+                    ret.importResult = importResult;
+                    var exporter = new deftools.DefinitionExporter(_this.repos, _this.info);
                     deftools.helper.removeFilesFromDir(exporter.repos.out, function (err) {
                         if(err) {
                             return callback(err, null);
                         }
-                        exporter.exportDefinitions(res.all, callback);
+                        var list = importResult.parsed;
+                        if(options.export === 'all') {
+                            list = importResult.all;
+                        } else if(options.export === 'error') {
+                            list = importResult.error;
+                        }
+                        ret.exportSelection = list;
+                        exporter.exportDefinitions(list, callback);
                     });
-                }            ], callback);
+                }            ], function (err, exportResult) {
+                if(err) {
+                    return callback(err);
+                }
+                ret.exportResult = exportResult;
+                callback(null, ret);
+            });
         };
         return API;
     })();
@@ -342,8 +374,6 @@ var deftools;
             var ret = {
                 "name": header.def.name,
                 "description": header.name + (header.submodule ? ' (' + header.submodule + ')' : '') + (header.submodule ? ' ' + header.submodule : ''),
-                "generated": this.info.getNameVersion() + ' @ ' + new Date().toUTCString(),
-                "valid": header.isValid(),
                 "versions": [
                     {
                         "version": header.version,
@@ -359,7 +389,12 @@ var deftools;
                         "author": header.authorName,
                         "author_url": header.authorUrl
                     }
-                ]
+                ],
+                "generator": {
+                    "name": this.info.getNameVersion(),
+                    "date": new Date().toUTCString(),
+                    "valid": header.isValid()
+                }
             };
             return ret;
         };
@@ -1438,22 +1473,45 @@ var deftools;
 var xm;
 (function (xm) {
     var _ = require('underscore');
+    var Command = (function () {
+        function Command(id, execute, label, hint) {
+            this.id = id;
+            this.execute = execute;
+            this.label = label;
+            this.hint = hint;
+        }
+        Command.prototype.getLabels = function () {
+            var ret = this.id;
+            if(this.label) {
+                ret += ' (' + this.label + ')';
+            }
+            if(this.hint) {
+                var arr = [];
+                _.forEach(this.hint, function (label, id) {
+                    arr.push('     --' + id + ' (' + label + ')');
+                });
+                if(arr.length > 0) {
+                    ret += '\n' + arr.join('\n');
+                }
+            }
+            return ret;
+        };
+        return Command;
+    })();    
     var Expose = (function () {
         function Expose() {
             var _this = this;
-            this._commands = {
-            };
+            this._commands = new xm.KeyValueMap();
             this.add('help', function () {
-                console.log('-> available commands:');
-                _.keys(_this._commands).sort().forEach(function (value) {
-                    console.log('  ' + value);
+                console.log('available commands:');
+                _.forEach(_this._commands.keys().sort(), function (id) {
+                    console.log('   ' + _this._commands.get(id).getLabels());
                 });
-            });
-            this.map('h', 'help');
+            }, 'usage help');
         }
         Expose.prototype.executeArgv = function (argv, alt) {
             if(!argv || argv._.length == 0) {
-                if(alt && this.has(alt)) {
+                if(alt && this._commands.has(alt)) {
                     this.execute(alt);
                 }
                 this.execute('help');
@@ -1469,24 +1527,24 @@ var xm;
         Expose.prototype.execute = function (id, args, head) {
             if (typeof args === "undefined") { args = null; }
             if (typeof head === "undefined") { head = true; }
-            if(!this._commands.hasOwnProperty(id)) {
-                console.log('\n-> unknown command ' + id + '\n');
+            if(!this._commands.has(id)) {
+                console.log('\nunknown command ' + id + '\n');
                 return;
             }
             if(head) {
                 console.log('\n-> ' + id + '\n');
             }
-            var f = this._commands[id];
-            f.call(null, args);
+            var f = this._commands.get(id);
+            f.execute.call(null, args);
         };
-        Expose.prototype.add = function (id, def) {
-            if(this._commands.hasOwnProperty(id)) {
+        Expose.prototype.add = function (id, def, label, hint) {
+            if(this._commands.has(id)) {
                 throw new Error('id collision on ' + id);
             }
-            this._commands[id] = def;
+            this._commands.set(id, new Command(id, def, label, hint));
         };
         Expose.prototype.has = function (id) {
-            return this._commands.hasOwnProperty(id);
+            return this._commands.has(id);
         };
         Expose.prototype.map = function (id, to) {
             var self = this;
@@ -1521,18 +1579,7 @@ var deftools;
             _(api.repos).keys().sort().forEach(function (value) {
                 console.log('   ' + value + ': ' + api.repos[value]);
             });
-        });
-        expose.add('tsdList', function (args) {
-            api.loadTsdNames(function (err, res) {
-                if(err) {
-                    return console.log(err);
-                }
-                if(!res) {
-                    return console.log('compare returned no result');
-                }
-                console.log(util.inspect(res.sort(), false, 8));
-            });
-        });
+        }, 'print tool info');
         expose.add('repoList', function (args) {
             api.loadRepoDefs(function (err, res) {
                 if(err) {
@@ -1545,8 +1592,19 @@ var deftools;
                     return def.combi();
                 }).sort(), false, 8));
             });
-        });
-        expose.add('compareFull', function (args) {
+        }, 'list repo content');
+        expose.add('tsdList', function (args) {
+            api.loadTsdNames(function (err, res) {
+                if(err) {
+                    return console.log(err);
+                }
+                if(!res) {
+                    return console.log('compare returned no result');
+                }
+                console.log(util.inspect(res.sort(), false, 10));
+            });
+        }, 'list TSD content');
+        expose.add('compare', function (args) {
             api.compare(function (err, res) {
                 if(err) {
                     return console.log(err);
@@ -1554,28 +1612,26 @@ var deftools;
                 if(!res) {
                     return console.log('compare returned no result');
                 }
-                console.log(util.inspect(res, false, 8));
+                if(args.dump) {
+                    console.log(util.inspect(res, false, 10));
+                }
                 console.log(res.getStats());
             });
+        }, 'compare repo and TSD content, print info', {
+            'dump': 'flag, dump result object: "--dump"'
         });
-        expose.add('compareStats', function (args) {
-            api.compare(function (err, res) {
+        expose.add('repoParse', function (args) {
+            var reportParseStat = function (err, res) {
                 if(err) {
                     return console.log(err);
                 }
                 if(!res) {
-                    return console.log('compare returned no result');
+                    return console.log('parseProject returned no result');
                 }
-                console.log(res.getStats());
-            });
-        });
-        expose.add('listParsed', function (args) {
-            api.parseAll(function (err, res) {
-                if(err) {
-                    return console.log(err);
-                }
-                if(!res) {
-                    return console.log('listParsed returned no result');
+                if(args.dump) {
+                    console.log('dump:\n');
+                    console.log('error:\n' + util.inspect(res.error, false, 5));
+                    console.log('parsed:\n' + util.inspect(res.parsed, false, 5));
                 }
                 console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 5));
                 console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 5));
@@ -1589,19 +1645,48 @@ var deftools;
                 console.log('isDependency(): ' + res.isDependency().length);
                 console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
                 console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 4));
-            });
+            };
+            if(args.project) {
+                api.parseProject(args.project, reportParseStat);
+            } else {
+                api.parseAll(reportParseStat);
+            }
+        }, 'parse repo typing headers', {
+            'project': 'project name: "--project angular"',
+            'dump': 'flag, dump result to console: "--dump"'
         });
-        expose.add('recreateAll', function (args) {
-            api.recreateAll(function (err, res) {
+        expose.add('updateTsd', function (args) {
+            var options = {
+                parse: args.parse,
+                export: args.export
+            };
+            api.updateTsd(options, function (err, res) {
                 if(err) {
                     return console.log(err);
                 }
                 if(!res) {
-                    return console.log('recreateAll returned no result');
+                    return console.log('updateTSD returned no result');
                 }
-                console.log(util.inspect(res, false, 8));
-                console.log('created(): ' + res.created.length);
+                if(args.write) {
+                    fs.writeFileSync(args.write, JSON.stringify(res, null, 2));
+                    console.log('output written to: ' + args.write);
+                }
+                if(args.dump) {
+                    console.log(util.inspect(res, false, 10));
+                }
+                console.log('parse');
+                console.log('   select: ' + res.importSelection.length);
+                console.log('   success: ' + res.importResult.parsed.length);
+                console.log('   error: ' + res.importResult.error.length);
+                console.log('export');
+                console.log('   select: ' + res.exportSelection.length);
+                console.log('   created: ' + res.exportResult.created.length);
             });
+        }, 'recreate TDS data from parsed repo content', {
+            'parse': 'parse selector: "--parse [all | new]"',
+            'export': 'export selector: "--export [parsed | all | error | all]"',
+            'write': 'write result file: "--write <path>"',
+            'dump': 'flag, dump result to console: "--dump"'
         });
         exp.expose = expose;
         if(isMain) {

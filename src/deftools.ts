@@ -30,56 +30,53 @@ module deftools {
 			_(api.repos).keys().sort().forEach((value) => {
 				console.log('   ' + value + ': ' + api.repos[value]);
 			});
-		});
+		}, 'print tool info');
+
+		expose.add('repoList', (args:any) => {
+			api.loadRepoDefs((err, res:Def[]) => {
+				if (err) return console.log(err);
+				if (!res) return console.log('compare returned no result');
+
+				console.log(util.inspect(_.map(res,(def:Def) => {
+					return def.combi();
+				}).sort(), false, 8));
+			});
+		}, 'list repo content');
 
 		expose.add('tsdList', (args:any) => {
 			api.loadTsdNames((err, res:string[]) => {
 				if (err) return console.log(err);
 				if (!res) return console.log('compare returned no result');
 
-				console.log(util.inspect(res.sort(), false, 8));
+				console.log(util.inspect(res.sort(), false, 10));
 			});
-		});
-		expose.add('repoList', (args:any) => {
-			api.loadRepoDefs((err, res:Def[]) => {
-				if (err) return console.log(err);
-				if (!res) return console.log('compare returned no result');
+		}, 'list TSD content');
 
-				console.log(util.inspect(_.map(res, (def:Def) => {
-					return def.combi();
-				}).sort(), false, 8));
-			});
-		});
-
-		expose.add('compareFull', (args:any) => {
+		expose.add('compare', (args:any) => {
 			api.compare((err?, res?:deftools.CompareResult) => {
 				if (err) return console.log(err);
 				if (!res) return console.log('compare returned no result');
 
-				console.log(util.inspect(res, false, 8));
+				if (args.dump) {
+					console.log(util.inspect(res, false, 10));
+				}
 				console.log(res.getStats());
 			});
-		});
-		expose.add('compareStats', (args:any) => {
-			api.compare((err?, res?:deftools.CompareResult) => {
-				if (err) return console.log(err);
-				if (!res) return console.log('compare returned no result');
-
-				//console.log(util.inspect({repoUnlisted: res.repoUnlisted, tsdNotInRepo: res.tsdNotInRepo}, false, 8));
-				console.log(res.getStats());
-			});
+		}, 'compare repo and TSD content, print info', {
+			'dump': 'flag, dump result object: "--dump"'
 		});
 
-		expose.add('listParsed', (args:any) => {
-			api.parseAll((err?, res?:deftools.ImportResult) => {
+		expose.add('repoParse', (args:any) => {
+			//reuse
+			var reportParseStat = (err?, res?:deftools.ImportResult) => {
 				if (err) return console.log(err);
-				if (!res) return console.log('listParsed returned no result');
+				if (!res) return console.log('parseProject returned no result');
 
-				//console.log(util.inspect(res, false, 8));
-				//console.log('all:\n' + util.inspect(res.all, false, 8));
-				//console.log('error: ' + util.inspect(res.error, false, 8));
-				//console.log('hasDependency():\n' + util.inspect(res.hasDependency(), false, 8));
-				//console.log('isDependency():\n' + util.inspect(res.isDependency(), false, 8));
+				if (args.dump) {
+					console.log('dump:\n');
+					console.log('error:\n' + util.inspect(res.error, false, 5));
+					console.log('parsed:\n' + util.inspect(res.parsed, false, 5));
+				}
 
 				console.log('isDependencyStat():\n' + util.inspect(res.isDependencyStat(), false, 5));
 				console.log('hasDependencyStat():\n' + util.inspect(res.hasDependencyStat(), false, 5));
@@ -94,26 +91,50 @@ module deftools {
 				console.log('isDependency(): ' + res.isDependency().length);
 				console.log('dupeCheck(): ' + _.size(res.dupeCheck()));
 				console.log('checkDupes():\n' + util.inspect(res.checkDupes(), false, 4));
-			});
+			};
+			//do it!
+			if (args.project) {
+				api.parseProject(args.project, reportParseStat);
+			}
+			else {
+				api.parseAll(reportParseStat);
+			}
+		}, 'parse repo typing headers', {
+			//hint params
+			'project': 'project name: "--project angular"',
+			'dump': 'flag, dump result to console: "--dump"'
 		});
-		/*
-		expose.add('createUnlisted', (args:any) => {
-			api.createUnlisted((err?, res?:deftool.ExportResult) => {
-				if (err) return console.log(err);
-				console.log(util.inspect(res, false, 8));
-				console.log('created(): ' + res.created);
-				console.log('created(): ' + res.created.length);
-			});
-		});*/
 
-		expose.add('recreateAll', (args:any) => {
-			api.recreateAll((err?, res?:deftools.ExportResult) => {
-				if (err) return console.log(err);
-				if (!res) return console.log('recreateAll returned no result');
+		expose.add('updateTsd', (args:any) => {
 
-				console.log(util.inspect(res, false, 8));
-				console.log('created(): ' + res.created.length);
+			var options = {
+				parse: args.parse,
+				export: args.export
+			};
+
+			api.updateTsd(options, (err?, res?:deftools.RecreateResult) => {
+				if (err) return console.log(err);
+				if (!res) return console.log('updateTSD returned no result');
+				if (args.write) {
+					fs.writeFileSync(args.write, JSON.stringify(res, null, 2));
+					console.log('output written to: ' + args.write);
+				}
+				if (args.dump) {
+					console.log(util.inspect(res, false, 10));
+				}
+				console.log('parse');
+				console.log('   select: ' + res.importSelection.length);
+				console.log('   success: ' + res.importResult.parsed.length);
+				console.log('   error: ' + res.importResult.error.length);
+				console.log('export');
+				console.log('   select: ' + res.exportSelection.length);
+				console.log('   created: ' + res.exportResult.created.length);
 			});
+		}, 'recreate TDS data from parsed repo content', {
+			'parse': 'parse selector: "--parse [all | new]"',
+			'export': 'export selector: "--export [parsed | all | error | all]"',
+			'write': 'write result file: "--write <path>"',
+			'dump': 'flag, dump result to console: "--dump"'
 		});
 
 		//export expose for testing

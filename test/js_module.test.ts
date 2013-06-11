@@ -45,17 +45,17 @@ describe('deftools', () => {
 			describe('command', () => {
 				var testCommand = (name:string) => {
 					it(name, () => {
-						assert.isTrue(expose.has(name), 'has()');
+						assert.isTrue(expose.has(name), 'has() '+name);
 					});
 				};
 				testCommand('help');
-				testCommand('h');
+				//testCommand('h');
 				testCommand('info');
-				testCommand('listParsed');
 				testCommand('repoList');
+				testCommand('repoParse');
 				testCommand('tsdList');
-				testCommand('compareFull');
-				testCommand('compareStats');
+				testCommand('compare');
+				testCommand('updateTsd');
 			});
 		});
 	});

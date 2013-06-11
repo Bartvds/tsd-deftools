@@ -1,26 +1,50 @@
 ///<reference path="../_ref.ts" />
+///<reference path="../xm/keyValue.ts" />
 
 module xm {
 
 	var _:UnderscoreStatic = require('underscore');
 
+	class Command {
+		constructor(public id:string, public execute:(args:any) => void, public label?:string, public hint?:any) {
+
+		}
+
+		getLabels():string {
+			var ret = this.id;
+			if (this.label) {
+				ret += ' (' + this.label + ')'
+			}
+			if (this.hint) {
+				var arr = [];
+				_.forEach(this.hint, (label, id) => {
+					arr.push('     --' + id + ' (' + label + ')');
+				});
+				if (arr.length > 0) {
+					ret += '\n' + arr.join('\n');
+				}
+			}
+			return ret;
+		}
+	}
+
 	export class Expose {
 
-		private _commands:any = {};
+		private _commands = new KeyValueMap();
 
 		constructor() {
 			this.add('help', () => {
-				console.log('-> available commands:');
-				_.keys(this._commands).sort().forEach((value) => {
-					console.log('  ' + value);
+				console.log('available commands:');
+				_.forEach(this._commands.keys().sort(), (id) => {
+					console.log('   ' + this._commands.get(id).getLabels());
 				});
-			});
-			this.map('h', 'help');
+			}, 'usage help');
+			//this.map('h', 'help');
 		}
 
 		executeArgv(argv:any, alt?:string) {
 			if (!argv || argv._.length == 0) {
-				if (alt && this.has(alt)) {
+				if (alt && this._commands.has(alt)) {
 					this.execute(alt);
 				}
 				this.execute('help');
@@ -30,32 +54,33 @@ module xm {
 					this.execute(argv._[0], argv);
 				}
 				else {
-					console.log('command not found: '+argv._[0]);
+					console.log('command not found: ' + argv._[0]);
 					this.execute('help');
 				}
 			}
 		}
-		execute(id:string, args:any=null, head:bool = true) {
-			if (!this._commands.hasOwnProperty(id)) {
-				console.log('\n-> unknown command ' + id + '\n');
+
+		execute(id:string, args:any = null, head:bool = true) {
+			if (!this._commands.has(id)) {
+				console.log('\nunknown command ' + id + '\n');
 				return;
 			}
 			if (head) {
-				console.log('\n-> ' + id+ '\n');
+				console.log('\n-> ' + id + '\n');
 			}
-			var f = this._commands[id];
-			f.call(null, args);
+			var f:Command = this._commands.get(id);
+			f.execute.call(null, args);
 		}
 
-		add(id:string, def:(args:any) => void) {
-			if (this._commands.hasOwnProperty(id)) {
+		add(id:string, def:(args:any) => void, label?:string, hint?:any) {
+			if (this._commands.has(id)) {
 				throw new Error('id collision on ' + id);
 			}
-			this._commands[id] = def;
+			this._commands.set(id, new Command(id, def, label, hint));
 		}
 
-		has(id:string) {
-			return this._commands.hasOwnProperty(id);
+		has(id:string):bool {
+			return this._commands.has(id);
 		}
 
 		map(id:string, to:string) {
