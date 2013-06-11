@@ -26,13 +26,13 @@ module deftools {
 			if (ref) {
 				ref = path.resolve(process.cwd(), ref);
 				fs.writeFileSync(ref, JSON.stringify(obj, null, 2));
-				console.log('output written to: ' + ref);
+				console.log('result written as json to: ' + ref);
 			}
 		}
 
 		var params = {
-			write: 'write result file: "--write <path>"',
-			dump: 'dump result object: "--dump"'
+			write: 'write to file as json: "--write <path>"',
+			dump: 'dump to console: "--dump"'
 		};
 
 		//expose some easy access tools to cli

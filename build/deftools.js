@@ -1581,8 +1581,8 @@ var deftools;
             }
         };
         var params = {
-            write: 'write result file: "--write <path>"',
-            dump: 'dump result object: "--dump"'
+            write: 'write to file as json: "--write <path>"',
+            dump: 'dump to console: "--dump"'
         };
         var expose = new xm.Expose();
         expose.add('info', function (args) {
