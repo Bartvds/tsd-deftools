@@ -896,8 +896,10 @@ var deftools;
     var delimEndOpt = /[\)\}\]>]?/;
     var urlGroupsCap = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
     var urlFullCap = /((?:(?:[A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)(?:(?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
+    var referenceTag = /<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>/;
     var commentStart = glue(expStart, spaceOpt, /\/\/+/, spaceOpt).join();
     var commentLine = glue(commentStart).append(anyLazyCap).append(spaceOpt, expEnd).join();
+    var referencePath = glue(expStart, spaceOpt, /\/\/\//, spaceOpt).append(referenceTag).append(spaceOpt, expEnd).join();
     var typeHead = glue(commentStart).append(/Type definitions?[ \t]*(?:for)?:?/, spaceOpt, wordsCap).append(spaceReq, versionCap, spaceOpt).append(anyGreedy, expEnd).join('i');
     var projectUrl = glue(commentStart).append(/Project/, spaceOpt, /:?/, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
     var defAuthorUrl = glue(commentStart).append(/Definitions[ \t]+by[ \t]*:?/, spaceOpt).append(wordsCap, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
@@ -918,7 +920,8 @@ var deftools;
                 'projectUrl', 
                 'defAuthorUrl', 
                 'reposUrl', 
-                'reposUrlAlt'
+                'reposUrlAlt', 
+                'referencePath'
             ];
             this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, [
                 'head'
@@ -941,6 +944,9 @@ var deftools;
             }, fields));
             this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 2, function (match) {
                 data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
+            }, fields));
+            this.parser.addParser(new xm.LineParser('referencePath', referencePath, 1, function (match) {
+                data.references.push(match.getGroup(0));
             }, fields));
             this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, [
                 'comment'

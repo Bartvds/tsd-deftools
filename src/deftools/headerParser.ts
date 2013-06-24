@@ -42,7 +42,7 @@ module deftools {
 	var urlFullCap = /((?:(?:[A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)(?:(?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
 
 	//var referencePath = /^[ \t]*\/\/\/\/?[ \t]*<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>[ \t]*$/gm;
-
+	var referenceTag = /<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>/;
 
 	//glue long RegExp's from parts
 	var commentStart = glue(expStart, spaceOpt, /\/\/+/, spaceOpt).join();
@@ -51,6 +51,11 @@ module deftools {
 	.append(anyLazyCap)
 	.append(spaceOpt, expEnd)
 	.join();
+
+	var referencePath = glue(expStart, spaceOpt, /\/\/\//, spaceOpt)
+		.append(referenceTag)
+		.append(spaceOpt, expEnd)
+		.join();
 
 	var typeHead = glue(commentStart)
 	.append(/Type definitions?[ \t]*(?:for)?:?/, spaceOpt, wordsCap)
@@ -117,7 +122,7 @@ module deftools {
 			//setup parser
 			this.parser = new xm.LineParserCore();
 
-			var fields = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt'];
+			var fields = ['projectUrl', 'defAuthorUrl', 'reposUrl', 'reposUrlAlt', 'referencePath'];
 
 			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(fields, ['any'])));
 
@@ -142,6 +147,10 @@ module deftools {
 
 			this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 2, (match:xm.LineParserMatch) => {
 				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
+			}, fields));
+
+			this.parser.addParser(new xm.LineParser('referencePath', referencePath, 1, (match:xm.LineParserMatch) => {
+				data.references.push(match.getGroup(0));
 			}, fields));
 
 			this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
