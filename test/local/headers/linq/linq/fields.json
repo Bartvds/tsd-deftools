@@ -1,0 +1,12 @@
+{
+	"parsed": {
+		"name": "linq.js",
+		"version": "2.2",
+		"submodule": "",
+		"description": "",
+		"projectUrl": "http://linqjs.codeplex.com",
+		"authorName": "Marcin Najder",
+		"authorUrl": "",
+		"reposUrl": "https://github.com/borisyankov/DefinitelyTyped"
+	}
+}

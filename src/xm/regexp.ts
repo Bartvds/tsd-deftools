@@ -8,22 +8,22 @@ module xm {
 
 	export class RegExpGlue {
 
-		parts:string[] = [];
+		parts:any[] = [];
 
-		constructor(...exp:RegExp[]) {
+		constructor(...exp:any[]) {
 			if (exp.length > 0) {
 				this.append.apply(this, exp);
 			}
 		}
 
-		static get(...exp:RegExp[]):RegExpGlue {
+		static get(...exp:any[]):RegExpGlue {
 			var e = new RegExpGlue();
 			return e.append.apply(e, exp);
 		}
 
-		append(...exp:RegExp[]):RegExpGlue {
+		append(...exp:any[]):RegExpGlue {
 			exp.forEach((value:RegExp) => {
-				this.parts.push('' + value);
+				this.parts.push(value);
 			}, this);
 			return this;
 		}
@@ -67,12 +67,16 @@ module xm {
 			flags = typeof flags !== 'undefined' ? this.getCleanFlags(flags) : '';
 
 			this.parts.forEach((exp, index, arr) => {
+				if (typeof exp === 'string') {
+					chunks.push(exp);
+					return;
+				}
 				expTrim.lastIndex = 0;
 				var trim = expTrim.exec('' + exp);
 				//console.log('loppp ' + exp);
 				//console.log(trim);
 				if (!trim) {
-					return;
+					return exp;
 				}
 				if (trim.length < 2) {
 					console.log(trim);
