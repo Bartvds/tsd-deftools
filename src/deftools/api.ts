@@ -14,7 +14,7 @@ module deftools {
 		importSelection:Def[];
 		importResult:ImportResult;
 
-		exportSelection:HeaderData[];
+		exportSelection:deftools.DefData[];
 		exportResult:ExportResult;
 
 		constructor(public repos:Repos, public options:any) {
@@ -131,7 +131,7 @@ module deftools {
 				helper.removeFilesFromDir(exporter.repos.out, (err) => {
 					if (err) return callback(err, null);
 
-					var list:HeaderData[] = importResult.parsed;
+					var list:deftools.DefData[] = importResult.parsed;
 					if (options.export === 'all') {
 						list = importResult.all;
 					}

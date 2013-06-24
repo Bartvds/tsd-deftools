@@ -8,10 +8,10 @@ module deftools {
 		[name: string]: Def;
 	}
 	export interface HeaderDataMap {
-		[name: string]: HeaderData;
+		[name: string]: deftools.DefData;
 	}
 	export interface HeaderDataListMap {
-		[name: string]:HeaderData[];
+		[name: string]:deftools.DefData[];
 	}
 
 	//single definition file in repo (non-parsed)
@@ -29,7 +29,7 @@ module deftools {
 	}
 
 	//single definition file in repo (parsed)
-	export class HeaderData {
+	export class DefData {
 		name:string;
 		version:string;
 		submodule:string;
@@ -45,7 +45,7 @@ module deftools {
 
 		errors:ParseError[];
 		references:string[] = [];
-		dependencies:HeaderData[] = [];
+		dependencies:deftools.DefData[] = [];
 
 		constructor(public def:Def) {
 			if (!this.def) {

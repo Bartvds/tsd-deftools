@@ -18,11 +18,11 @@ module deftools {
 	}
 	//single export
 	export class HeaderExport {
-		constructor(public header:HeaderData, public path:string) {
+		constructor(public header:deftools.DefData, public path:string) {
 		}
 	}
 
-	//export HeaderData to tsd JSON in Repos
+	//export DefData to tsd JSON in Repos
 	export class DefinitionExporter {
 
 		constructor(public repos:Repos, public info:ToolInfo) {
@@ -32,8 +32,8 @@ module deftools {
 		getEncoder():DataEncoder {
 			return new Encode(this.repos, this.info);
 		}
-		//write single HeaderData to Repos
-		writeDef(data:HeaderData, encoder:DataEncoder, finish:(err?, exp?:HeaderExport) => void) {
+		//write single DefData to Repos
+		writeDef(data:deftools.DefData, encoder:DataEncoder, finish:(err?, exp?:HeaderExport) => void) {
 			//console.log(util.inspect(encoder.encode(data), false, 10));
 
 			var dest = this.repos.out + data.def.name + '.json';
@@ -53,12 +53,12 @@ module deftools {
 			});
 		}
 
-		//bulk write single HeaderData's to Repos
-		exportDefinitions(list:HeaderData[], finish:(err?, res?:ExportResult) => void) {
+		//bulk write single DefData's to Repos
+		exportDefinitions(list:deftools.DefData[], finish:(err?, res?:ExportResult) => void) {
 			var self:DefinitionExporter = this;
 			var encoder = this.getEncoder();
 			var res = new ExportResult();
-			async.forEach(list, (data:HeaderData, callback:(err?, data?) => void) => {
+			async.forEach(list, (data:deftools.DefData, callback:(err?, data?) => void) => {
 
 				self.writeDef(data, encoder, (err?, exp?:HeaderExport) => {
 					if (err)  return callback(err);
@@ -74,17 +74,17 @@ module deftools {
 		}
 	}
 
-	//encode single HeaderData
+	//encode single DefData
 	export interface DataEncoder {
-		encode(str:HeaderData):any;
+		encode(str:deftools.DefData):any;
 	}
 
-	//encode single HeaderData to tsd json format
+	//encode single DefData to tsd json format
 	export class Encode implements DataEncoder {
 		constructor(public repos:Repos, public info:ToolInfo) {
 
 		}
-		encode(header:HeaderData):any {
+		encode(header:deftools.DefData):any {
 			var ret = {
 				"name": header.def.name,
 				"description": header.name + (header.submodule ? ' (' + header.submodule + ')' : '') + (header.submodule ? ' ' + header.submodule : ''),
@@ -92,7 +92,7 @@ module deftools {
 					{
 						"version": header.version,
 						"key": getGUID(),
-						"dependencies": _.map(header.dependencies, (data:HeaderData) => {
+						"dependencies": _.map(header.dependencies, (data:deftools.DefData) => {
 							return {
 								"valid": data.isValid(),
 								"name": data.def.name,

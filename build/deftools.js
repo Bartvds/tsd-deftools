@@ -976,8 +976,8 @@ var deftools;
         return Def;
     })();
     deftools.Def = Def;    
-    var HeaderData = (function () {
-        function HeaderData(def) {
+    var DefData = (function () {
+        function DefData(def) {
             this.def = def;
             this.sourcePath = '';
             this.references = [];
@@ -986,7 +986,7 @@ var deftools;
             }
             this.resetAll();
         }
-        HeaderData.prototype.resetFields = function () {
+        DefData.prototype.resetFields = function () {
             this.name = '';
             this.version = '*';
             this.submodule = '';
@@ -996,26 +996,26 @@ var deftools;
             this.authorUrl = '';
             this.reposUrl = '';
         };
-        HeaderData.prototype.resetAll = function () {
+        DefData.prototype.resetAll = function () {
             this.resetFields();
             this.errors = [];
             this.references = [];
             this.dependencies = [];
             this.sourcePath = '';
         };
-        HeaderData.prototype.combi = function () {
+        DefData.prototype.combi = function () {
             if(!this.def) {
                 return '[' + this.name + ']';
             }
             return this.def.combi();
         };
-        HeaderData.prototype.getDefUrl = function () {
+        DefData.prototype.getDefUrl = function () {
             if(!this.reposUrl) {
                 return '';
             }
             return this.reposUrl + this.def.project + '/' + this.def.name + '.d.ts';
         };
-        HeaderData.prototype.isValid = function () {
+        DefData.prototype.isValid = function () {
             if(this.errors.length > 0) {
                 return false;
             }
@@ -1030,9 +1030,9 @@ var deftools;
             }
             return true;
         };
-        return HeaderData;
+        return DefData;
     })();
-    deftools.HeaderData = HeaderData;    
+    deftools.DefData = DefData;    
 })(deftools || (deftools = {}));
 var deftools;
 (function (deftools) {
@@ -1186,7 +1186,7 @@ var deftools;
                 if(res.map.hasOwnProperty(key)) {
                     return callback(null, res);
                 }
-                var data = new deftools.HeaderData(def);
+                var data = new deftools.DefData(def);
                 res.map[key] = data;
                 self.loadData(data, res, function (err, data) {
                     if(err) {
@@ -1262,7 +1262,7 @@ var deftools;
                             data.dependencies.push(res.map[key]);
                             return callback(null, res.map[key]);
                         }
-                        var sub = new deftools.HeaderData(dep);
+                        var sub = new deftools.DefData(dep);
                         res.map[key] = sub;
                         self.loadData(sub, res, function (err, sub) {
                             if(err) {

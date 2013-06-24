@@ -114,7 +114,7 @@ module deftools {
 
 		}
 
-		parse(data:HeaderData, source:string):HeaderData {
+		parse(data:deftools.DefData, source:string):deftools.DefData {
 			//console.log('parse: ', data.combi());
 
 			data.resetFields();

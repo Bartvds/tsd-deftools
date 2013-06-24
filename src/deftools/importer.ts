@@ -12,49 +12,49 @@ module deftools {
 	var definition = /^([\w _-]+)\.d\.ts$/
 
 	export class ImportResult {
-		all:HeaderData[] = [];
-		error:HeaderData[] = [];
-		parsed:HeaderData[] = [];
-		requested:HeaderData[] = [];
+		all:deftools.DefData[] = [];
+		error:deftools.DefData[] = [];
+		parsed:deftools.DefData[] = [];
+		requested:deftools.DefData[] = [];
 		map:HeaderDataMap = {};
 		ready:HeaderDataMap = {};
 
 		constructor() {
 		}
 
-		hasReference(list:HeaderData[] = null):HeaderData[] {
+		hasReference(list:deftools.DefData[] = null):deftools.DefData[] {
 			list = list || this.all;
-			return _.filter(list, (value:HeaderData) => {
+			return _.filter(list, (value:deftools.DefData) => {
 				return value.references.length > 0;
 			})
 		}
 
-		hasDependency(list:HeaderData[] = null):HeaderData[] {
+		hasDependency(list:deftools.DefData[] = null):deftools.DefData[] {
 			list = list || this.all;
-			return _.filter(list, (value:HeaderData) => {
+			return _.filter(list, (value:deftools.DefData) => {
 				return value.dependencies.length > 0;
 			})
 		}
 
-		countReferences(list:HeaderData[] = null):number {
+		countReferences(list:deftools.DefData[] = null):number {
 			list = list || this.all;
-			return _.reduce(list, (memo:number, value:HeaderData) => {
+			return _.reduce(list, (memo:number, value:deftools.DefData) => {
 				return memo + value.references.length;
 			}, 0)
 		}
 
-		countDependencies(list:HeaderData[] = null):number {
+		countDependencies(list:deftools.DefData[] = null):number {
 			list = list || this.all;
-			return _.reduce(list, (memo:number, value:HeaderData) => {
+			return _.reduce(list, (memo:number, value:deftools.DefData) => {
 				return memo + value.dependencies.length;
 			}, 0)
 		}
 
-		isDependency(list:HeaderData[] = null):HeaderData[] {
+		isDependency(list:deftools.DefData[] = null):deftools.DefData[] {
 			list = list || this.all;
-			var ret:HeaderData[] = [];
-			return _.reduce(list, (ret:HeaderData[], value:HeaderData) => {
-				_(value.dependencies).forEach((dep:HeaderData) => {
+			var ret:deftools.DefData[] = [];
+			return _.reduce(list, (ret:deftools.DefData[], value:deftools.DefData) => {
+				_(value.dependencies).forEach((dep:deftools.DefData) => {
 					if (ret.indexOf(dep) < 0) {
 						ret.push(dep);
 					}
@@ -64,10 +64,10 @@ module deftools {
 		}
 
 		//whut
-		dupeCheck(list:HeaderData[] = null):HeaderDataListMap {
+		dupeCheck(list:deftools.DefData[] = null):HeaderDataListMap {
 			list = list || this.all;
 
-			var ret:HeaderDataListMap = _.reduce(list, (memo:HeaderDataListMap, value:HeaderData) => {
+			var ret:HeaderDataListMap = _.reduce(list, (memo:HeaderDataListMap, value:deftools.DefData) => {
 				var key = value.def.name;//.combi();
 				if (memo.hasOwnProperty(key)) {
 					memo[key].push(value);
@@ -85,9 +85,9 @@ module deftools {
 			}, {});
 		}
 
-		hasDependencyStat(list:HeaderData[] = null):NumberMap {
-			var map = _.reduce(this.hasDependency(list), (memo:NumberMap, value:HeaderData) => {
-				_.forEach(value.dependencies, (dep:HeaderData) => {
+		hasDependencyStat(list:deftools.DefData[] = null):NumberMap {
+			var map = _.reduce(this.hasDependency(list), (memo:NumberMap, value:deftools.DefData) => {
+				_.forEach(value.dependencies, (dep:deftools.DefData) => {
 					var key = value.combi();
 					if (memo.hasOwnProperty(key)) {
 						memo[key]++;
@@ -104,9 +104,9 @@ module deftools {
 			return map;
 		}
 
-		isDependencyStat(list:HeaderData[] = null):NumberMap {
-			var map = _.reduce(this.hasDependency(list), (memo:NumberMap, value:HeaderData) => {
-				_.forEach(value.dependencies, (dep:HeaderData) => {
+		isDependencyStat(list:deftools.DefData[] = null):NumberMap {
+			var map = _.reduce(this.hasDependency(list), (memo:NumberMap, value:deftools.DefData) => {
+				_.forEach(value.dependencies, (dep:deftools.DefData) => {
 					var key = dep.combi();
 					if (memo.hasOwnProperty(key)) {
 						memo[key]++;
@@ -123,11 +123,11 @@ module deftools {
 			return map;
 		}
 
-		/*success(list:HeaderData[] = null):HeaderData[] {
+		/*success(list:DefData[] = null):DefData[] {
 			list = list || this.all;
-			var ret:HeaderData[] = [];
-			return _.reduce(list, (ret:HeaderData[], value:HeaderData) => {
-				_(value.dependencies).forEach((dep:HeaderData) => {
+			var ret:DefData[] = [];
+			return _.reduce(list, (ret:DefData[], value:DefData) => {
+				_(value.dependencies).forEach((dep:DefData) => {
 					if (ret.indexOf(dep) < 0) {
 						ret.push(dep);
 					}
@@ -175,11 +175,11 @@ module deftools {
 				if (res.map.hasOwnProperty(key)) {
 					return callback(null, res);
 				}
-				var data = new HeaderData(def);
+				var data = new deftools.DefData(def);
 				res.map[key] = data;
 				//res.queued[key] = data;
 
-				self.loadData(data, res, (err?:any, data?:HeaderData) => {
+				self.loadData(data, res, (err?:any, data?:deftools.DefData) => {
 					if (err) {
 						console.log([<any>'err', err]);
 						return callback(null, res);
@@ -211,7 +211,7 @@ module deftools {
 			});
 		}
 
-		loadData(data:HeaderData, res:ImportResult, callback:(err, data?:HeaderData) => void) {
+		loadData(data:deftools.DefData, res:ImportResult, callback:(err, data?:deftools.DefData) => void) {
 
 			var src = path.resolve(this.repos.defs + data.def.project + '/' + data.def.name + '.d.ts');
 
@@ -243,7 +243,7 @@ module deftools {
 
 					//console.log('references: ' + data.references);
 
-					async.forEach(data.references, (ref:string, callback:(err?, data?:HeaderData) => void) => {
+					async.forEach(data.references, (ref:string, callback:(err?, data?:deftools.DefData) => void) => {
 
 						var match, dep;
 						match = ref.match(dependency);
@@ -268,11 +268,11 @@ module deftools {
 							data.dependencies.push(res.map[key]);
 							return callback(null, res.map[key]);
 						}
-						var sub:HeaderData = new HeaderData(dep);
+						var sub:deftools.DefData = new deftools.DefData(dep);
 						res.map[key] = sub;
 
 						//recursive
-						self.loadData(sub, res, (err, sub?:HeaderData) => {
+						self.loadData(sub, res, (err, sub?:deftools.DefData) => {
 							if (err) {
 								if (sub) {
 									sub.errors.push(new ParseError('cannot load dependency' + sub.combi(), err));
