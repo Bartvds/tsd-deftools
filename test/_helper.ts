@@ -71,13 +71,9 @@ module helper {
 		//loop projects
 		fs.readdir(src, (err, files:string[]) => {
 			if (err || !files) return finish(err, []);
-			console.log(src);
-			console.log(files);
 
 			async.reduce(files, [], (memo:helper.HeaderAssert[], project, callback:(err, res?) => void) => {
 				var dir = path.join(src, project);
-
-				console.log(dir);
 
 				fs.stat(dir, (err, stats) => {
 					if (err || !stats) return callback(err);

@@ -128,12 +128,11 @@ module deftools {
 			//setup parser
 			this.parser = new xm.LineParserCore(this.verbose);
 
-			var fields = ['projectUrl', 'defAuthorUrl', 'defAuthorUrlAlt', 'defAuthorUrlOpt', 'reposUrl', 'reposUrlAlt', 'referencePath'];
+			var fields = ['projectUrl', 'defAuthorUrl', 'defAuthorUrlAlt', 'reposUrl', 'reposUrlAlt', 'referencePath'];
 
 			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(fields, ['any'])));
 
 			this.parser.addParser(new xm.LineParser('head', typeHead, 2, (match:xm.LineParserMatch) => {
-				console.log(match.match);
 				data.name = match.getGroup(0, data.name);
 				data.version = match.getGroup(1, data.version);
 				//data.submodule = match.getGroup(2, data.submodule);

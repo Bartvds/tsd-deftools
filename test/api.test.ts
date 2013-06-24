@@ -195,7 +195,6 @@ describe('deftools', () => {
 					var filter;// = ['async', 'expect.js'];
 
 					before((done:(err?) => void) => {
-						console.log('before');
 						helper.loadHeaderFixtures(path.join(conf.test, 'headers'), (err, res:helper.HeaderAssert[]) => {
 							if (err){
 								return done(err);
@@ -213,7 +212,6 @@ describe('deftools', () => {
 									return filter.indexOf(value.name) > -1;
 								});
 							}
-							helper.dump(data, 'loadHeaderFixtures');
 
 							done();
 						});
@@ -234,7 +232,7 @@ describe('deftools', () => {
 								assert.ok(def, def.key + ' ok');
 
 								var data = new deftools.DefData(def.def);
-								var parser = new deftools.HeaderParser(true);
+								var parser = new deftools.HeaderParser(false);
 								parser.parse(data, def.header);
 
 								_.each(def.fields.parsed, (value:any, field:string) => {

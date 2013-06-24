@@ -752,13 +752,14 @@ var xm;
                 procLineCount++;
                 var text = line[2];
                 log('[[' + text + ']]');
+                log('---');
                 var choice = _.reduce(possibles, function (memo, parser) {
-                    log('---');
-                    log(parser.getName());
                     var res = parser.match(text, offset, cursor);
                     if(res) {
-                        log('-> match!');
+                        log(parser.getName() + ' -> match!');
+                        log(res.match);
                         memo.push(res);
+                    } else {
                     }
                     return memo;
                 }, []);
@@ -768,13 +769,13 @@ var xm;
                     possibles = [];
                 } else if(choice.length == 1) {
                     log('single match line');
-                    log(choice[0].parser.id);
+                    log('using ' + choice[0].parser.id);
                     res.push(choice[0]);
                     possibles = choice[0].parser.next;
                     log('switching possibles: [' + this.listIds(possibles) + ']');
                 } else {
                     log('multi match line');
-                    log(choice[0].parser.id);
+                    log('using ' + choice[0].parser.id);
                     res.push(choice[0]);
                     possibles = choice[0].parser.next;
                     log('switching possibles: [' + this.listIds(possibles) + ']');
@@ -929,7 +930,6 @@ var deftools;
                 'projectUrl', 
                 'defAuthorUrl', 
                 'defAuthorUrlAlt', 
-                'defAuthorUrlOpt', 
                 'reposUrl', 
                 'reposUrlAlt', 
                 'referencePath'
@@ -940,7 +940,6 @@ var deftools;
                 'any'
             ])));
             this.parser.addParser(new xm.LineParser('head', typeHead, 2, function (match) {
-                console.log(match.match);
                 data.name = match.getGroup(0, data.name);
                 data.version = match.getGroup(1, data.version);
             }, fields));

@@ -131,18 +131,19 @@ module xm {
 
 				var text = line[2];
 				log('[[' + text + ']]');
+				log('---');
 
 				var choice:LineParserMatch[] = _.reduce(possibles, (memo:LineParserMatch[], parser:LineParser) => {
-					log('---');
-					log(parser.getName());
 
 					var res = parser.match(text, offset, cursor);
 					if (res) {
-						log('-> match!');
-						//console.log(res);
+						log(parser.getName() + ' -> match!');
+						log(res.match);
 						memo.push(res);
-
 						//we could break after first?
+					}
+					else {
+						//log(parser.getName());
 					}
 					return memo;
 				}, []);
@@ -157,7 +158,7 @@ module xm {
 				}
 				else if (choice.length == 1) {
 					log('single match line');
-					log(choice[0].parser.id);
+					log('using ' + choice[0].parser.id);
 					//console.log(choice[0].match);
 
 					res.push(choice[0]);
@@ -166,7 +167,7 @@ module xm {
 				}
 				else {
 					log('multi match line');
-					log(choice[0].parser.id);
+					log('using ' + choice[0].parser.id);
 					//console.log(choice[0].match);
 					//TODO pick one!
 
