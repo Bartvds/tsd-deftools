@@ -1,10 +1,4 @@
 {
-	"baseline": {
-		"tsd_git": "https://github.com/Bartvds/tsd/tree/def/baseline",
-		"typings_git": "https://github.com/Bartvds/DefinitelyTyped/tree/def/baseline",
-		"path": "./test/local/path.json",
-		"test" : "./test/baseline"
-	},
 	"local": {
 		"path": "./test/local/path.json",
 		"test": "./test/local"

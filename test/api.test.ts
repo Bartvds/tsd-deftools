@@ -190,15 +190,16 @@ describe('deftools', () => {
 				});
 
 				//skip for now
-				describe.skip('Parser', () => {
+				describe('Parser', () => {
 					var data:helper.HeaderAssert[];
-					var filter = ['async'];
+					var filter;// = ['async', 'expect.js'];
 
 					before((done:(err?) => void) => {
 						console.log('before');
 						helper.loadHeaderFixtures(path.join(conf.test, 'headers'), (err, res:helper.HeaderAssert[]) => {
-							if (err) return done(err);
-							helper.dump(res, 'loadHeaderFixtures');
+							if (err){
+								return done(err);
+							}
 							try {
 								assert.operator(res.length, '>', 0);
 							}
@@ -207,34 +208,41 @@ describe('deftools', () => {
 							}
 							data = res;
 
-							/*if (filter) {
+							if (filter) {
 								data = _.filter(data, (value:helper.HeaderAssert) => {
 									return filter.indexOf(value.name) > -1;
 								});
-							}*/
+							}
+							helper.dump(data, 'loadHeaderFixtures');
 
 							done();
 						});
 					});
 
 					describe('loop', () => {
+
 						before(() => {
-							_.each(data, (value:helper.HeaderAssert) => {
-								console.log('-> looped ' + value.combi());
 
-								// :(
-								it('check ' + value.combi(), (done:() => void) => {
-
-									console.log('hoot! ' + value.combi());
-									assert.ok(true);
-
-									done();
-								});
-							});
 						});
 
 						it('data ok', () => {
 							assert.operator(data.length, '>', 0, 'data.length');
+						});
+
+						it('parse test data', (done:() => void) => {
+							_.each(data, (def:helper.HeaderAssert) => {
+								assert.ok(def, def.key + ' ok');
+
+								var data = new deftools.DefData(def.def);
+								var parser = new deftools.HeaderParser(true);
+								parser.parse(data, def.header);
+
+								_.each(def.fields.parsed, (value:any, field:string) => {
+									assert.strictEqual(data[field], value, def.key + ' .' + field);
+								});
+							});
+
+							done();
 						});
 					});
 
@@ -265,8 +273,8 @@ describe('deftools', () => {
 							api.loadTsdNames((err, res:string[]) => {
 								assert.ok(!err, '' + err);
 								assert.isArray(res, 'res');
-								assert.lengthOf(res, stats.tsd.fileCount);
-								assert.lengthOf(res, fileList.length);
+								assert.lengthOf(res, stats.tsd.fileCount, 'res v fileCount');
+								assert.lengthOf(res, fileList.length, 'res v defList');
 								res.sort(sortList);
 								assert.sameMembers(res, fileList);
 								done();
@@ -287,7 +295,7 @@ describe('deftools', () => {
 							api.loadRepoDefs((err, res:deftools.Def[]) => {
 								assert.ok(!err, '' + err);
 								assert.isArray(res, 'res');
-								assert.isArray(defList, 'res');
+								assert.isArray(defList, 'defList');
 								assert.lengthOf(res, stats.typings.fileCount, 'res v fileCount');
 								assert.lengthOf(res, defList.length, 'res v defList');
 								res.sort(sortDefList);

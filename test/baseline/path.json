@@ -1,6 +1,0 @@
-{
-	"tsd": "./../deftools-data/baseline/tsd",
-	"typings": "./../deftools-data/baseline/DefinitelyTyped",
-	"out": "./test/baseline/out",
-	"tmp": "./test/baseline/tmp"
-}

@@ -489,7 +489,7 @@ var xm;
                 exp[_i] = arguments[_i + 0];
             }
             exp.forEach(function (value) {
-                _this.parts.push('' + value);
+                _this.parts.push(value);
             }, this);
             return this;
         };
@@ -524,10 +524,14 @@ var xm;
             var chunks = [];
             flags = typeof flags !== 'undefined' ? this.getCleanFlags(flags) : '';
             this.parts.forEach(function (exp, index, arr) {
+                if(typeof exp === 'string') {
+                    chunks.push(exp);
+                    return;
+                }
                 expTrim.lastIndex = 0;
                 var trim = expTrim.exec('' + exp);
                 if(!trim) {
-                    return;
+                    return exp;
                 }
                 if(trim.length < 2) {
                     console.log(trim);
@@ -729,12 +733,9 @@ var xm;
             while(line = this.trimmedLine.exec(source)) {
                 log('-----------------------------------------------------------------------------------------');
                 cursor = line.index + line[0].length;
-                if(cursor >= length) {
-                    break;
-                }
+                this.trimmedLine.lastIndex = cursor;
                 lineCount++;
                 log('line: ' + lineCount);
-                this.trimmedLine.lastIndex = cursor;
                 if(lineCount > safetyBreak) {
                     console.log('\n\n\n\nsafetyBreak bail at ' + lineCount + '> ' + safetyBreak + '!\n\n\n\n\n');
                     throw ('parser safetyBreak bail!');
@@ -782,6 +783,10 @@ var xm;
                     log('no more possibles, break');
                     break;
                 }
+                if(cursor >= length) {
+                    log('done ' + cursor + ' >= ' + length + ' lineCount: ' + lineCount);
+                    break;
+                }
             }
             log('--------------');
             log('total lineCount: ' + lineCount);
@@ -813,7 +818,7 @@ var xm;
                 return null;
             }
             if(this.groupsMin >= 0 && match.length < this.groupsMin) {
-                throw (new Error(this.getName() + 'bad extract expected ' + this.groupsMin + ' groups, got ' + (this.match.length - 1)));
+                throw (new Error(this.getName() + 'bad match expected ' + this.groupsMin + ' groups, got ' + (this.match.length - 1)));
             }
             return new LineParserMatch(this, match);
         };
@@ -838,12 +843,12 @@ var xm;
             if(num >= this.match.length - 1) {
                 throw (new Error(this.parser.getName() + ' group index ' + num + ' > ' + (this.match.length - 2)));
             }
-            if(this.parser.groupsMin >= 0 && num >= this.parser.groupsMin) {
-                throw (new Error(this.getName() + ' group index ' + num + ' >= parser.groupsMin ' + (this.parser.groupsMin)));
-            }
             num += 1;
             if(num < 1 || num > this.match.length) {
-                return '';
+                return alt;
+            }
+            if(typeof this.match[num] === 'undefined') {
+                return alt;
             }
             return this.match[num];
         };
@@ -898,27 +903,33 @@ var deftools;
     var urlFullCap = /((?:(?:[A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)(?:(?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[.\!\/\\w]*))?)/;
     var referenceTag = /<reference[ \t]*path=["']?([\w\.\/_-]*)["']?[ \t]*\/>/;
     var commentStart = glue(expStart, spaceOpt, /\/\/+/, spaceOpt).join();
+    var optUrl = glue('(?:', spaceOpt, delimStartOpt, urlFullCap, delimEndOpt, ')?').join();
     var commentLine = glue(commentStart).append(anyLazyCap).append(spaceOpt, expEnd).join();
     var referencePath = glue(expStart, spaceOpt, /\/\/\//, spaceOpt).append(referenceTag).append(spaceOpt, expEnd).join();
-    var typeHead = glue(commentStart).append(/Type definitions?[ \t]*(?:for)?:?/, spaceOpt, wordsCap).append(spaceReq, versionCap, spaceOpt).append(anyGreedy, expEnd).join('i');
+    var typeHead = glue(commentStart).append(/Type definitions?/, spaceOpt, /(?:for)?:?/, spaceOpt, identifierCap).append(spaceReq, versionCap, spaceOpt).append(anyGreedy, expEnd).join('i');
     var projectUrl = glue(commentStart).append(/Project/, spaceOpt, /:?/, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
-    var defAuthorUrl = glue(commentStart).append(/Definitions[ \t]+by[ \t]*:?/, spaceOpt).append(wordsCap, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
+    var defAuthorUrl = glue(commentStart).append(/Definitions[ \t]+by[ \t]*:?/, spaceOpt).append(wordsCap, optUrl).append(spaceOpt, expEnd).join('i');
+    var defAuthorUrlAlt = glue(commentStart).append(/Author[ \t]*:?/, spaceOpt).append(wordsCap, optUrl).append(spaceOpt, expEnd).join('i');
     var reposUrl = glue(commentStart).append(/Definitions/, spaceOpt, /:?/, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
     var reposUrlAlt = glue(commentStart).append(/DefinitelyTyped/, spaceOpt, /:?/, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
     var labelUrl = glue(commentStart).append(labelCap, spaceOpt, /:?/, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd).join('i');
     var labelWordsUrl = glue(commentStart).append(labelCap, spaceOpt, /:?/, spaceOpt).append(wordsCap, spaceOpt).append(delimStartOpt, urlFullCap, delimEndOpt).append(spaceOpt, expEnd);
     var HeaderParser = (function () {
-        function HeaderParser() {
+        function HeaderParser(verbose) {
+            if (typeof verbose === "undefined") { verbose = false; }
+            this.verbose = verbose;
             this.init();
         }
         HeaderParser.prototype.init = function () {
         };
         HeaderParser.prototype.parse = function (data, source) {
             data.resetFields();
-            this.parser = new xm.LineParserCore();
+            this.parser = new xm.LineParserCore(this.verbose);
             var fields = [
                 'projectUrl', 
                 'defAuthorUrl', 
+                'defAuthorUrlAlt', 
+                'defAuthorUrlOpt', 
                 'reposUrl', 
                 'reposUrlAlt', 
                 'referencePath'
@@ -929,6 +940,7 @@ var deftools;
                 'any'
             ])));
             this.parser.addParser(new xm.LineParser('head', typeHead, 2, function (match) {
+                console.log(match.match);
                 data.name = match.getGroup(0, data.name);
                 data.version = match.getGroup(1, data.version);
             }, fields));
@@ -939,10 +951,14 @@ var deftools;
                 data.authorName = match.getGroup(0, data.authorName);
                 data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
             }, fields));
-            this.parser.addParser(new xm.LineParser('reposUrl', reposUrl, 2, function (match) {
+            this.parser.addParser(new xm.LineParser('defAuthorUrlAlt', defAuthorUrlAlt, 2, function (match) {
+                data.authorName = match.getGroup(0, data.authorName);
+                data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
+            }, fields));
+            this.parser.addParser(new xm.LineParser('reposUrl', reposUrl, 1, function (match) {
                 data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
             }, fields));
-            this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 2, function (match) {
+            this.parser.addParser(new xm.LineParser('reposUrlAlt', reposUrlAlt, 1, function (match) {
                 data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
             }, fields));
             this.parser.addParser(new xm.LineParser('referencePath', referencePath, 1, function (match) {
@@ -951,10 +967,12 @@ var deftools;
             this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, [
                 'comment'
             ]));
+            if(this.verbose) {
+                console.log(this.parser.getInfo());
+            }
             this.parser.parse(source, [
                 'head'
             ]);
-            return data;
         };
         return HeaderParser;
     })();

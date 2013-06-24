@@ -5,7 +5,7 @@
 ///<reference path="../typings/DefinitelyTyped/chai/chai-assert.d.ts" />
 ///<reference path="../typings/DefinitelyTyped/chai/chai-fuzzy-assert.d.ts" />
 
-///<reference path="helper.ts" />
+///<reference path="_helper.ts" />
 
 var chaii = require('chai');
 chaii.use(require('chai-fuzzy'));

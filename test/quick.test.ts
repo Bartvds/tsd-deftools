@@ -14,7 +14,7 @@ describe('quick tests', () => {
 		setTimeout(()=> {
 			assert.ok(1);
 			done();
-		}, 100);
+		}, 50);
 	});
 
 	describe('assert deepEqual', () => {

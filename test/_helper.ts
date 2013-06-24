@@ -1,5 +1,5 @@
 ///<reference path="_ref.ts" />
-
+///<reference path="../src/deftools/header.ts" />
 
 module helper {
 
@@ -25,6 +25,16 @@ module helper {
 		});
 	}
 
+	export function writeJSON(src:string, data:any, callback:(err, res:any) => void) {
+		try {
+			data = JSON.stringify(data)
+		}
+		catch (err) {
+			return;
+		}
+		fs.writeFileSync(path.resolve(src), data, 'utf8');
+	}
+
 	export function dump(object:any, label?:string = '', depth?:number = 6, showHidden?:bool = false):any {
 		if (label) {
 			console.log(label + ':');
@@ -44,13 +54,11 @@ module helper {
 		header:any;
 		tsd:any;
 		key:string;
+		def:deftools.Def;
 
 		constructor(public project:string, public name:string) {
-			this.key = this.combi();
-		}
-
-		combi():string {
-			return this.project + '/' + this.name;
+			this.def = new deftools.Def(project, name);
+			this.key = this.def.combi();
 		}
 	}
 
@@ -63,9 +71,13 @@ module helper {
 		//loop projects
 		fs.readdir(src, (err, files:string[]) => {
 			if (err || !files) return finish(err, []);
+			console.log(src);
+			console.log(files);
 
 			async.reduce(files, [], (memo:helper.HeaderAssert[], project, callback:(err, res?) => void) => {
 				var dir = path.join(src, project);
+
+				console.log(dir);
 
 				fs.stat(dir, (err, stats) => {
 					if (err || !stats) return callback(err);
@@ -90,7 +102,15 @@ module helper {
 										helper.loadJSON(path.join(pack, 'fields.json'), callback);
 									},
 									tsd: (callback:AsyncCallback) => {
-										helper.loadJSON(path.join(pack, 'tsd.json'), callback);
+										var src = path.join(pack, 'tsd.json');
+										fs.exists(src, (exists:bool) => {
+											if (exists) {
+												helper.loadJSON(src, callback);
+											}
+											else{
+												callback(null, '');
+											}
+										});
 									}
 								}, (err, res) => {
 									if (err) return callback(err);
@@ -98,7 +118,7 @@ module helper {
 									//needed?
 									if (!res.fields) return callback('missing res.fields');
 									if (!res.header) return callback('missing res.header');
-									if (!res.tsd) return callback('missing res.tsd');
+									//if (!res.tsd) return callback('missing res.tsd');
 
 									var data = new helper.HeaderAssert(project, name);
 									data.fields = res.fields;
@@ -111,7 +131,7 @@ module helper {
 							});
 
 						}, (err, memo) => {
-							finish(err, memo || []);
+							callback(err, memo || []);
 						});
 					});
 				});

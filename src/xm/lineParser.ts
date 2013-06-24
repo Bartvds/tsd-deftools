@@ -98,12 +98,11 @@ module xm {
 			this.trimmedLine.lastIndex = 0;
 			while (line = this.trimmedLine.exec(source)) {
 				log('-----------------------------------------------------------------------------------------');
-				cursor = line.index + line[0].length;
 
-				if (cursor >= length) {
-					//done
-					break;
-				}
+				//pre-advance cursor
+				cursor = line.index + line[0].length;
+				this.trimmedLine.lastIndex = cursor;
+
 				lineCount++;
 				log('line: ' + lineCount);
 				/*
@@ -111,8 +110,6 @@ module xm {
 				console.log(line);
 				console.log('cursor: ' + cursor);
 				*/
-
-				this.trimmedLine.lastIndex = cursor;
 
 				//break some development loops :)
 				if (lineCount > safetyBreak) {
@@ -183,6 +180,11 @@ module xm {
 					log('no more possibles, break');
 					break;
 				}
+				if (cursor >= length) {
+					//done
+					log('done ' + cursor + ' >= ' + length + ' lineCount: ' + lineCount);
+					break;
+				}
 			}
 			log('--------------');
 
@@ -215,7 +217,7 @@ module xm {
 			}
 			//move this to constructor?
 			if (this.groupsMin >= 0 && match.length < this.groupsMin) {
-				throw(new Error(this.getName() + 'bad extract expected ' + this.groupsMin + ' groups, got ' + (this.match.length - 1)));
+				throw(new Error(this.getName() + 'bad match expected ' + this.groupsMin + ' groups, got ' + (this.match.length - 1)));
 			}
 			return new LineParserMatch(this, match);
 		}
@@ -242,14 +244,16 @@ module xm {
 			if (num >= this.match.length - 1) {
 				throw(new Error(this.parser.getName() + ' group index ' + num + ' > ' + (this.match.length - 2)));
 			}
-			if (this.parser.groupsMin >= 0 && num >= this.parser.groupsMin) {
+			/*if (this.parser.groupsMin >= 0 && num >= this.parser.groupsMin) {
 				throw(new Error(this.getName() + ' group index ' + num + ' >= parser.groupsMin ' + (this.parser.groupsMin)));
-			}
+			}*/
 			num += 1;
 			if (num < 1 || num > this.match.length) {
-				return '';
+				return alt;
 			}
-
+			if (typeof this.match[num] === 'undefined') {
+				return alt;
+			}
 			return this.match[num];
 		}
 
