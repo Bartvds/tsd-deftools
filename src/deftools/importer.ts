@@ -189,6 +189,7 @@ module deftools {
 						//return callback('null data');
 						return callback(null, res);
 					}
+					console.log(data.combi());
 					res.requested.push(data);
 					if (res.all.indexOf(data) < 0) {
 						res.all.push(data);
@@ -310,11 +311,16 @@ module deftools {
 						if (data.references.length !== data.dependencies.length) {
 							data.errors.push(new ParseError('references/dependencies mistcount ' + data.references.length + '/' + data.dependencies.length, err));
 						}
-						callback(err, data);
+
+						process.nextTick(() => {
+							callback(err, data);
+						});
 					});
 				}
 				else {
-					return callback(null, data);
+					process.nextTick(() => {
+						callback(null, data);
+					});
 				}
 			});
 		}

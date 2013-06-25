@@ -47,6 +47,7 @@
 		"chai": "~1.6.0",
 		"grunt-mocha-test": "~0.3.2",
 		"chai-fuzzy": "~1.3.0",
+		"chai-json-scheme": "git://github.com/Bartvds/chai-json-scheme.git",
 		"tsd": "git://github.com/Diullei/tsd.git#develop-0.4.x"
 	},
 	"peerDependencies": {

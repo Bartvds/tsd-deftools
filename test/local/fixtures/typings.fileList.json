@@ -38,5 +38,13 @@
 	{
 		"project": "underscore",
 		"name": "underscore"
+	},
+	{
+		"project": "breeze",
+		"name": "breeze"
+	},
+	{
+		"project": "breeze",
+		"name": "breeze-1.0"
 	}
 ]

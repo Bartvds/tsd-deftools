@@ -27,7 +27,7 @@ module deftools {
 	var anyLazyCap = /(.*?)/;
 
 	var identifierCap = /([\w\._-]*(?:[ \t]*[\w\._-]+)*?)/;
-	var versionCap = /v?(\d+\.\d+\.?\d*\.?\d*)?/;
+	var versionCap = /-?v?(\d+\.\d+\.?\d*\.?\d*)?/;
 	var wordsCap = /([\w \t_-]+[\w]+)/;
 	var labelCap = /([\w_-]+[\w]+)/;
 
@@ -35,6 +35,8 @@ module deftools {
 	var delimStartOpt = /[<\[\{\(]?/;
 	var delimEnd = /[\)\}\]>]/;
 	var delimEndOpt = /[\)\}\]>]?/;
+
+	var seperatorOpt = /[,;]?/;
 
 
 	//http://blog.mattheworiordan.com/post/13174566389/url-regular-expression-for-links-with-or-without-the
@@ -60,7 +62,7 @@ module deftools {
 
 	var typeHead = glue(commentStart)
 		.append(/Type definitions?/, spaceOpt, /(?:for)?:?/, spaceOpt, identifierCap)
-		.append(spaceReq, versionCap, spaceOpt)
+		.append(/[ \t:-]+/, versionCap, spaceOpt)
 		.append(anyGreedy, expEnd)
 		.join('i');
 
@@ -74,13 +76,13 @@ module deftools {
 	var defAuthorUrl = glue(commentStart)
 		.append(/Definitions[ \t]+by[ \t]*:?/, spaceOpt)
 		.append(wordsCap, optUrl)
-		.append(spaceOpt, expEnd)
+		.append(spaceOpt, seperatorOpt, spaceOpt, expEnd)
 		.join('i');
 
 	var defAuthorUrlAlt = glue(commentStart)
 		.append(/Author[ \t]*:?/, spaceOpt)
 		.append(wordsCap, optUrl)
-		.append(spaceOpt, expEnd)
+		.append(spaceOpt, seperatorOpt, spaceOpt, expEnd)
 		.join('i');
 
 	var reposUrl = glue(commentStart)
@@ -107,6 +109,29 @@ module deftools {
 		.append(delimStartOpt, urlFullCap, delimEndOpt)
 		.append(spaceOpt, expEnd)
 
+	var wordsUrl = glue(commentStart)
+		.append(wordsCap, spaceOpt)
+		.append(delimStartOpt, urlFullCap, delimEndOpt)
+		.append(spaceOpt, expEnd)
+		.join('i');
+
+	var mutate = (base:string[], add:string[], remove:string[]) => {
+		var res = base ? base.slice(0) : [];
+		var i , ii, index;
+		if (add) {
+			for (i = 0, ii = add.length; i < ii; i++) {
+				res.push(add[i]);
+			}
+		}
+		if (remove) {
+			for (i = 0, ii = remove.length; i < ii; i++) {
+				while ((index = res.indexOf(remove[i])) > -1) {
+					res.splice(index, 1);
+				}
+			}
+		}
+		return res;
+	};
 
 	export class HeaderParser {
 
@@ -130,7 +155,7 @@ module deftools {
 
 			var fields = ['projectUrl', 'defAuthorUrl', 'defAuthorUrlAlt', 'reposUrl', 'reposUrlAlt', 'referencePath'];
 
-			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head'].concat(fields, ['any'])));
+			this.parser.addParser(new xm.LineParser('any', anyGreedyCap, 0, null, ['head', 'any']));
 
 			this.parser.addParser(new xm.LineParser('head', typeHead, 2, (match:xm.LineParserMatch) => {
 				data.name = match.getGroup(0, data.name);
@@ -138,9 +163,14 @@ module deftools {
 				//data.submodule = match.getGroup(2, data.submodule);
 			}, fields));
 
+			fields = mutate(fields, null, ['projectUrl']);
+
 			this.parser.addParser(new xm.LineParser('projectUrl', projectUrl, 1, (match:xm.LineParserMatch) => {
 				data.projectUrl = match.getGroup(0, data.projectUrl).replace(endSlashTrim, '');
 			}, fields));
+
+
+			fields = mutate(fields, ['defAuthorAppend'], ['defAuthorUrl','defAuthorUrlAlt']);
 
 			this.parser.addParser(new xm.LineParser('defAuthorUrl', defAuthorUrl, 2, (match:xm.LineParserMatch) => {
 				data.authorName = match.getGroup(0, data.authorName);
@@ -152,6 +182,14 @@ module deftools {
 				data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
 			}, fields));
 
+			this.parser.addParser(new xm.LineParser('defAuthorAppend', wordsUrl, 2, (match:xm.LineParserMatch) => {
+				console.log(match);
+			}, fields));
+
+			fields = mutate(fields, null, ['defAuthorAppend']);
+
+			fields = mutate(fields, null, ['reposUrl','reposUrlAlt']);
+
 			this.parser.addParser(new xm.LineParser('reposUrl', reposUrl, 1, (match:xm.LineParserMatch) => {
 				data.reposUrl = match.getGroup(0, data.reposUrl).replace(endSlashTrim, '');
 			}, fields));
@@ -162,7 +200,7 @@ module deftools {
 
 			this.parser.addParser(new xm.LineParser('referencePath', referencePath, 1, (match:xm.LineParserMatch) => {
 				data.references.push(match.getGroup(0));
-			}, fields));
+			}, ['referencePath']));
 
 			this.parser.addParser(new xm.LineParser('comment', commentLine, 0, null, ['comment']));
 

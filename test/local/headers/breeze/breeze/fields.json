@@ -1,0 +1,12 @@
+{
+	"parsed": {
+		"name": "Breeze",
+		"version": "1.2.7",
+		"submodule": "",
+		"description": "",
+		"projectUrl": "http://www.breezejs.com",
+		"authorName": "Boris Yankov",
+		"authorUrl": "https://github.com/borisyankov",
+		"reposUrl": "https://github.com/borisyankov/DefinitelyTyped"
+	}
+}

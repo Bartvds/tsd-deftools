@@ -1,9 +1,9 @@
 {
 	"tsd": {
-		"fileCount": 7
+		"fileCount": 8
 	},
 	"typings": {
-		"fileCount": 10,
+		"fileCount": 12,
 		"jquery":{
 			"fileCount": 1
 		},

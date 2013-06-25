@@ -196,7 +196,7 @@ describe('deftools', () => {
 
 					before((done:(err?) => void) => {
 						helper.loadHeaderFixtures(path.join(conf.test, 'headers'), (err, res:helper.HeaderAssert[]) => {
-							if (err){
+							if (err) {
 								return done(err);
 							}
 							try {
@@ -232,12 +232,18 @@ describe('deftools', () => {
 								assert.ok(def, def.key + ' ok');
 
 								var data = new deftools.DefData(def.def);
-								var parser = new deftools.HeaderParser(false);
+								var parser = new deftools.HeaderParser(true);
 								parser.parse(data, def.header);
-
-								_.each(def.fields.parsed, (value:any, field:string) => {
-									assert.strictEqual(data[field], value, def.key + ' .' + field);
-								});
+								if (def.fields.fields) {
+									_.each(def.fields.fields, (field:string) => {
+										assert.strictEqual(data[field], def.fields.parsed[field], def.key + ' .' + field);
+									});
+								}
+								else {
+									_.each(def.fields.parsed, (value:any, field:string) => {
+										assert.strictEqual(data[field], def.fields.parsed[field], def.key + ' .' + field);
+									});
+								}
 							});
 
 							done();
@@ -263,11 +269,11 @@ describe('deftools', () => {
 
 						before(() => {
 							fileList = helper.readJSON(path.join(testDir, 'fixtures', 'tsd.filelist.json'));
-							assert.lengthOf(fileList, stats.tsd.fileCount);
 
 							fileList.sort(sortList);
 						});
 						it('loads content', (done:() => void) => {
+							assert.lengthOf(fileList, stats.tsd.fileCount, 'fileList');
 							api.loadTsdNames((err, res:string[]) => {
 								assert.ok(!err, '' + err);
 								assert.isArray(res, 'res');
@@ -286,10 +292,11 @@ describe('deftools', () => {
 
 						before(() => {
 							defList = helper.readJSON(path.join(testDir, 'fixtures', 'typings.filelist.json'));
-							assert.lengthOf(defList, stats.typings.fileCount);
 							defList.sort(sortDefList);
 						});
 						it('loads content', (done:() => void) => {
+							assert.lengthOf(defList, stats.typings.fileCount, 'defList');
+
 							api.loadRepoDefs((err, res:deftools.Def[]) => {
 								assert.ok(!err, '' + err);
 								assert.isArray(res, 'res');

@@ -87,17 +87,27 @@ module xm {
 
 			var length = source.length;
 			var line;
-			var end;
+			var i, ii;
 			var offset = 0;
 			var cursor = 0;
 			var lineCount = 0;
 			var procLineCount = 0;
 
-			var safetyBreak = 10000;
+			var safetyBreak = 20;
 
 			this.trimmedLine.lastIndex = 0;
 			while (line = this.trimmedLine.exec(source)) {
 				log('-----------------------------------------------------------------------------------------');
+
+				if (line[0].length === 0) {
+					console.log('zero length line match?');
+					break;
+				}
+				if (line.index + line[0].lengt === cursor) {
+					console.log('cursor not advancing?');
+					break;
+				}
+
 
 				//pre-advance cursor
 				cursor = line.index + line[0].length;
@@ -121,62 +131,64 @@ module xm {
 
 				if (line.length < 5) {
 					log('skip bad line match');
-					continue;
 				}
-				if (typeof line[2] === 'undefined' || line[2] == '') {
+				else if (typeof line[2] === 'undefined' || line[2] == '') {
 					log('skip empty line');
-					continue;
-				}
-				procLineCount++;
-
-				var text = line[2];
-				log('[[' + text + ']]');
-				log('---');
-
-				var choice:LineParserMatch[] = _.reduce(possibles, (memo:LineParserMatch[], parser:LineParser) => {
-
-					var res = parser.match(text, offset, cursor);
-					if (res) {
-						log(parser.getName() + ' -> match!');
-						log(res.match);
-						memo.push(res);
-						//we could break after first?
-					}
-					else {
-						//log(parser.getName());
-					}
-					return memo;
-				}, []);
-
-				log('---');
-
-				log('choices ' + choice.length);
-
-				if (choice.length == 0) {
-					//console.log('cannot match line');
-					possibles = [];
-				}
-				else if (choice.length == 1) {
-					log('single match line');
-					log('using ' + choice[0].parser.id);
-					//console.log(choice[0].match);
-
-					res.push(choice[0]);
-					possibles = choice[0].parser.next;
-					log('switching possibles: [' + this.listIds(possibles) + ']');
 				}
 				else {
-					log('multi match line');
-					log('using ' + choice[0].parser.id);
-					//console.log(choice[0].match);
-					//TODO pick one!
+					procLineCount++;
 
-					//why not first?
-					res.push(choice[0]);
-					possibles = choice[0].parser.next;
-					log('switching possibles: [' + this.listIds(possibles) + ']');
+					var text = line[2];
+					log('[[' + text + ']]');
+					log('---');
+
+					var choice:LineParserMatch[] = [];
+
+					for (i = 0, ii = possibles.length; i < ii; i++) {
+						var parser = possibles[i];
+						var match = parser.match(text, offset, cursor);
+						if (match) {
+							log(parser.getName() + ' -> match!');
+							log(match.match);
+							choice.push(match);
+							//we could break after first?
+							break;
+						}
+						else {
+							log(parser.getName());
+						}
+					}
+
+					log('---');
+
+					log('choices ' + choice.length);
+
+					if (choice.length == 0) {
+						log('cannot match line');
+						break;
+					}
+					else if (choice.length == 1) {
+						log('single match line');
+						log('using ' + choice[0].parser.id);
+						//console.log(choice[0].match);
+
+						res.push(choice[0]);
+						possibles = choice[0].parser.next;
+						log('switching possibles: [' + this.listIds(possibles) + ']');
+					}
+					else {
+						log('multi match line');
+						log('using ' + choice[0].parser.id);
+						//console.log(choice[0].match);
+						//TODO pick one!
+
+						//why not first?
+						res.push(choice[0]);
+						possibles = choice[0].parser.next;
+						log('switching possibles: [' + this.listIds(possibles) + ']');
+					}
 				}
-
+				//keep looping?
 				if (possibles.length == 0) {
 					log('no more possibles, break');
 					break;
@@ -192,7 +204,8 @@ module xm {
 			log('total lineCount: ' + lineCount);
 			log('procLineCount: ' + procLineCount);
 			//console.log(util.inspect(res, false, 10));
-			log('res.lengt: ' + res.length);
+			log('res.length: ' + res.length);
+			log(' ');
 
 			if (res.length > 0) {
 				_.each(res, (match:LineParserMatch) => {
