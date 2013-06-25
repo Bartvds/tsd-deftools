@@ -1,5 +1,5 @@
-// Type definitions for chai v1.6.0 assert style
-// Project: http://chaijs.com/
+// Type definitions for chai-fuzzy 1.3.0 assert style
+// Project: http://chaijs.com/plugins/chai-fuzzy
 // Definitions by: Bart van der Schoor <https://github.com/Bartvds>
 // Definitions: https://github.com/borisyankov/DefinitelyTyped
 
