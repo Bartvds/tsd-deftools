@@ -74,6 +74,20 @@ module deftools {
 			});
 		}, 'list TSD content', params);
 
+		expose.add('tsdNotHosted', (args:any) => {
+			api.tsdNotHostedInRepo((err, res:any[]) => {
+				if (err) return console.log(err);
+				if (!res) return console.log('tsdNotHostedInRepo returned no result');
+
+				write(args.write, res);
+				if (args.dump) {
+					console.log(util.inspect(res.sort(), false, 10));
+				}
+				console.log('tsd not hosted: ' + res.length);
+
+			});
+		}, 'list TSD content not hosted on DefinitelyTyped', params);
+
 		expose.add('compare', (args:any) => {
 			api.compare((err?, res?:deftools.CompareResult) => {
 				if (err) return console.log(err);

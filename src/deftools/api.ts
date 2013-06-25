@@ -33,7 +33,6 @@ module deftools {
 
 		/**
 		 * List files in tsd as name
-		 * @param callback
 		 */
 		loadTsdNames(callback:(err, res:string[]) => void) {
 			var loader = new ListLoader(this.repos);
@@ -41,8 +40,25 @@ module deftools {
 		}
 
 		/**
+		 * List files in tsd that are not hosted on DefinitelyTyped
+		 */
+		tsdNotHostedInRepo(callback:(err, any:string[]) => void) {
+			var loader = new ListLoader(this.repos);
+			loader.loadTsdNames((err, names:string[]) => {
+				if (err) return console.log(err);
+				if (!names) return console.log('loadTsdNames no res');
+
+				var importer = new TsdImporter(loader.repos);
+				importer.parseRepoData(names, (err?, res?:TsdImportResult) => {
+					if (err) return callback(err, null);
+					if (!res) return callback('parseRepoData no res', null);
+					callback(null, res.urlMatch(/^https:\/\/github.com\/borisyankov\/DefinitelyTyped/, true));
+				});
+			});
+		}
+
+		/**
 		 * List files in repo as Def
-		 * @param callback
 		 */
 		loadRepoDefs(callback:(err, res:Def[]) => void) {
 			var loader = new ListLoader(this.repos);
@@ -51,7 +67,6 @@ module deftools {
 
 		/**
 		 * List and compare repo to tsd content
-		 * @param callback
 		 */
 		compare(callback:(err?, res?:CompareResult) => void) {
 			var comparer = new DefinitionComparer(this.repos);
@@ -60,7 +75,6 @@ module deftools {
 
 		/**
 		 * Parse all repo data
-		 * @param callback
 		 */
 		parseAll(callback:(err?, res?:ImportResult) => void) {
 
@@ -76,7 +90,6 @@ module deftools {
 
 		/**
 		 * Parse project repo data
-		 * @param callback
 		 */
 		parseProject(project:string, callback:(err?, res?:ImportResult) => void) {
 
@@ -92,7 +105,6 @@ module deftools {
 
 		/**
 		 * Recreate all tsd json files from repo data
-		 * @param callback
 		 */
 		updateTsd(options:any, callback:(err?, res?:RecreateResult) => void) {
 

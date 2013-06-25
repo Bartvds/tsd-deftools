@@ -56,6 +56,7 @@ describe('deftools', () => {
 				testCommand('tsdList');
 				testCommand('compare');
 				testCommand('updateTsd');
+				testCommand('tsdNotHosted');
 			});
 		});
 	});

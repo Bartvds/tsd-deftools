@@ -28,6 +28,27 @@ var deftools;
             var loader = new deftools.ListLoader(this.repos);
             loader.loadTsdNames(callback);
         };
+        API.prototype.tsdNotHostedInRepo = function (callback) {
+            var loader = new deftools.ListLoader(this.repos);
+            loader.loadTsdNames(function (err, names) {
+                if(err) {
+                    return console.log(err);
+                }
+                if(!names) {
+                    return console.log('loadTsdNames no res');
+                }
+                var importer = new deftools.TsdImporter(loader.repos);
+                importer.parseRepoData(names, function (err, res) {
+                    if(err) {
+                        return callback(err, null);
+                    }
+                    if(!res) {
+                        return callback('parseRepoData no res', null);
+                    }
+                    callback(null, res.urlMatch(/^https:\/\/github.com\/borisyankov\/DefinitelyTyped/, true));
+                });
+            });
+        };
         API.prototype.loadRepoDefs = function (callback) {
             var loader = new deftools.ListLoader(this.repos);
             loader.loadRepoDefs(callback);
@@ -1381,6 +1402,71 @@ var deftools;
 })(deftools || (deftools = {}));
 var deftools;
 (function (deftools) {
+    var fs = require('fs');
+    var path = require('path');
+    var util = require('util');
+    var async = require('async');
+    var _ = require('underscore');
+    var dependency = /^\.\.\/([\w _-]+)\/([\w _-]+)\.d\.ts$/;
+    var definition = /^([\w _-]+)\.d\.ts$/;
+    var TsdImportResult = (function () {
+        function TsdImportResult() {
+            this.all = [];
+        }
+        TsdImportResult.prototype.urlMatch = function (pattern, invert, list) {
+            if (typeof invert === "undefined") { invert = false; }
+            if (typeof list === "undefined") { list = null; }
+            list = list || this.all;
+            return _.filter(list, function (value) {
+                var ret = true;
+                _.each(value.versions, function (version) {
+                    ret = ret && (pattern.test(version.url));
+                });
+                if(invert) {
+                    ret = !ret;
+                }
+                return ret;
+            });
+        };
+        return TsdImportResult;
+    })();
+    deftools.TsdImportResult = TsdImportResult;    
+    var TsdImporter = (function () {
+        function TsdImporter(repos) {
+            this.repos = repos;
+        }
+        TsdImporter.prototype.parseRepoData = function (names, finish) {
+            var self = this;
+            async.reduce(names, new TsdImportResult(), function (res, name, callback) {
+                var p = path.join(self.repos.tsd, 'repo_data', name + '.json');
+                fs.readFile(p, 'utf8', function (err, content) {
+                    if(err) {
+                        return callback(err);
+                    }
+                    if(!content) {
+                        return callback('no content');
+                    }
+                    var obj;
+                    try  {
+                        obj = JSON.parse(content);
+                    } catch (e) {
+                        return callback(e);
+                    }
+                    if(obj) {
+                        res.all.push(obj);
+                    }
+                    callback(null, res);
+                });
+            }, function (err, res) {
+                finish(err, res);
+            });
+        };
+        return TsdImporter;
+    })();
+    deftools.TsdImporter = TsdImporter;    
+})(deftools || (deftools = {}));
+var deftools;
+(function (deftools) {
     function getGUID() {
         var S4 = function () {
             return Math.floor(Math.random() * 0x10000).toString(16);
@@ -1699,6 +1785,21 @@ var deftools;
                 console.log('tsd items: ' + res.length);
             });
         }, 'list TSD content', params);
+        expose.add('tsdNotHosted', function (args) {
+            api.tsdNotHostedInRepo(function (err, res) {
+                if(err) {
+                    return console.log(err);
+                }
+                if(!res) {
+                    return console.log('tsdNotHostedInRepo returned no result');
+                }
+                write(args.write, res);
+                if(args.dump) {
+                    console.log(util.inspect(res.sort(), false, 10));
+                }
+                console.log('tsd not hosted: ' + res.length);
+            });
+        }, 'list TSD content not hosted on DefinitelyTyped', params);
         expose.add('compare', function (args) {
             api.compare(function (err, res) {
                 if(err) {

@@ -5,7 +5,8 @@
 ///<reference path="exporter.ts" />
 ///<reference path="headerParser.ts" />
 ///<reference path="header.ts" />
-///<reference path="importer.ts" />
+///<reference path="repoImporter.ts" />
+///<reference path="tsdImporter.ts" />
 ///<reference path="lib.ts" />
 ///<reference path="helper.ts" />
 ///<reference path="loader.ts" />
