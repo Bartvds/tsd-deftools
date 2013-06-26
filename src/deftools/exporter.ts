@@ -100,8 +100,9 @@ module deftools {
 							}
 						}),
 						"url": header.getDefUrl(),
-						"author": header.authorName,
-						"author_url": header.authorUrl
+						"authors": _.map(header.authors, (data:deftools.DefAuthor) => {
+							return data.toJSON();
+						})
 					}
 				],
 				"generator" : {

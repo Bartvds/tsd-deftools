@@ -5,8 +5,16 @@
 		"submodule": "",
 		"description": "",
 		"projectUrl": "http://www.breezejs.com",
-		"authorName": "Boris Yankov",
-		"authorUrl": "https://github.com/borisyankov",
+		"authors": [
+			{
+				"name": "Boris Yankov",
+				"url": "https://github.com/borisyankov"
+			},
+			{
+				"name": "IdeaBlade",
+				"url": "https://github.com/IdeaBlade/Breeze"
+			}
+		],
 		"reposUrl": "https://github.com/borisyankov/DefinitelyTyped"
 	}
 }

@@ -464,8 +464,9 @@ var deftools;
                             };
                         }),
                         "url": header.getDefUrl(),
-                        "author": header.authorName,
-                        "author_url": header.authorUrl
+                        "authors": _.map(header.authors, function (data) {
+                            return data.toJSON();
+                        })
                     }
                 ],
                 "generator": {
@@ -1006,15 +1007,13 @@ var deftools;
                 'defAuthorUrlAlt'
             ]);
             this.parser.addParser(new xm.LineParser('defAuthorUrl', defAuthorUrl, 2, function (match) {
-                data.authorName = match.getGroup(0, data.authorName);
-                data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
+                data.authors.push(new deftools.DefAuthor(match.getGroup(0), match.getGroup(1)));
             }, fields));
             this.parser.addParser(new xm.LineParser('defAuthorUrlAlt', defAuthorUrlAlt, 2, function (match) {
-                data.authorName = match.getGroup(0, data.authorName);
-                data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
+                data.authors.push(new deftools.DefAuthor(match.getGroup(0), match.getGroup(1)));
             }, fields));
             this.parser.addParser(new xm.LineParser('defAuthorAppend', wordsUrl, 2, function (match) {
-                console.log(match);
+                data.authors.push(new deftools.DefAuthor(match.getGroup(0), match.getGroup(1)));
             }, fields));
             fields = mutate(fields, null, [
                 'defAuthorAppend'
@@ -1050,6 +1049,7 @@ var deftools;
 })(deftools || (deftools = {}));
 var deftools;
 (function (deftools) {
+    var endSlashTrim = /\/?$/;
     var Def = (function () {
         function Def(project, name) {
             this.project = project;
@@ -1064,6 +1064,36 @@ var deftools;
         return Def;
     })();
     deftools.Def = Def;    
+    var DefAuthor = (function () {
+        function DefAuthor(name, url, email) {
+            if (typeof name === "undefined") { name = ''; }
+            if (typeof url === "undefined") { url = undefined; }
+            if (typeof email === "undefined") { email = undefined; }
+            this.name = name;
+            this.url = url;
+            this.email = email;
+            if(this.url) {
+                this.url = this.url.replace(endSlashTrim, '');
+            }
+        }
+        DefAuthor.prototype.toString = function () {
+            return '[' + this.name + (this.email ? ' @ ' + this.email : '') + (this.url ? ' <' + this.url + '>' : '') + ']';
+        };
+        DefAuthor.prototype.toJSON = function () {
+            var obj = {
+                name: this.name
+            };
+            if(this.url) {
+                obj.url = this.url;
+            }
+            if(this.email) {
+                obj.email = this.email;
+            }
+            return obj;
+        };
+        return DefAuthor;
+    })();
+    deftools.DefAuthor = DefAuthor;    
     var DefData = (function () {
         function DefData(def) {
             this.def = def;
@@ -1080,8 +1110,7 @@ var deftools;
             this.submodule = '';
             this.description = '';
             this.projectUrl = '';
-            this.authorName = '';
-            this.authorUrl = '';
+            this.authors = [];
             this.reposUrl = '';
         };
         DefData.prototype.resetAll = function () {
@@ -1110,7 +1139,7 @@ var deftools;
             if(!this.name || !this.version || !this.projectUrl) {
                 return false;
             }
-            if(!this.authorName || !this.authorUrl) {
+            if(this.authors.length === 0) {
                 return false;
             }
             if(!this.reposUrl) {

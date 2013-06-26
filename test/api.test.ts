@@ -228,21 +228,33 @@ describe('deftools', () => {
 						});
 
 						it('parse test data', (done:() => void) => {
+							var testProp = (def, data, parsed, prop) => {
+								assert.strictEqual(data[prop], parsed[prop], def.key + ' .' + prop);
+							};
 							_.each(data, (def:helper.HeaderAssert) => {
 								assert.ok(def, def.key + ' ok');
 
 								var data = new deftools.DefData(def.def);
 								var parser = new deftools.HeaderParser(true);
 								parser.parse(data, def.header);
+
+								var parsed = def.fields.parsed;
 								if (def.fields.fields) {
 									_.each(def.fields.fields, (field:string) => {
-										assert.strictEqual(data[field], def.fields.parsed[field], def.key + ' .' + field);
+										testProp(def, data, parsed, field);
 									});
 								}
 								else {
-									_.each(def.fields.parsed, (value:any, field:string) => {
-										assert.strictEqual(data[field], def.fields.parsed[field], def.key + ' .' + field);
-									});
+									testProp(def, data, parsed, 'name');
+									testProp(def, data, parsed, 'version');
+									testProp(def, data, parsed, 'submodule');
+									testProp(def, data, parsed, 'description');
+									testProp(def, data, parsed, 'projectUrl');
+									testProp(def, data, parsed, 'reposUrl');
+
+									assert.like(_.map(data.authors, (author) => {
+										return author.toJSON();
+									}), parsed["authors"], def.key + ' .' + "authors");
 								}
 							});
 

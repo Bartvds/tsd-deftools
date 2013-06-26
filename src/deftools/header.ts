@@ -4,6 +4,8 @@
 
 module deftools {
 
+	var endSlashTrim = /\/?$/;
+
 	export interface DefMap {
 		[name: string]: Def;
 	}
@@ -27,6 +29,29 @@ module deftools {
 			return '[Def ' + this.combi() + ']';
 		}
 	}
+	export class DefAuthor {
+
+		constructor(public name:string = '', public url:string = undefined, public email:string = undefined) {
+			if (this.url) {
+				this.url = this.url.replace(endSlashTrim, '');
+			}
+		}
+
+		toString():string {
+			return '[' + this.name + (this.email ? ' @ ' + this.email : '') + (this.url ? ' <' + this.url + '>' : '') + ']';
+		}
+
+		toJSON():any {
+			var obj:any = {name: this.name};
+			if (this.url) {
+				obj.url = this.url;
+			}
+			if (this.email) {
+				obj.email = this.email;
+			}
+			return obj;
+		}
+	}
 
 	//single definition file in repo (parsed)
 	export class DefData {
@@ -36,8 +61,7 @@ module deftools {
 		description:string;
 		projectUrl:string;
 
-		authorName:string;
-		authorUrl:string;
+		authors:DefAuthor[];
 		//reposName:string;
 		reposUrl:string;
 
@@ -61,8 +85,7 @@ module deftools {
 			this.description = '';
 			this.projectUrl = '';
 
-			this.authorName = '';
-			this.authorUrl = '';
+			this.authors = []
 			//this.reposName = '';
 			this.reposUrl = '';
 		}
@@ -96,7 +119,7 @@ module deftools {
 			if (!this.name || !this.version || !this.projectUrl) {
 				return false;
 			}
-			if (!this.authorName || !this.authorUrl) {
+			if (this.authors.length === 0) {
 				return false;
 			}
 			//!this.reposName ||

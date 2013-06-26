@@ -173,17 +173,15 @@ module deftools {
 			fields = mutate(fields, ['defAuthorAppend'], ['defAuthorUrl','defAuthorUrlAlt']);
 
 			this.parser.addParser(new xm.LineParser('defAuthorUrl', defAuthorUrl, 2, (match:xm.LineParserMatch) => {
-				data.authorName = match.getGroup(0, data.authorName);
-				data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
+				data.authors.push(new DefAuthor(match.getGroup(0), match.getGroup(1)));
 			}, fields));
 
 			this.parser.addParser(new xm.LineParser('defAuthorUrlAlt', defAuthorUrlAlt, 2, (match:xm.LineParserMatch) => {
-				data.authorName = match.getGroup(0, data.authorName);
-				data.authorUrl = match.getGroup(1, data.authorUrl).replace(endSlashTrim, '');
+				data.authors.push(new DefAuthor(match.getGroup(0), match.getGroup(1)));
 			}, fields));
 
 			this.parser.addParser(new xm.LineParser('defAuthorAppend', wordsUrl, 2, (match:xm.LineParserMatch) => {
-				console.log(match);
+				data.authors.push(new DefAuthor(match.getGroup(0), match.getGroup(1)));
 			}, fields));
 
 			fields = mutate(fields, null, ['defAuthorAppend']);

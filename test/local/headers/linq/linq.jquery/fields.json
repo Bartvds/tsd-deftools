@@ -5,8 +5,12 @@
 		"submodule": "",
 		"description": "",
 		"projectUrl": "http://linqjs.codeplex.com",
-		"authorName": "neuecc",
-		"authorUrl": "http://www.codeplex.com/site/users/view/neuecc",
+		"authors": [
+			{
+				"name": "neuecc",
+				"url": "http://www.codeplex.com/site/users/view/neuecc"
+			}
+		],
 		"reposUrl": ""
 	}
 }

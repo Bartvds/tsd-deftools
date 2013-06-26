@@ -5,8 +5,11 @@
 		"submodule": "",
 		"description": "",
 		"projectUrl": "http://linqjs.codeplex.com",
-		"authorName": "Marcin Najder",
-		"authorUrl": "",
+		"authors": [
+			{
+				"name": "Marcin Najder"
+			}
+		],
 		"reposUrl": "https://github.com/borisyankov/DefinitelyTyped"
 	}
 }
